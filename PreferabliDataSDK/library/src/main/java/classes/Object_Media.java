@@ -28,16 +28,16 @@ public class Object_Media extends Object_BaseObject {
             return;
         }
         this.imageRecResults = Object_LabelRecResult.sortLabelRecs(imageRecResults);
-        Tools_DBHelper.getInstance().openDatabase();
+        Tools_Database.getInstance().openDatabase();
         for (Object_LabelRecResult imageRec : imageRecResults) {
             Object_Product product = imageRec.getWine();
             product.setRateSourceLocation("label_rec");
-            Tools_DBHelper.getInstance().updateWineTable(product);
+            Tools_Database.getInstance().updateWineTable(product);
             for (Object_Variant variant : product.getVariants()) {
-                variant.addTags(Tools_DBHelper.getInstance().getVariantTags(variant));
+                variant.addTags(Tools_Database.getInstance().getVariantTags(variant));
             }
         }
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().closeDatabase();
     }
 
     public ArrayList<Object_Product> getImageRecResults() {

@@ -90,13 +90,13 @@ public class Object_Customer extends Object_BaseObject {
     }
 
     public String getName() {
-        if (!Tools_PreferabliTools.isNullOrWhitespace(merchant_user_display_name)) {
+        if (!Tools_Preferabli.isNullOrWhitespace(merchant_user_display_name)) {
             return merchant_user_display_name;
-        } else if (!Tools_PreferabliTools.isNullOrWhitespace(merchant_user_name)) {
+        } else if (!Tools_Preferabli.isNullOrWhitespace(merchant_user_name)) {
             return merchant_user_name;
-        } else if (!Tools_PreferabliTools.isNullOrWhitespace(merchant_user_email_address)) {
+        } else if (!Tools_Preferabli.isNullOrWhitespace(merchant_user_email_address)) {
             return merchant_user_email_address;
-        } else if (!Tools_PreferabliTools.isNullOrWhitespace(merchant_user_id)) {
+        } else if (!Tools_Preferabli.isNullOrWhitespace(merchant_user_id)) {
             return merchant_user_id;
         }
 
@@ -104,9 +104,9 @@ public class Object_Customer extends Object_BaseObject {
     }
 
     public String getMerchantName() {
-        if (!Tools_PreferabliTools.isNullOrWhitespace(merchant_user_name)) {
+        if (!Tools_Preferabli.isNullOrWhitespace(merchant_user_name)) {
             return merchant_user_name;
-        } else if (!Tools_PreferabliTools.isNullOrWhitespace(merchant_user_email_address)) {
+        } else if (!Tools_Preferabli.isNullOrWhitespace(merchant_user_email_address)) {
             return merchant_user_email_address;
         }
 
@@ -128,7 +128,7 @@ public class Object_Customer extends Object_BaseObject {
                 return -1;
             }
 
-            return Tools_PreferabliTools.alphaSortIgnoreThe(customer1.getName(), customer2.getName());
+            return Tools_Preferabli.alphaSortIgnoreThe(customer1.getName(), customer2.getName());
         }
     }
 

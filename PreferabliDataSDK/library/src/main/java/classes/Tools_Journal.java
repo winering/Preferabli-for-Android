@@ -1,5 +1,5 @@
 //
-//  Tools_JournalTools.java
+//  Tools_Journal.java
 //  Preferabli
 //
 //  Created by Nicholas Bortolussi on 7/13/16.
@@ -14,20 +14,20 @@ import java.util.ArrayList;
 import java.util.concurrent.Semaphore;
 import retrofit2.Response;
 
-public class Tools_JournalTools {
+public class Tools_Journal {
 
-    private static Tools_JournalTools journalTools;
+    private static Tools_Journal journalTools;
     private Semaphore getItemsSempahore;
     private Semaphore journalToolsSemaphore;
     private boolean error;
 
-    public Tools_JournalTools() {
+    public Tools_Journal() {
         journalToolsSemaphore = new Semaphore(1);
         getItemsSempahore = new Semaphore(10);
     }
 
-    public static Tools_JournalTools getInstance() {
-        if (journalTools == null) journalTools = new Tools_JournalTools();
+    public static Tools_Journal getInstance() {
+        if (journalTools == null) journalTools = new Tools_Journal();
         return journalTools;
     }
 
@@ -41,20 +41,20 @@ public class Tools_JournalTools {
     }
 
     public ArrayList<Object_Product> getProducts(boolean forceRefresh) throws API_PreferabliException, IOException, InterruptedException, NullPointerException {
-        if (forceRefresh || !Tools_PreferabliTools.getKeyStore().getBoolean("hasCalledRatings", false) || !Tools_PreferabliTools.getKeyStore().getBoolean("hasCalledWishlist", false)) {
+        if (forceRefresh || !Tools_Preferabli.getKeyStore().getBoolean("hasCalledRatings", false) || !Tools_Preferabli.getKeyStore().getBoolean("hasCalledWishlist", false)) {
             journalToolsSemaphore.acquire();
             loadJournalFromAPI(Other_TagType.RATING);
             loadJournalFromAPI(Other_TagType.WISHLIST);
             loadPurchasesFromAPI(forceRefresh);
             journalToolsSemaphore.release();
         } else {
-            if (Tools_PreferabliTools.hasDaysPassed(5, Tools_PreferabliTools.getKeyStore().getLong("lastGrabbedRatings", 0))) {
-                Tools_PreferabliTools.startNewWorkThread(new Runnable() {
+            if (Tools_Preferabli.hasDaysPassed(5, Tools_Preferabli.getKeyStore().getLong("lastGrabbedRatings", 0))) {
+                Tools_Preferabli.startNewWorkThread(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             loadJournalFromAPI(Other_TagType.RATING);
-                            EventBus.getDefault().post(Tools_JournalTools.this);
+                            EventBus.getDefault().post(Tools_Journal.this);
                         } catch (Exception e) {
                             // catch exception so that we can still pull up cached data
                             e.printStackTrace();
@@ -65,13 +65,13 @@ public class Tools_JournalTools {
             }
 
 
-            if (Tools_PreferabliTools.hasDaysPassed(5, Tools_PreferabliTools.getKeyStore().getLong("lastGrabbedWishlist", 0))) {
-                Tools_PreferabliTools.startNewWorkThread(new Runnable() {
+            if (Tools_Preferabli.hasDaysPassed(5, Tools_Preferabli.getKeyStore().getLong("lastGrabbedWishlist", 0))) {
+                Tools_Preferabli.startNewWorkThread(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             loadJournalFromAPI(Other_TagType.WISHLIST);
-                            EventBus.getDefault().post(Tools_JournalTools.this);
+                            EventBus.getDefault().post(Tools_Journal.this);
                         } catch (Exception e) {
                             // catch exception so that we can still pull up cached data
                             e.printStackTrace();
@@ -81,13 +81,13 @@ public class Tools_JournalTools {
                 });
             }
 
-            if (Tools_PreferabliTools.hasDaysPassed(5, Tools_PreferabliTools.getKeyStore().getLong("lastGrabbedPurchaseHistory", 0))) {
-                Tools_PreferabliTools.startNewWorkThread(new Runnable() {
+            if (Tools_Preferabli.hasDaysPassed(5, Tools_Preferabli.getKeyStore().getLong("lastGrabbedPurchaseHistory", 0))) {
+                Tools_Preferabli.startNewWorkThread(new Runnable() {
                     @Override
                     public void run() {
                         try {
                             loadPurchasesFromAPI(false);
-                            EventBus.getDefault().post(Tools_JournalTools.this);
+                            EventBus.getDefault().post(Tools_Journal.this);
                         } catch (Exception e) {
                             // catch exception so that we can still pull up cached data
                             e.printStackTrace();
@@ -104,9 +104,9 @@ public class Tools_JournalTools {
 
     public ArrayList<Object_Product> getProductsfromDB() {
         ArrayList<Object_Product> products;
-        Tools_DBHelper.getInstance().openDatabase();
-        products = Tools_DBHelper.getInstance().getJournalProducts();
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().openDatabase();
+        products = Tools_Database.getInstance().getJournalProducts();
+        Tools_Database.getInstance().closeDatabase();
         return products;
     }
 
@@ -121,8 +121,8 @@ public class Tools_JournalTools {
     }
 
     public void loadPurchasesFromAPI(boolean forceRefresh) throws API_PreferabliException, NullPointerException, InterruptedException, IOException {
-        Tools_PreferabliTools.getKeyStore().edit().putLong("lastGrabbedPurchaseHistory", System.currentTimeMillis()).apply();
-        ArrayList<Object_UserCollection> userCollections = Tools_UserCollectionsTools.getInstance().getUserCollections(forceRefresh, "purchase");
+        Tools_Preferabli.getKeyStore().edit().putLong("lastGrabbedPurchaseHistory", System.currentTimeMillis()).apply();
+        ArrayList<Object_UserCollection> userCollections = Tools_UserCollections.getInstance().getUserCollections(forceRefresh, "purchase");
         for (Object_UserCollection userCollection : userCollections) {
             getProductsFromAPI(userCollection.getCollection_id());
         }
@@ -133,9 +133,9 @@ public class Tools_JournalTools {
         try {
             error = false;
 
-            Tools_DBHelper.getInstance().openDatabase();
-            Tools_DBHelper.getInstance().clearTagTable(collectionId, true);
-            Tools_DBHelper.getInstance().closeDatabase();
+            Tools_Database.getInstance().openDatabase();
+            Tools_Database.getInstance().clearTagTable(collectionId, true);
+            Tools_Database.getInstance().closeDatabase();
 
             loadCollectionViaTags(collectionId);
 
@@ -154,9 +154,9 @@ public class Tools_JournalTools {
     }
 
     public void loadCollectionViaTags(long collectionId) throws InterruptedException, API_PreferabliException {
-        Tools_DBHelper.getInstance().openDatabase();
-        Object_Collection collection = Tools_DBHelper.getInstance().getCollection(collectionId);
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().openDatabase();
+        Object_Collection collection = Tools_Database.getInstance().getCollection(collectionId);
+        Tools_Database.getInstance().closeDatabase();
 
         if (collection == null) {
             // We don't have the collection in question
@@ -169,7 +169,7 @@ public class Tools_JournalTools {
             getItemsSempahore.acquire();
             offsetOverall = offsetOverall + limit;
             final int offset = offsetOverall;
-            Tools_PreferabliTools.startNewWorkThread(new Runnable() {
+            Tools_Preferabli.startNewWorkThread(new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -179,24 +179,24 @@ public class Tools_JournalTools {
                         ArrayList<Object_Tag> tags = tagsResponse.body();
 
                         if (tags.size() > 0) {
-                            Tools_DBHelper.getInstance().openDatabase();
+                            Tools_Database.getInstance().openDatabase();
                             ArrayList<Long> variant_ids = new ArrayList<>();
                             for (Object_Tag tag : tags) {
                                 variant_ids.add(tag.getVariantId());
-                                Tools_DBHelper.getInstance().updateTagTable(tag);
+                                Tools_Database.getInstance().updateTagTable(tag);
                             }
-                            Tools_DBHelper.getInstance().closeDatabase();
+                            Tools_Database.getInstance().closeDatabase();
 
                             Response<ArrayList<Object_Product>> productsResponse = API_Singleton.getInstanceService().getProducts(variant_ids).execute();
                             if (!productsResponse.isSuccessful())
                                 throw new API_PreferabliException(productsResponse.errorBody());
                             ArrayList<Object_Product> products = productsResponse.body();
 
-                            Tools_DBHelper.getInstance().openDatabase();
+                            Tools_Database.getInstance().openDatabase();
                             for (Object_Product product : products) {
-                                Tools_DBHelper.getInstance().updateWineTable(product);
+                                Tools_Database.getInstance().updateWineTable(product);
                             }
-                            Tools_DBHelper.getInstance().closeDatabase();
+                            Tools_Database.getInstance().closeDatabase();
 
                         }
                     } catch (API_PreferabliException | IOException e) {

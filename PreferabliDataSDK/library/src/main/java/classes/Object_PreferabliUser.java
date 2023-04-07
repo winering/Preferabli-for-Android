@@ -9,9 +9,6 @@
 package classes;
 
 import android.os.Parcel;
-import android.os.Parcelable;
-
-import java.util.ArrayList;
 
 public class Object_PreferabliUser extends Object_BaseObject {
     private String display_name;
@@ -171,7 +168,7 @@ public class Object_PreferabliUser extends Object_BaseObject {
     }
 
     public String getFirstName() {
-        if (Tools_PreferabliTools.isNullOrWhitespace(fname)) {
+        if (Tools_Preferabli.isNullOrWhitespace(fname)) {
             return display_name;
         }
         return fname;

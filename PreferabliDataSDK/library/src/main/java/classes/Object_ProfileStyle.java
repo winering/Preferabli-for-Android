@@ -207,7 +207,7 @@ public class Object_ProfileStyle extends Object_BaseObject {
                 return -1;
             }
 
-            return Tools_PreferabliTools.alphaSortIgnoreThe(ps1.getName(), ps2.getName());
+            return Tools_Preferabli.alphaSortIgnoreThe(ps1.getName(), ps2.getName());
         }
     }
 
@@ -244,7 +244,7 @@ public class Object_ProfileStyle extends Object_BaseObject {
                 return ((Integer) ps1.getOrderProfile()).compareTo(ps2.getOrderProfile());
             }
 
-            return Tools_PreferabliTools.alphaSortIgnoreThe(ps1.getName(), ps2.getName());
+            return Tools_Preferabli.alphaSortIgnoreThe(ps1.getName(), ps2.getName());
         }
     }
 

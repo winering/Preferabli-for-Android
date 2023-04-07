@@ -9,6 +9,7 @@
 package classes;
 
 import android.app.Application;
+import android.content.Context;
 import android.util.Log;
 
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
@@ -20,11 +21,9 @@ import org.greenrobot.eventbus.ThreadMode;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.HashMap;
-
 class Tools_PreferabliApp extends Application {
 
-    private static Tools_PreferabliApp mAppContext;
+    private static Context mAppContext;
     private static MixpanelAPI mixpanel;
 
     @Override
@@ -32,19 +31,19 @@ class Tools_PreferabliApp extends Application {
         super.onCreate();
         setAppContext(this);
         registerEventBus();
-        Tools_PreferabliTools.handleCursorSize();
-        Tools_PreferabliTools.clearValues();
-        Tools_DBHelper.initializeInstance(new Tools_DBHelper.SQLiteOpenHelper());
-        Tools_PreferabliTools.handleUpgrade();
-        Tools_PreferabliTools.addSDKProperties();
+        Tools_Preferabli.handleCursorSize();
+        Tools_Preferabli.clearValues();
+        Tools_Database.initializeInstance(new Tools_Database.SQLiteOpenHelper());
+        Tools_Preferabli.handleUpgrade();
+        Tools_Preferabli.addSDKProperties();
     }
 
-    public static Tools_PreferabliApp getAppContext() {
+    public static Context getAppContext() {
         return mAppContext;
     }
 
-    private void setAppContext(Tools_PreferabliApp mAppContext) {
-        Tools_PreferabliApp.mAppContext = mAppContext;
+    public static void setAppContext(Context context) {
+        mAppContext = context;
     }
 
     private void registerEventBus() {

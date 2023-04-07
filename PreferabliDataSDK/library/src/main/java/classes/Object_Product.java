@@ -110,8 +110,8 @@ public class Object_Product extends Object_BaseObject {
         this.created_at = created_at;
         this.updated_at = updated_at;
         this.dirty = isDirty;
-        this.primary_image = Tools_PreferabliTools.convertJsonToObject(image, Object_Media.class);
-        this.back_image = Tools_PreferabliTools.convertJsonToObject(backImage, Object_Media.class);
+        this.primary_image = Tools_Preferabli.convertJsonToObject(image, Object_Media.class);
+        this.back_image = Tools_Preferabli.convertJsonToObject(backImage, Object_Media.class);
         this.brand_lat = brand_lat;
         this.brand_lon = brand_lon;
         this.category = category;
@@ -406,7 +406,7 @@ public class Object_Product extends Object_BaseObject {
     }
 
     public HashSet<Object_Tag>  getPersonalCellarTags() {
-        Set<String> collectionIds = Tools_PreferabliTools.getKeyStore().getStringSet("cellarIds", new HashSet<>());
+        Set<String> collectionIds = Tools_Preferabli.getKeyStore().getStringSet("cellarIds", new HashSet<>());
         if (personalCellarTags == null){
             HashSet<Object_Tag> collectionTags = getCollectionTags();
             personalCellarTags = new HashSet<>();
@@ -489,7 +489,7 @@ public class Object_Product extends Object_BaseObject {
     }
 
     public String getImage() {
-        if (primary_image != null && !Tools_PreferabliTools.isNullOrWhitespace(primary_image.getPath()) && !primary_image.getPath().contains("placeholder"))
+        if (primary_image != null && !Tools_Preferabli.isNullOrWhitespace(primary_image.getPath()) && !primary_image.getPath().contains("placeholder"))
             return primary_image.getPath();
         else if (getMostRecentVariant().getPrimaryImagePath() != null && !getMostRecentVariant().getPrimaryImagePath().contains("placeholder")) {
             return getMostRecentVariant().getPrimaryImagePath();
@@ -561,7 +561,7 @@ public class Object_Product extends Object_BaseObject {
     }
 
     public String getGrape() {
-        if (Tools_PreferabliTools.isNullOrWhitespace(grape) || grape.toLowerCase().contains("identifying"))
+        if (Tools_Preferabli.isNullOrWhitespace(grape) || grape.toLowerCase().contains("identifying"))
             return "";
         return grape;
     }
@@ -583,14 +583,14 @@ public class Object_Product extends Object_BaseObject {
     }
 
     public boolean isBeingIdentified() {
-        if (Tools_PreferabliTools.isNullOrWhitespace(getBrand())) {
+        if (Tools_Preferabli.isNullOrWhitespace(getBrand())) {
             return true;
         }
         return getBrand().toLowerCase().contains("identified");
     }
 
     public String getRegion() {
-        if (Tools_PreferabliTools.isNullOrWhitespace(region) || region.toLowerCase().contains("entered"))
+        if (Tools_Preferabli.isNullOrWhitespace(region) || region.toLowerCase().contains("entered"))
             return "";
         return region;
     }
@@ -651,7 +651,7 @@ public class Object_Product extends Object_BaseObject {
         if (mostRecentRating == null) {
             Date date = new Date(0);
             for (Object_Tag tag : getRatingsTags()) {
-                Date compareToDate = Tools_PreferabliTools.convertAPITimeStampToDate(tag.getCreatedAt());
+                Date compareToDate = Tools_Preferabli.convertAPITimeStampToDate(tag.getCreatedAt());
                 if (compareToDate.after(date)) {
                     date = compareToDate;
                     mostRecentRating = tag;

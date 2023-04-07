@@ -1,5 +1,5 @@
 //
-//  Tools_LoadCollectionTools.java
+//  Tools_LoadCollection.java
 //  Preferabli
 //
 //  Created by Nicholas Bortolussi on 7/13/16.
@@ -15,16 +15,16 @@ import java.util.concurrent.Semaphore;
 
 import retrofit2.Response;
 
-public class Tools_LoadCollectionTools {
+public class Tools_LoadCollection {
 
-    private static Tools_LoadCollectionTools loadCollectionTools;
+    private static Tools_LoadCollection loadCollectionTools;
 
-    public Tools_LoadCollectionTools() {
+    public Tools_LoadCollection() {
         // nada
     }
 
-    public static Tools_LoadCollectionTools getInstance() {
-        if (loadCollectionTools == null) loadCollectionTools = new Tools_LoadCollectionTools();
+    public static Tools_LoadCollection getInstance() {
+        if (loadCollectionTools == null) loadCollectionTools = new Tools_LoadCollection();
         return loadCollectionTools;
     }
 
@@ -35,21 +35,21 @@ public class Tools_LoadCollectionTools {
     public Object_Collection loadCollection(long collectionId) throws IOException, API_PreferabliException {
         Response<Object_Collection> collectionResponse = API_Singleton.getInstanceService().getCollection(collectionId).execute();
         if (!collectionResponse.isSuccessful()) throw new API_PreferabliException(collectionResponse.errorBody());
-        Tools_PreferabliTools.saveCollectionEtag(collectionResponse, collectionId);
+        Tools_Preferabli.saveCollectionEtag(collectionResponse, collectionId);
         Object_Collection collection = collectionResponse.body();
-        Tools_DBHelper.getInstance().openDatabase();
-        Tools_DBHelper.getInstance().deleteCollection(collection);
-        Tools_DBHelper.getInstance().updateCollectionTable(collection);
-        collection = Tools_DBHelper.getInstance().getCollection(collectionId);
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().openDatabase();
+        Tools_Database.getInstance().deleteCollection(collection);
+        Tools_Database.getInstance().updateCollectionTable(collection);
+        collection = Tools_Database.getInstance().getCollection(collectionId);
+        Tools_Database.getInstance().closeDatabase();
         return collection;
     }
 
     public void loadCollectionViaTags(long collectionId, int priority) throws InterruptedException, API_PreferabliException {
-        Tools_DBHelper.getInstance().openDatabase();
-        Object_Collection collection = Tools_DBHelper.getInstance().getCollection(collectionId);
-        Tools_DBHelper.getInstance().clearTagTable(collectionId, false);
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().openDatabase();
+        Object_Collection collection = Tools_Database.getInstance().getCollection(collectionId);
+        Tools_Database.getInstance().clearTagTable(collectionId, false);
+        Tools_Database.getInstance().closeDatabase();
 
         if (collection == null) {
             // We don't have the collection in question
@@ -64,7 +64,7 @@ public class Tools_LoadCollectionTools {
             getItemsSempahore.acquire();
             offsetOverall = offsetOverall + limit;
             final int offset = offsetOverall;
-            Tools_PreferabliTools.startNewWorkThread(priority, new Runnable() {
+            Tools_Preferabli.startNewWorkThread(priority, new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -74,24 +74,24 @@ public class Tools_LoadCollectionTools {
                         ArrayList<Object_Tag> tags = tagsResponse.body();
 
                         if (tags.size() > 0) {
-                            Tools_DBHelper.getInstance().openDatabase();
+                            Tools_Database.getInstance().openDatabase();
                             ArrayList<Long> variant_ids = new ArrayList<>();
                             for (Object_Tag tag : tags) {
                                 variant_ids.add(tag.getVariantId());
-                                Tools_DBHelper.getInstance().updateTagTable(tag);
+                                Tools_Database.getInstance().updateTagTable(tag);
                             }
-                            Tools_DBHelper.getInstance().closeDatabase();
+                            Tools_Database.getInstance().closeDatabase();
 
                             Response<ArrayList<Object_Product>> productsResponse = API_Singleton.getInstanceService().getProducts(variant_ids).execute();
                             if (!productsResponse.isSuccessful())
                                 throw new API_PreferabliException(productsResponse.errorBody());
                             ArrayList<Object_Product> products = productsResponse.body();
 
-                            Tools_DBHelper.getInstance().openDatabase();
+                            Tools_Database.getInstance().openDatabase();
                             for (Object_Product product : products) {
-                                Tools_DBHelper.getInstance().updateWineTable(product);
+                                Tools_Database.getInstance().updateWineTable(product);
                             }
-                            Tools_DBHelper.getInstance().closeDatabase();
+                            Tools_Database.getInstance().closeDatabase();
 
                         }
                     } catch (API_PreferabliException | IOException e) {
@@ -113,9 +113,9 @@ public class Tools_LoadCollectionTools {
     }
 
     public void loadCollectionViaOrderings(long collectionId, int priority) throws InterruptedException, API_PreferabliException {
-        Tools_DBHelper.getInstance().openDatabase();
-        Object_Collection collection = Tools_DBHelper.getInstance().getCollection(collectionId);
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().openDatabase();
+        Object_Collection collection = Tools_Database.getInstance().getCollection(collectionId);
+        Tools_Database.getInstance().closeDatabase();
 
         if (collection == null) {
             // We don't have the collection in question
@@ -135,7 +135,7 @@ public class Tools_LoadCollectionTools {
             orderingMap.put(group, orderingsToInsert);
             while (offset <= group.getOrderingsCount()) {
                 final int finalOffset = offset;
-                Tools_PreferabliTools.startNewWorkThread(priority, new Runnable() {
+                Tools_Preferabli.startNewWorkThread(priority, new Runnable() {
                     @Override
                     public void run() {
                         try {
@@ -165,13 +165,13 @@ public class Tools_LoadCollectionTools {
         }
 
         // we need to insert all orderings together after the old are cleared after all is done so to prevent data loss.
-        Tools_DBHelper.getInstance().openDatabase();
+        Tools_Database.getInstance().openDatabase();
         for (Object_Collection.Version.Group group : version.getGroups()) {
             ArrayList<Object_Collection.Version.Group.Ordering> orderingsToInsert = orderingMap.get(group);
-            Tools_DBHelper.getInstance().clearGroupOrderings(group);
-            Tools_DBHelper.getInstance().updateOrderingTable(orderingsToInsert);
+            Tools_Database.getInstance().clearGroupOrderings(group);
+            Tools_Database.getInstance().updateOrderingTable(orderingsToInsert);
         }
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().closeDatabase();
     }
 
     public ArrayList<Object_Collection.Version.Group.Ordering> getGroupItems(Object_Collection collection, Object_Collection.Version version, Object_Collection.Version.Group group, int limit, int offset, int failCount) throws API_PreferabliException {
@@ -181,7 +181,7 @@ public class Tools_LoadCollectionTools {
             if (Thread.interrupted()) return new ArrayList<>();
             if (!orderingResponse.isSuccessful())
                 throw new API_PreferabliException(orderingResponse.errorBody());
-            Tools_PreferabliTools.saveCollectionEtag(orderingResponse, collection.getId());
+            Tools_Preferabli.saveCollectionEtag(orderingResponse, collection.getId());
             ArrayList<Object_Collection.Version.Group.Ordering> orderings = orderingResponse.body();
 
             if (orderings.size() != 0) {
@@ -196,23 +196,23 @@ public class Tools_LoadCollectionTools {
                     return new ArrayList<>();
                 if (!tagsResponse.isSuccessful())
                     throw new API_PreferabliException(tagsResponse.errorBody());
-                Tools_PreferabliTools.saveCollectionEtag(tagsResponse, collection.getId());
+                Tools_Preferabli.saveCollectionEtag(tagsResponse, collection.getId());
                 ArrayList<Object_Tag> tags = tagsResponse.body();
 
-                Tools_DBHelper.getInstance().openDatabase();
+                Tools_Database.getInstance().openDatabase();
                 ArrayList<Long> variantIds = new ArrayList<>();
                 for (Object_Tag tag : tags) {
                     tag.setLocation(collection.getName());
                     for (Object_Collection.Version.Group.Ordering ordering : orderings) {
                         if (ordering.getCollectionVariantTagId() == tag.getId()) {
-                            Tools_DBHelper.getInstance().updateTagTable(ordering, tag);
+                            Tools_Database.getInstance().updateTagTable(ordering, tag);
                             ordering.setTag(tag);
                             break;
                         }
                     }
                     variantIds.add(tag.getVariantId());
                 }
-                Tools_DBHelper.getInstance().closeDatabase();
+                Tools_Database.getInstance().closeDatabase();
 
                 Response<ArrayList<Object_Product>> productsResponse = API_Singleton.getInstanceService().getProducts(variantIds).execute();
                 if (Thread.interrupted())
@@ -220,9 +220,9 @@ public class Tools_LoadCollectionTools {
                 if (!productsResponse.isSuccessful())
                     throw new API_PreferabliException(productsResponse.errorBody());
                 ArrayList<Object_Product> products = productsResponse.body();
-                Tools_DBHelper.getInstance().openDatabase();
+                Tools_Database.getInstance().openDatabase();
                 for (Object_Product product : products) {
-                    Tools_DBHelper.getInstance().updateWineTable(product);
+                    Tools_Database.getInstance().updateWineTable(product);
                     // add cached tags to products here and also the collection tag
                     for (Object_Variant variant : product.getVariants()) {
                         variant.setProduct(product);
@@ -234,7 +234,7 @@ public class Tools_LoadCollectionTools {
                         }
                     }
                 }
-                Tools_DBHelper.getInstance().closeDatabase();
+                Tools_Database.getInstance().closeDatabase();
             }
 
             return orderings;

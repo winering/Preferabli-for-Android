@@ -131,10 +131,10 @@ public class Object_Venue extends Object_BaseObject {
         if (oneLine) {
             newLine = " | ";
         }
-        String firstTwo = (Tools_PreferabliTools.isNullOrWhitespace(address_l1) ? "" : (address_l1 + newLine)) + (Tools_PreferabliTools.isNullOrWhitespace(address_l2) ? "" : (address_l2 + newLine));
-        String third = Tools_PreferabliTools.isNullOrWhitespace(city) ? "" : (city + ", ");
-        third = third + (Tools_PreferabliTools.isNullOrWhitespace(state) ? "" : state) + " " + (Tools_PreferabliTools.isNullOrWhitespace(zip_code) ? "" : zip_code);
-        String fourth = Tools_PreferabliTools.isNullOrWhitespace(country) ? "" : (" " + country);
+        String firstTwo = (Tools_Preferabli.isNullOrWhitespace(address_l1) ? "" : (address_l1 + newLine)) + (Tools_Preferabli.isNullOrWhitespace(address_l2) ? "" : (address_l2 + newLine));
+        String third = Tools_Preferabli.isNullOrWhitespace(city) ? "" : (city + ", ");
+        third = third + (Tools_Preferabli.isNullOrWhitespace(state) ? "" : state) + " " + (Tools_Preferabli.isNullOrWhitespace(zip_code) ? "" : zip_code);
+        String fourth = Tools_Preferabli.isNullOrWhitespace(country) ? "" : (" " + country);
         return firstTwo + third + fourth;
     }
 
@@ -223,7 +223,7 @@ public class Object_Venue extends Object_BaseObject {
             }
 
             if (venue1.getDistanceInMiles(lat1, lon1) == venue2.getDistanceInMiles(lat1, lon1)) {
-                return Tools_PreferabliTools.alphaSortIgnoreThe(venue1.getName(), venue2.getName());
+                return Tools_Preferabli.alphaSortIgnoreThe(venue1.getName(), venue2.getName());
             }
 
             return Integer.compare(venue1.getDistanceInMiles(lat1, lon1), venue2.getDistanceInMiles(lat1, lon1));
@@ -237,7 +237,7 @@ public class Object_Venue extends Object_BaseObject {
 
     public int getDistanceInMiles(double lat1, double lon1) {
         if (distanceInMiles == -1) {
-            distanceInMiles = Tools_PreferabliTools.calculateDistanceInMiles(lat1, lon1, lat, lon);
+            distanceInMiles = Tools_Preferabli.calculateDistanceInMiles(lat1, lon1, lat, lon);
         }
 
         return distanceInMiles;
@@ -294,11 +294,11 @@ public class Object_Venue extends Object_BaseObject {
     }
 
     public String getCityState() {
-        if (Tools_PreferabliTools.isNullOrWhitespace(city + state)) {
+        if (Tools_Preferabli.isNullOrWhitespace(city + state)) {
             return "";
-        } else if (Tools_PreferabliTools.isNullOrWhitespace(city)) {
+        } else if (Tools_Preferabli.isNullOrWhitespace(city)) {
             return state;
-        } else if (Tools_PreferabliTools.isNullOrWhitespace(state)) {
+        } else if (Tools_Preferabli.isNullOrWhitespace(state)) {
             return city;
         } else {
             return city+ ", " + state;

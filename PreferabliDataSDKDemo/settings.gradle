@@ -1,3 +1,5 @@
+include ':preferablidatasdk'
 include ':app'
 
-rootProject.name = "Wine Ring SDK Demo"
+project (':preferablidatasdk').projectDir = new File(rootProject.projectDir, '../PreferabliDataSDK/library')
+rootProject.name = "PreferabliDataSDKDemo"

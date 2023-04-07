@@ -173,7 +173,7 @@ public class Object_MerchantProductLink extends Object_BaseObject {
 
     public String getBottle_price() {
         DecimalFormat df = new DecimalFormat("0.00");
-        if (!Tools_PreferabliTools.isNullOrWhitespace(bottle_price)) {
+        if (!Tools_Preferabli.isNullOrWhitespace(bottle_price)) {
             double doublePrice = Double.parseDouble(bottle_price);
             return df.format(doublePrice);
         }

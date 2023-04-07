@@ -9,7 +9,6 @@
 package classes;
 
 import android.os.Parcel;
-import android.os.Parcelable;
 
 import com.google.gson.reflect.TypeToken;
 
@@ -32,11 +31,11 @@ public class Object_Style extends Object_BaseObject {
         this.name = name;
         this.type = type;
         this.description = description;
-        this.foods = Tools_PreferabliTools.convertJsonToObject(foods, new TypeToken<ArrayList<Object_Food>>() {
+        this.foods = Tools_Preferabli.convertJsonToObject(foods, new TypeToken<ArrayList<Object_Food>>() {
         }.getType());
         this.primary_image_url = primary_image_url;
         this.product_category = product_category;
-        this.locations = Tools_PreferabliTools.convertJsonToObject(location, new TypeToken<ArrayList<Object_Location>>() {
+        this.locations = Tools_Preferabli.convertJsonToObject(location, new TypeToken<ArrayList<Object_Location>>() {
         }.getType());
     }
 

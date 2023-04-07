@@ -26,7 +26,7 @@ public enum Other_ProductCategory {
     }
 
     public static Other_ProductCategory getProductCategoryFromString(String category) {
-        if (Tools_PreferabliTools.isNullOrWhitespace(category)) {
+        if (Tools_Preferabli.isNullOrWhitespace(category)) {
             return NONE;
         } else if (category.equalsIgnoreCase("whiskey")) {
             return WHISKEY;

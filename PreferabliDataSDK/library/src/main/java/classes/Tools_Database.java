@@ -1,5 +1,5 @@
 //
-//  Tools_DBHelper.java
+//  Tools_Database.java
 //  Preferabli
 //
 //  Created by Nicholas Bortolussi on 6/30/16.
@@ -25,7 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class Tools_DBHelper {
+public class Tools_Database {
 
     // constants for searches
     public static final String KEY_SEARCHLOCALID = "SearchLocalId";
@@ -260,7 +260,7 @@ public class Tools_DBHelper {
     public static final String TABLE_SEARCHES = "Searches";
 
     private int mOpenCounter;
-    public static Tools_DBHelper instance;
+    public static Tools_Database instance;
     public static SQLiteOpenHelper mDatabaseHelper;
     private SQLiteDatabase mDatabase;
 
@@ -292,10 +292,10 @@ public class Tools_DBHelper {
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             resetDatabase(db);
             API_Singleton.getSharedInstance().clearCache();
-            Map<String, ?> allEntries = Tools_PreferabliTools.getKeyStore().getAll();
+            Map<String, ?> allEntries = Tools_Preferabli.getKeyStore().getAll();
             for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
                 if (entry.getKey().startsWith("hasLoaded") || entry.getKey().startsWith("hasCalled") || entry.getKey().startsWith("collection_etags_") || entry.getKey().toLowerCase().contains("lastgrabbed")) {
-                    Tools_PreferabliTools.getKeyStore().edit().remove(entry.getKey()).apply();
+                    Tools_Preferabli.getKeyStore().edit().remove(entry.getKey()).apply();
                 }
             }
         }
@@ -321,14 +321,14 @@ public class Tools_DBHelper {
 
     public static synchronized void initializeInstance(SQLiteOpenHelper helper) {
         if (instance == null) {
-            instance = new Tools_DBHelper();
+            instance = new Tools_Database();
             mDatabaseHelper = helper;
         }
     }
 
-    public static synchronized Tools_DBHelper getInstance() {
+    public static synchronized Tools_Database getInstance() {
         if (instance == null) {
-            throw new IllegalStateException(Tools_DBHelper.class.getSimpleName() + " is not initialized, call initializeInstance(..) method first.");
+            throw new IllegalStateException(Tools_Database.class.getSimpleName() + " is not initialized, call initializeInstance(..) method first.");
         }
 
         return instance;
@@ -411,8 +411,8 @@ public class Tools_DBHelper {
         cv.put(KEY_WINENV, product.isNonVariant());
         cv.put(KEY_WINEDIRTY, product.isDirty());
         cv.put(KEY_WINEDECANT, product.isDecant());
-        cv.put(KEY_WINEIMAGE, Tools_PreferabliTools.getGson().toJson(product.getPrimaryImage()));
-        cv.put(KEY_WINEBACKIMAGE, Tools_PreferabliTools.getGson().toJson(product.getBackImage()));
+        cv.put(KEY_WINEIMAGE, Tools_Preferabli.getGson().toJson(product.getPrimaryImage()));
+        cv.put(KEY_WINEBACKIMAGE, Tools_Preferabli.getGson().toJson(product.getBackImage()));
         cv.put(KEY_WINEREGION, product.getRegionForDB());
         cv.put(KEY_WINETYPE, product.getType());
         cv.put(KEY_WINECAT, product.getCategory());
@@ -449,7 +449,7 @@ public class Tools_DBHelper {
         ContentValues cv = new ContentValues();
         cv.put(KEY_VINTAGECA, variant.getCreatedAt());
         cv.put(KEY_VINTAGEID, variant.getId());
-        cv.put(KEY_VINTAGEIMAGE, Tools_PreferabliTools.getGson().toJson(variant.getPrimaryImage()));
+        cv.put(KEY_VINTAGEIMAGE, Tools_Preferabli.getGson().toJson(variant.getPrimaryImage()));
         cv.put(KEY_VINTAGEPRICE, variant.getPrice());
         cv.put(KEY_VINTAGEUA, variant.getUpdatedAt());
         cv.put(KEY_VINTAGEWINEID, wineId);
@@ -524,7 +524,7 @@ public class Tools_DBHelper {
         cv.put(KEY_TAGCHANNELID, tag.getChannelId());
         cv.put(KEY_TAGCOMMENT, tag.getComment());
         cv.put(KEY_TAGLOCATION, tag.getLocation());
-        cv.put(KEY_TAGSHARING, Tools_PreferabliTools.getGson().toJson(tag.getSharing()));
+        cv.put(KEY_TAGSHARING, Tools_Preferabli.getGson().toJson(tag.getSharing()));
         cv.put(KEY_TAGUSERID, tag.getUserId());
         cv.put(KEY_TAGVALUE, tag.getValue());
         cv.put(KEY_TAGDIRTY, tag.isDirty());
@@ -631,9 +631,9 @@ public class Tools_DBHelper {
         cv.put(KEY_COLLECTIONAUTOWILI, collection.isAutoWili());
         cv.put(KEY_COLLECTIONPUBLISHED, collection.isPublished());
         cv.put(KEY_COLLECTIONSD, collection.getStartDate());
-        cv.put(KEY_COLLECTIONTRAITS, Tools_PreferabliTools.getGson().toJson(collection.getTraits()));
+        cv.put(KEY_COLLECTIONTRAITS, Tools_Preferabli.getGson().toJson(collection.getTraits()));
         cv.put(KEY_COLLECTIONUA, collection.getUpdatedAt());
-        cv.put(KEY_COLLECTIONVENUE, Tools_PreferabliTools.getGson().toJson(collection.getVenue()));
+        cv.put(KEY_COLLECTIONVENUE, Tools_Preferabli.getGson().toJson(collection.getVenue()));
         cv.put(KEY_COLLECTIONCHANNELNAME, collection.getChannelName());
         cv.put(KEY_COLLECTIONBLIND, collection.isBlind());
         cv.put(KEY_COLLECTIONBADGE, collection.getBadgeMethod());
@@ -734,12 +734,12 @@ public class Tools_DBHelper {
         cv.put(KEY_TAGCOLLECTIONID, tag.getCollectionId());
         cv.put(KEY_TAGCOMMENT, tag.getComment());
         cv.put(KEY_TAGLOCATION, tag.getLocation());
-        cv.put(KEY_TAGSHARING, Tools_PreferabliTools.getGson().toJson(tag.getSharing()));
+        cv.put(KEY_TAGSHARING, Tools_Preferabli.getGson().toJson(tag.getSharing()));
         cv.put(KEY_TAGUSERID, tag.getUserId());
         cv.put(KEY_TAGVALUE, tag.getValue());
         cv.put(KEY_TAGDIRTY, tag.isDirty());
         cv.put(KEY_TAGBADGE, tag.getBadge());
-        cv.put(KEY_TAGPARAMS, Tools_PreferabliTools.getGson().toJson(tag.getParameters()));
+        cv.put(KEY_TAGPARAMS, Tools_Preferabli.getGson().toJson(tag.getParameters()));
         if (ordering != null) {
             cv.put(KEY_TAGORDERINGID, ordering.getId());
         }
@@ -840,7 +840,7 @@ public class Tools_DBHelper {
             cv.put(KEY_STYLETYPE, style.getStyle().getType());
             cv.put(KEY_STYLEIMAGE, style.getStyle().getImage());
             cv.put(KEY_STYLECAT, style.getStyle().getProduct_category());
-            cv.put(KEY_STYLELOC, Tools_PreferabliTools.getGson().toJson(style.getStyle().getLocations()));
+            cv.put(KEY_STYLELOC, Tools_Preferabli.getGson().toJson(style.getStyle().getLocations()));
         }
 
         cv.put(KEY_STYLECONFLICT, style.isConflict());
@@ -873,8 +873,8 @@ public class Tools_DBHelper {
         HashMap<Long, Object_Product> productsHash = new HashMap<>();
         HashMap<Long, Object_Variant> variantsHash = new HashMap<>();
 
-        getProductsFromCollection(Tools_PreferabliTools.getKeyStore().getLong("ratings_id", 0), products, productsHash, variantsHash);
-        getProductsFromCollection(Tools_PreferabliTools.getKeyStore().getLong("wishlist_id", 0), products, productsHash, variantsHash);
+        getProductsFromCollection(Tools_Preferabli.getKeyStore().getLong("ratings_id", 0), products, productsHash, variantsHash);
+        getProductsFromCollection(Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0), products, productsHash, variantsHash);
 
         ArrayList<Object_UserCollection> userCollections = getUserCollections("purchase");
         for (Object_UserCollection userCollection : userCollections) {
@@ -1377,7 +1377,7 @@ public class Tools_DBHelper {
     }
 
     public ArrayList<Object_Tag> getPersonalTags() {
-        Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_TAGS + " WHERE " + KEY_TAGCOLLECTIONID + " = ? OR " + KEY_TAGCOLLECTIONID + "= ? OR " + KEY_TAGCOLLECTIONID + "= ?", new String[]{Long.toString(Tools_PreferabliTools.getKeyStore().getLong("ratings_id", 0)), Long.toString(Tools_PreferabliTools.getKeyStore().getLong("wishlist_id", 0)), Long.toString(Tools_PreferabliTools.getKeyStore().getLong("skips_id", 0))});
+        Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_TAGS + " WHERE " + KEY_TAGCOLLECTIONID + " = ? OR " + KEY_TAGCOLLECTIONID + "= ? OR " + KEY_TAGCOLLECTIONID + "= ?", new String[]{Long.toString(Tools_Preferabli.getKeyStore().getLong("ratings_id", 0)), Long.toString(Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0)), Long.toString(Tools_Preferabli.getKeyStore().getLong("skips_id", 0))});
 
         ArrayList<Object_Tag> tags = new ArrayList<>();
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {

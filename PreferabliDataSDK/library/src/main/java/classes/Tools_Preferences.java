@@ -1,5 +1,5 @@
 //
-//  Tools_PreferenceTools.java
+//  Tools_Preferences.java
 //  Preferabli
 //
 //  Created by Nicholas Bortolussi on 7/13/16.
@@ -18,17 +18,17 @@ import java.util.concurrent.Semaphore;
 
 import retrofit2.Response;
 
-public class Tools_PreferencesTools {
+public class Tools_Preferences {
 
-    private static Tools_PreferencesTools preferencesTools;
+    private static Tools_Preferences preferencesTools;
     private Semaphore preferencesToolsSemaphore;
 
-    public Tools_PreferencesTools() {
+    public Tools_Preferences() {
         preferencesToolsSemaphore = new Semaphore(1);
     }
 
-    public static Tools_PreferencesTools getInstance() {
-        if (preferencesTools == null) preferencesTools = new Tools_PreferencesTools();
+    public static Tools_Preferences getInstance() {
+        if (preferencesTools == null) preferencesTools = new Tools_Preferences();
         return preferencesTools;
     }
 
@@ -42,19 +42,19 @@ public class Tools_PreferencesTools {
     }
 
     public ArrayList<Object_ProfileStyle> getStyles(Object wineOrRefineType, boolean forceRefresh, boolean refreshInBackground) throws API_PreferabliException, IOException, InterruptedException, NullPointerException {
-        if (forceRefresh || !Tools_PreferabliTools.getKeyStore().getBoolean("hasCalledStyles", false)) {
+        if (forceRefresh || !Tools_Preferabli.getKeyStore().getBoolean("hasCalledStyles", false)) {
             preferencesToolsSemaphore.acquire();
             getPreferencesFromAPI(true);
             preferencesToolsSemaphore.release();
-        } else if (refreshInBackground && Tools_PreferabliTools.hasDaysPassed(5, Tools_PreferabliTools.getKeyStore().getLong("lastGrabbedStyles", 0))) {
-            Tools_PreferabliTools.getKeyStore().edit().putLong("lastGrabbedStyles", System.currentTimeMillis()).apply();
-            Tools_PreferabliTools.startNewWorkThread(new Runnable() {
+        } else if (refreshInBackground && Tools_Preferabli.hasDaysPassed(5, Tools_Preferabli.getKeyStore().getLong("lastGrabbedStyles", 0))) {
+            Tools_Preferabli.getKeyStore().edit().putLong("lastGrabbedStyles", System.currentTimeMillis()).apply();
+            Tools_Preferabli.startNewWorkThread(new Runnable() {
                 @Override
                 public void run() {
                     try {
                         getPreferencesFromAPI(false);
                         getStylesFromDB();
-                        EventBus.getDefault().post(Tools_PreferencesTools.this);
+                        EventBus.getDefault().post(Tools_Preferences.this);
                     } catch (Exception e) {
                         // catch exception so that we can still pull up cached data
                         e.printStackTrace();
@@ -67,9 +67,9 @@ public class Tools_PreferencesTools {
     }
 
     public ArrayList<Object_ProfileStyle> getStylesFromDB() {
-        Tools_DBHelper.getInstance().openDatabase();
-        ArrayList<Object_ProfileStyle> allObjectProfileStyles = Tools_DBHelper.getInstance().getStyles();
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().openDatabase();
+        ArrayList<Object_ProfileStyle> allObjectProfileStyles = Tools_Database.getInstance().getStyles();
+        Tools_Database.getInstance().closeDatabase();
         return allObjectProfileStyles;
     }
 
@@ -95,7 +95,7 @@ public class Tools_PreferencesTools {
 
 
         for (Object_ProfileStyle objectProfileStyle : allObjectProfileStyles) {
-            if (objectProfileStyle.getStyle() == null || Tools_PreferabliTools.isNullOrWhitespace(objectProfileStyle.getName()) || (objectProfileStyle.getOrderProfile() == 0 && objectProfileStyle.getOrderRecommend() == 0 && objectProfileStyle.getRating() == 0 && objectProfileStyle.getStrength() == 0)) {
+            if (objectProfileStyle.getStyle() == null || Tools_Preferabli.isNullOrWhitespace(objectProfileStyle.getName()) || (objectProfileStyle.getOrderProfile() == 0 && objectProfileStyle.getOrderRecommend() == 0 && objectProfileStyle.getRating() == 0 && objectProfileStyle.getStrength() == 0)) {
                 // fix Andrew bug. Don't allow preferences styles without styles to be returned
                 continue;
             }
@@ -137,12 +137,12 @@ public class Tools_PreferencesTools {
     }
 
     public void getPreferencesFromAPI(boolean forceRefresh) throws API_PreferabliException, IOException, NullPointerException {
-        Tools_PreferabliTools.getKeyStore().edit().putLong("lastGrabbedStyles", System.currentTimeMillis()).apply();
+        Tools_Preferabli.getKeyStore().edit().putLong("lastGrabbedStyles", System.currentTimeMillis()).apply();
         try {
-            Response<Object_Profile> profilesResponse = API_Singleton.getInstanceService().getProfile(Tools_PreferabliTools.getPreferabliUserId()).execute();
+            Response<Object_Profile> profilesResponse = API_Singleton.getInstanceService().getProfile(Tools_Preferabli.getPreferabliUserId()).execute();
             if (profilesResponse.isSuccessful()) {
                 saveStylesToDB(profilesResponse.body().getPreferenceStyles(), forceRefresh);
-                Tools_PreferabliTools.getKeyStore().edit().putBoolean("hasCalledStyles", true).apply();
+                Tools_Preferabli.getKeyStore().edit().putBoolean("hasCalledStyles", true).apply();
             } else throw new API_PreferabliException(profilesResponse.errorBody());
         } catch (API_PreferabliException | IOException e) {
             preferencesToolsSemaphore.release();
@@ -151,7 +151,7 @@ public class Tools_PreferencesTools {
     }
 
     public void saveStylesToDB(ArrayList<Object_ProfileStyle> objectProfileStyles, boolean forceRefresh) throws API_PreferabliException, IOException, NullPointerException {
-        Tools_DBHelper.getInstance().openDatabase();
+        Tools_Database.getInstance().openDatabase();
 
         ArrayList<Long> style_ids = new ArrayList<>();
         HashMap<Long, Object_ProfileStyle> styleMap = new HashMap<>();
@@ -160,7 +160,7 @@ public class Tools_PreferencesTools {
                 style_ids.add(objectProfileStyle.getStyle_id());
                 styleMap.put(objectProfileStyle.getStyle_id(), objectProfileStyle);
             } else {
-                Object_ProfileStyle objectProfileStyleFromDB = Tools_DBHelper.getInstance().getStyleById(objectProfileStyle.getId());
+                Object_ProfileStyle objectProfileStyleFromDB = Tools_Database.getInstance().getStyleById(objectProfileStyle.getId());
                 if (objectProfileStyleFromDB == null || objectProfileStyleFromDB.getStyle() == null) {
                     style_ids.add(objectProfileStyle.getStyle_id());
                     styleMap.put(objectProfileStyle.getStyle_id(), objectProfileStyle);
@@ -168,7 +168,7 @@ public class Tools_PreferencesTools {
             }
         }
 
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().closeDatabase();
 
         if (style_ids.size() > 0) {
             Response<ArrayList<Object_Style>> stylesResponse = API_Singleton.getInstanceService().getStyles(style_ids).execute();
@@ -177,14 +177,14 @@ public class Tools_PreferencesTools {
             }
         }
 
-        Tools_DBHelper.getInstance().openDatabase();
+        Tools_Database.getInstance().openDatabase();
         if (forceRefresh) {
-            Tools_DBHelper.getInstance().clearStyleTable();
+            Tools_Database.getInstance().clearStyleTable();
         }
         for (Object_ProfileStyle objectProfileStyle : objectProfileStyles) {
-            Tools_DBHelper.getInstance().updateStyleTable(objectProfileStyle);
+            Tools_Database.getInstance().updateStyleTable(objectProfileStyle);
         }
-        Tools_DBHelper.getInstance().closeDatabase();
+        Tools_Database.getInstance().closeDatabase();
     }
 
 

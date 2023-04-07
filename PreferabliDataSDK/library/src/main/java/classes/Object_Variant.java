@@ -64,7 +64,7 @@ public class Object_Variant extends Object_BaseObject {
         this.created_at = created_at;
         this.updated_at = updated_at;
         this.product_id = product_id;
-        this.addImage(Tools_PreferabliTools.convertJsonToObject(image, Object_Media.class));
+        this.addImage(Tools_Preferabli.convertJsonToObject(image, Object_Media.class));
     }
 
     public Other_RatingType getRatingType() {
@@ -81,7 +81,7 @@ public class Object_Variant extends Object_BaseObject {
         if (mostRecentRating == null) {
             Date date = new Date(0);
             for (Object_Tag tag : getRatingsTags()) {
-                Date compareToDate = Tools_PreferabliTools.convertAPITimeStampToDate(tag.getCreatedAt());
+                Date compareToDate = Tools_Preferabli.convertAPITimeStampToDate(tag.getCreatedAt());
                 if (compareToDate.after(date)) {
                     date = compareToDate;
                     mostRecentRating = tag;
@@ -130,7 +130,7 @@ public class Object_Variant extends Object_BaseObject {
     }
 
     public String getImage() {
-        if (primary_image != null && !Tools_PreferabliTools.isNullOrWhitespace(primary_image.getPath()) && !primary_image.getPath().contains("placeholder"))
+        if (primary_image != null && !Tools_Preferabli.isNullOrWhitespace(primary_image.getPath()) && !primary_image.getPath().contains("placeholder"))
             return primary_image.getPath();
         else if (getWine() != null && getWine().getPrimaryImagePath() != null && !getWine().getPrimaryImagePath().contains("placeholder")) {
             return getWine().getPrimaryImagePath();

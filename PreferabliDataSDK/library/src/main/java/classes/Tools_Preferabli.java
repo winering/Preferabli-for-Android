@@ -1,5 +1,5 @@
 //
-//  Tools_PreferabliTools.java
+//  Tools_Preferabli.java
 //  Preferabli
 //
 //  Created by Nicholas Bortolussi on 6/30/16.
@@ -38,7 +38,7 @@ import java.util.TimeZone;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
-class Tools_PreferabliTools {
+class Tools_Preferabli {
 
     private static SharedPreferences sharedPreferences;
     private static Gson gson;
@@ -123,8 +123,8 @@ class Tools_PreferabliTools {
     }
 
     static boolean hasBeenLoaded(retrofit2.Response response, long collectionId) {
-        if (Tools_PreferabliTools.getKeyStore().getBoolean("hasLoaded" + collectionId, false)) {
-            HashSet<String> etags = (HashSet<String>) Tools_PreferabliTools.getKeyStore().getStringSet("collection_etags_" + collectionId, new HashSet<>());
+        if (Tools_Preferabli.getKeyStore().getBoolean("hasLoaded" + collectionId, false)) {
+            HashSet<String> etags = (HashSet<String>) Tools_Preferabli.getKeyStore().getStringSet("collection_etags_" + collectionId, new HashSet<>());
             String etag = response.headers().get("collection_etag");
             return etags.contains(etag);
         }
@@ -133,10 +133,10 @@ class Tools_PreferabliTools {
     }
 
     static void saveCollectionEtag(retrofit2.Response response, long collectionId) {
-        if (!Tools_PreferabliTools.isNullOrWhitespace(response.headers().get("collection_etag"))) {
-            HashSet<String> etags = (HashSet<String>) Tools_PreferabliTools.getKeyStore().getStringSet("collection_etags_" + collectionId, new HashSet<>());
+        if (!Tools_Preferabli.isNullOrWhitespace(response.headers().get("collection_etag"))) {
+            HashSet<String> etags = (HashSet<String>) Tools_Preferabli.getKeyStore().getStringSet("collection_etags_" + collectionId, new HashSet<>());
             etags.add(response.headers().get("collection_etag"));
-            Tools_PreferabliTools.getKeyStore().edit().putStringSet("collection_etags_" + collectionId, etags).commit();
+            Tools_Preferabli.getKeyStore().edit().putStringSet("collection_etags_" + collectionId, etags).commit();
         }
     }
 
@@ -163,7 +163,7 @@ class Tools_PreferabliTools {
             format.setTimeZone(TimeZone.getTimeZone(timezone));
             return format.format(date);
         } catch (Exception e) {
-            Log.e(Tools_PreferabliTools.class.getName(), "Error formatting date.", e);
+            Log.e(Tools_Preferabli.class.getName(), "Error formatting date.", e);
             return null;
         }
     }
@@ -208,17 +208,17 @@ class Tools_PreferabliTools {
     }
 
     static String getSymbolForCurrencyCode(String code) {
-        if (Tools_PreferabliTools.isNullOrWhitespace(code))
+        if (Tools_Preferabli.isNullOrWhitespace(code))
             return "$";
         return Currency.getInstance(code).getSymbol();
     }
 
     static int alphaSortIgnoreThe(String x, String y) {
-        if (Tools_PreferabliTools.isNullOrWhitespace(x) && Tools_PreferabliTools.isNullOrWhitespace(y)) {
+        if (Tools_Preferabli.isNullOrWhitespace(x) && Tools_Preferabli.isNullOrWhitespace(y)) {
             return 0;
-        } else if (Tools_PreferabliTools.isNullOrWhitespace(x)) {
+        } else if (Tools_Preferabli.isNullOrWhitespace(x)) {
             return 1;
-        } else if (Tools_PreferabliTools.isNullOrWhitespace(y)) {
+        } else if (Tools_Preferabli.isNullOrWhitespace(y)) {
             return -1;
         }
         if (x.startsWith("The ")) {
@@ -232,7 +232,7 @@ class Tools_PreferabliTools {
     }
 
     static void saveSession(Object_SessionData session) {
-        SharedPreferences.Editor editor = Tools_PreferabliTools.getKeyStore().edit();
+        SharedPreferences.Editor editor = Tools_Preferabli.getKeyStore().edit();
         editor.putString("access_token", session.getAccessToken());
         editor.putString("refresh_token", session.getRefreshToken());
         editor.putString("intercom_hmac", session.getIntercomHmac());
@@ -240,7 +240,7 @@ class Tools_PreferabliTools {
     }
 
     static void saveUser(Object_PreferabliUser user) {
-        SharedPreferences.Editor editor = Tools_PreferabliTools.getKeyStore().edit();
+        SharedPreferences.Editor editor = Tools_Preferabli.getKeyStore().edit();
         editor.putLong("user_id", user.getId());
         editor.putString("display_name", user.getDisplayName());
         editor.putString("avatar", user.getAvatar());
@@ -261,7 +261,7 @@ class Tools_PreferabliTools {
     }
 
     static void saveCustomer(Object_Customer customer) {
-        SharedPreferences.Editor editor = Tools_PreferabliTools.getKeyStore().edit();
+        SharedPreferences.Editor editor = Tools_Preferabli.getKeyStore().edit();
         editor.putLong("customer_id", customer.getId());
         editor.putString("email", customer.getEmail());
         editor.putLong("ratings_id", customer.getRatingsCollectionId());
@@ -281,7 +281,7 @@ class Tools_PreferabliTools {
     }
 
     public String getCurrencySymbol(String code) {
-        if (Tools_PreferabliTools.isNullOrWhitespace(code)) {
+        if (Tools_Preferabli.isNullOrWhitespace(code)) {
             return "";
         }
 
@@ -290,24 +290,24 @@ class Tools_PreferabliTools {
     }
 
     static void clearAllData() {
-        Tools_PreferabliTools.clearValues();
+        Tools_Preferabli.clearValues();
 
-        int integration_id = Tools_PreferabliTools.getKeyStore().getInt("INTEGRATION_ID", 0);
-        String client_interface = Tools_PreferabliTools.getKeyStore().getString("CLIENT_INTERFACE", "");
+        long integration_id = Tools_Preferabli.getKeyStore().getLong("INTEGRATION_ID", 0);
+        String client_interface = Tools_Preferabli.getKeyStore().getString("CLIENT_INTERFACE", "");
 
         API_Singleton.getSharedInstance().clearCache();
         API_Singleton.refreshDefaults();
-        Tools_DBHelper.getInstance().openDatabase();
-        Tools_DBHelper.getInstance().deleteDatabase();
-        Tools_DBHelper.getInstance().closeDatabase();
-        Tools_PreferabliTools.getKeyStore().edit().clear().apply();
-        Tools_UserCollectionsTools.getInstance().clearData();
-        Tools_JournalTools.getInstance().clearData();
-        Tools_LoadCollectionTools.getInstance().clearData();
-        Tools_PreferencesTools.getInstance().clearData();
+        Tools_Database.getInstance().openDatabase();
+        Tools_Database.getInstance().deleteDatabase();
+        Tools_Database.getInstance().closeDatabase();
+        Tools_Preferabli.getKeyStore().edit().clear().apply();
+        Tools_UserCollections.getInstance().clearData();
+        Tools_Journal.getInstance().clearData();
+        Tools_LoadCollection.getInstance().clearData();
+        Tools_Preferences.getInstance().clearData();
 
-        Tools_PreferabliTools.getKeyStore().edit().putInt("INTEGRATION_ID", integration_id).apply();
-        Tools_PreferabliTools.getKeyStore().edit().putString("CLIENT_INTERFACE", client_interface).apply();
+        Tools_Preferabli.getKeyStore().edit().putLong("INTEGRATION_ID", integration_id).apply();
+        Tools_Preferabli.getKeyStore().edit().putString("CLIENT_INTERFACE", client_interface).apply();
     }
 
     static int getResourceId(String pVariableName, String pResourcename, String pPackageName) {
@@ -325,11 +325,11 @@ class Tools_PreferabliTools {
     }
 
     static boolean isPreferabliUserLoggedIn() {
-        return !Tools_PreferabliTools.isNullOrWhitespace(Tools_PreferabliTools.getKeyStore().getString("access_token", "")) && Tools_PreferabliTools.getPreferabliUserId() != 0 && Tools_PreferabliTools.getPreferabliUserId() != 0L;
+        return !Tools_Preferabli.isNullOrWhitespace(Tools_Preferabli.getKeyStore().getString("access_token", "")) && Tools_Preferabli.getPreferabliUserId() != 0 && Tools_Preferabli.getPreferabliUserId() != 0L;
     }
 
     static boolean isCustomerLoggedIn() {
-        return !Tools_PreferabliTools.isNullOrWhitespace(Tools_PreferabliTools.getKeyStore().getString("access_token", "")) && Tools_PreferabliTools.getCustomerId() != 0 && Tools_PreferabliTools.getCustomerId() != 0L;
+        return !Tools_Preferabli.isNullOrWhitespace(Tools_Preferabli.getKeyStore().getString("access_token", "")) && Tools_Preferabli.getCustomerId() != 0 && Tools_Preferabli.getCustomerId() != 0L;
     }
 
     static void closeStream(Closeable stream) {
@@ -348,7 +348,7 @@ class Tools_PreferabliTools {
     }
 
     static boolean isImageUploaded(Object_Media image) {
-        return image != null && !Tools_PreferabliTools.isNullOrWhitespace(image.getPath()) && image.getPath().startsWith("http");
+        return image != null && !Tools_Preferabli.isNullOrWhitespace(image.getPath()) && image.getPath().startsWith("http");
     }
 
     static boolean isLocationEnabled() {
@@ -367,7 +367,7 @@ class Tools_PreferabliTools {
             return locationMode != Settings.Secure.LOCATION_MODE_OFF;
         } else {
             locationProviders = Settings.Secure.getString(Tools_PreferabliApp.getAppContext().getContentResolver(), Settings.Secure.LOCATION_PROVIDERS_ALLOWED);
-            return !Tools_PreferabliTools.isNullOrWhitespace(locationProviders);
+            return !Tools_Preferabli.isNullOrWhitespace(locationProviders);
         }
     }
 
@@ -380,7 +380,7 @@ class Tools_PreferabliTools {
                 // new user do nothing for now
             } else {
                 // user has upgraded the app always pull new data
-                Tools_DBHelper.getInstance().makeSureWeUpgradeDB();
+                Tools_Database.getInstance().makeSureWeUpgradeDB();
             }
             // we handled either possible situation so update the version code to current version
             getKeyStore().edit().putInt("versionCode", versionCode).apply();
@@ -436,7 +436,7 @@ class Tools_PreferabliTools {
             object.put("event", event);
             EventBus.getDefault().post(object);
         } catch (JSONException e) {
-            Log.e(Tools_PreferabliTools.class.getSimpleName(), e.toString());
+            Log.e(Tools_Preferabli.class.getSimpleName(), e.toString());
         }
     }
 }

@@ -57,8 +57,8 @@ public class Object_Tag extends Object_BaseObject {
 
     public Object_Tag() {
         super(-System.currentTimeMillis());
-        this.created_at = Tools_PreferabliTools.getSimpleDateFormat().format(new Date());
-        this.updated_at = Tools_PreferabliTools.getSimpleDateFormat().format(new Date());
+        this.created_at = Tools_Preferabli.getSimpleDateFormat().format(new Date());
+        this.updated_at = Tools_Preferabli.getSimpleDateFormat().format(new Date());
     }
 
     public Object_Tag(String type) {
@@ -147,11 +147,11 @@ public class Object_Tag extends Object_BaseObject {
         this.location = location;
         this.created_at = created_at;
         this.updated_at = updated_at;
-        this.sharing = Tools_PreferabliTools.convertJsonToObject(sharing, new TypeToken<ArrayList<Share>>() {
+        this.sharing = Tools_Preferabli.convertJsonToObject(sharing, new TypeToken<ArrayList<Share>>() {
         }.getType());
         this.dirty = dirty;
         this.badge = badge;
-        this.parameters = Tools_PreferabliTools.convertJsonToObject(parameters, new TypeToken<ArrayList<Parameter>>() {
+        this.parameters = Tools_Preferabli.convertJsonToObject(parameters, new TypeToken<ArrayList<Parameter>>() {
         }.getType());
         this.tagged_in_channel_name = tagged_in_channel_name;
         this.format_ml = format_ml;
@@ -174,7 +174,7 @@ public class Object_Tag extends Object_BaseObject {
 
     public String getPrice(String currencyCode) {
         NumberFormat format = NumberFormat.getCurrencyInstance();
-        if (!Tools_PreferabliTools.isNullOrWhitespace(currencyCode)) {
+        if (!Tools_Preferabli.isNullOrWhitespace(currencyCode)) {
             format.setCurrency(Currency.getInstance(currencyCode));
         }
 
@@ -194,7 +194,7 @@ public class Object_Tag extends Object_BaseObject {
     }
 
     public Date getPurchasedAtDate() {
-        return Tools_PreferabliTools.convertAPITimeStampToDate(created_at);
+        return Tools_Preferabli.convertAPITimeStampToDate(created_at);
     }
 
     public Object_Collection.Version.Group.Ordering getOrdering() {
@@ -206,15 +206,15 @@ public class Object_Tag extends Object_BaseObject {
     }
 
     public static Object_Tag newWishlistTag(long product_id, long variant_id, int year, long tagged_in_collection_id) {
-        return new Object_Tag("wishlist", year, product_id, variant_id, Tools_PreferabliTools.getKeyStore().getLong("wishlist_id", 0), tagged_in_collection_id);
+        return new Object_Tag("wishlist", year, product_id, variant_id, Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0), tagged_in_collection_id);
     }
 
     public static Object_Tag newRatingTag(long product_id, int year, String value, String location, String comment, long tagged_in_collection_id, double price, int quantity, int format_ml) {
-        return new Object_Tag("rating", product_id, 0, year, Tools_PreferabliTools.getKeyStore().getLong("ratings_id", 0), value, location, comment, tagged_in_collection_id, price, quantity, format_ml);
+        return new Object_Tag("rating", product_id, 0, year, Tools_Preferabli.getKeyStore().getLong("ratings_id", 0), value, location, comment, tagged_in_collection_id, price, quantity, format_ml);
     }
 
     public static Object_Tag newSkippedTag(long product_id, long variant_id, int year, long tagged_in_collection_id) {
-        return new Object_Tag("skipped", year, product_id, variant_id, Tools_PreferabliTools.getKeyStore().getLong("skips_id", 0), tagged_in_collection_id);
+        return new Object_Tag("skipped", year, product_id, variant_id, Tools_Preferabli.getKeyStore().getLong("skips_id", 0), tagged_in_collection_id);
     }
 
     public void addImage(Object_Media image) {
@@ -265,7 +265,7 @@ public class Object_Tag extends Object_BaseObject {
         Date date = new Date(0);
         Object_Tag mostRecentRatingFromCollection = null;
         for (Object_Tag tag : ratingsTags) {
-            Date compareToDate = Tools_PreferabliTools.convertAPITimeStampToDate(tag.getCreatedAt());
+            Date compareToDate = Tools_Preferabli.convertAPITimeStampToDate(tag.getCreatedAt());
             if (compareToDate.after(date) && tag.tagged_in_collection_id == collection_id) {
                 date = compareToDate;
                 mostRecentRatingFromCollection = tag;
@@ -289,7 +289,7 @@ public class Object_Tag extends Object_BaseObject {
     }
 
     public Date getDate() {
-        if (date == null) date = Tools_PreferabliTools.convertAPITimeStampToDate(created_at);
+        if (date == null) date = Tools_Preferabli.convertAPITimeStampToDate(created_at);
         return date;
     }
 

@@ -25,7 +25,7 @@ public class API_PreferabliException extends Exception {
 
     public API_PreferabliException(ResponseBody responseBody) {
         try {
-            API_Error apiError = Tools_PreferabliTools.convertJsonToObject(responseBody.string(), API_Error.class);
+            API_Error apiError = Tools_Preferabli.convertJsonToObject(responseBody.string(), API_Error.class);
             this.type = PreferabliExceptionType.APIError;
             this.message = apiError.getMessage();
             this.code = apiError.getCode();
@@ -62,7 +62,7 @@ public class API_PreferabliException extends Exception {
     @Override
     public String getMessage() {
         String mesageToReturn = message;
-        if (Tools_PreferabliTools.isNullOrWhitespace(message)) {
+        if (Tools_Preferabli.isNullOrWhitespace(message)) {
             mesageToReturn = type.getMessage();
         }
 

@@ -27,7 +27,7 @@ public enum Other_ProductType {
     }
 
     public static Other_ProductType getProductTypeFromString(String wineType) {
-        if (Tools_PreferabliTools.isNullOrWhitespace(wineType)) {
+        if (Tools_Preferabli.isNullOrWhitespace(wineType)) {
             return OTHER;
         } else if (wineType.equalsIgnoreCase("red")) {
             return RED;

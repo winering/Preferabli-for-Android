@@ -6,122 +6,100 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_margin="15dp"
             android:orientation="vertical">
 
+            <ImageView
+                android:id="@+id/preferabliLogo"
+                android:layout_width="match_parent"
+                android:scaleType="fitCenter"
+                android:layout_marginBottom="5dp"
+                android:layout_height="50dp" />
+
             <TextView
+                android:id="@+id/first"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
                 android:layout_marginBottom="15dp"
-                android:text="First make sure you initialize the SDK. Then try logging in..."
+                android:text="First make sure you initialize the SDK."
                 android:textSize="20sp" />
+
+            <Spinner
+                android:id="@+id/spinner1"
+                android:layout_width="match_parent"
+                android:background="@android:color/holo_blue_dark"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="15dp"
+                android:spinnerMode="dropdown"/>
+
+            <TextView
+                android:id="@+id/second"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                android:text="To unlock additional actions, link a customer or login an existing Preferabli user..."
+                android:textSize="20sp" />
+
+            <Button
+                android:layout_width="wrap_content"
+                android:id="@+id/customerButton"
+                android:text="Link a Customer"
+                android:onClick="customerButtonClicked"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="5dp"
+                android:layout_height="wrap_content" />
 
             <EditText
                 android:id="@+id/email"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:hint="Email"
+                android:layout_marginBottom="5dp"
+                android:hint="Customer ID (Email or Phone)"
                 android:inputType="textEmailAddress" />
 
             <EditText
                 android:id="@+id/password"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:hint="Password"
+                android:visibility="gone"
+                android:layout_marginBottom="5dp"
+                android:hint="Preferabli User Password"
                 android:inputType="textPassword" />
 
             <Button
-                android:id="@+id/loginButton"
+                android:id="@+id/submit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:onClick="loginClicked"
-                android:text="Login" />
+                android:layout_marginBottom="15dp"
+                android:onClick="submitClicked"
+                android:text="SUBMIT" />
+
+            <Spinner
+                android:id="@+id/spinner2"
+                android:layout_width="match_parent"
+                android:background="@android:color/holo_blue_dark"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="15dp"
+                android:spinnerMode="dropdown"/>
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:layout_marginTop="25dp"
-                android:text="Now you can try out some of our other built in features..."
+                android:text="Results (press and hold a product for more actions):"
                 android:textSize="20sp" />
 
-            <Button
-                android:id="@+id/getRecsButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="25dp"
-                android:onClick="getRecsClicked"
-                android:text="Get Recs" />
-
-            <Button
-                android:id="@+id/viewJournalButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:onClick="journalClicked"
-                android:text="View Journal" />
-
-            <Button
-                android:id="@+id/rateWinesButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:onClick="getRateWinesClicked"
-                android:text="Rate Wines" />
-
-            <Button
-                android:id="@+id/manageCellarsButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:onClick="getManageCellarsClicked"
-                android:text="Manage Cellars" />
-
-            <Button
-                android:id="@+id/preferencesButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:onClick="getPreferencesClicked"
-                android:text="View Preferences" />
-
-            <Button
-                android:id="@+id/connectionsButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:onClick="getConnectionsClicked"
-                android:text="View Connections" />
-
-            <Button
-                android:id="@+id/channelsButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="10dp"
-                android:onClick="getChannelsClicked"
-                android:text="View Channels" />
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/recyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="never" />
 
         </LinearLayout>
-    </ScrollView>
 
     <RelativeLayout
         android:id="@+id/progressRL"

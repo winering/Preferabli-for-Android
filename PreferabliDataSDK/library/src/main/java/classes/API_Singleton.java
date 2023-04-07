@@ -50,28 +50,28 @@ public class API_Singleton {
         builder.writeTimeout(30, TimeUnit.SECONDS);
         builder.readTimeout(30, TimeUnit.SECONDS);
         builder.addInterceptor(chain -> {
-            Request request = chain.request().newBuilder().addHeader("Authorization", "Bearer " + Tools_PreferabliTools.getKeyStore().getString("access_token", "")).addHeader("client_interface", Tools_PreferabliTools.getKeyStore().getString("CLIENT_INTERFACE", null)).addHeader("client_interface_version", Integer.toString(Preferabli.getVersionCode())).addHeader("Accept", "application/json").addHeader("api_token", Tools_PreferabliTools.getKeyStore().getString("api_token", "")).build();
+            Request request = chain.request().newBuilder().addHeader("Authorization", "Bearer " + Tools_Preferabli.getKeyStore().getString("access_token", "")).addHeader("client_interface", Tools_Preferabli.getKeyStore().getString("CLIENT_INTERFACE", null)).addHeader("client_interface_version", Integer.toString(Preferabli.getVersionCode())).addHeader("Accept", "application/json").addHeader("api_token", Tools_Preferabli.getKeyStore().getString("api_token", "")).build();
             Response response = chain.proceed(request);
             if (response.code() == 401) {
                 if (request.url().pathSegments().contains("sessions")) {
                     // Boot to login.
-                    Tools_PreferabliTools.clearAllData();
+                    Tools_Preferabli.clearAllData();
                     EventBus.getDefault().post(401);
                 } else {
                     // Refresh session.
                     try {
                         JsonObject jsonObject = new JsonObject();
-                        jsonObject.addProperty("user_id", Tools_PreferabliTools.getPreferabliUserId());
-                        jsonObject.addProperty("token_refresh", Tools_PreferabliTools.getKeyStore().getString("refresh_token", ""));
+                        jsonObject.addProperty("user_id", Tools_Preferabli.getPreferabliUserId());
+                        jsonObject.addProperty("token_refresh", Tools_Preferabli.getKeyStore().getString("refresh_token", ""));
                         retrofit2.Response<Object_SessionData> sessionResponse = getService(true).getSession(jsonObject).execute();
                         if (sessionResponse.isSuccessful()) {
                             Object_SessionData session = sessionResponse.body();
-                            Tools_PreferabliTools.saveSession(session);
+                            Tools_Preferabli.saveSession(session);
                             request = request.newBuilder().removeHeader("Authorization").addHeader("Authorization", "Bearer " + session.getAccessToken()).build();
                             response = chain.proceed(request);
                         } else {
                             // Boot to login.
-                            Tools_PreferabliTools.clearAllData();
+                            Tools_Preferabli.clearAllData();
                             EventBus.getDefault().post(401);
                         }
                     } catch (API_PreferabliException e) {
@@ -105,11 +105,11 @@ public class API_Singleton {
     }
 
     public API_Service getService(boolean requiresAccessToken) throws API_PreferabliException {
-        if (Tools_PreferabliTools.isNullOrWhitespace(Tools_PreferabliTools.getKeyStore().getString("CLIENT_INTERFACE", null))) {
+        if (Tools_Preferabli.isNullOrWhitespace(Tools_Preferabli.getKeyStore().getString("CLIENT_INTERFACE", null))) {
             throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.InvalidClientInterface);
         }
 
-        if (requiresAccessToken && Tools_PreferabliTools.isNullOrWhitespace(Tools_PreferabliTools.getKeyStore().getString("access_token", null))) {
+        if (requiresAccessToken && Tools_Preferabli.isNullOrWhitespace(Tools_Preferabli.getKeyStore().getString("access_token", null))) {
             throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.InvalidAccessToken);
         }
 
