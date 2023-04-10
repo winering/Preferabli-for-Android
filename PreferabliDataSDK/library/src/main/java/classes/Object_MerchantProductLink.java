@@ -19,7 +19,6 @@ public class Object_MerchantProductLink extends Object_BaseObject {
     private long variant_id;
     private Integer variant_year;
     private String mapping_name;
-    private long id;
     private String value;
     private String landing_url;
     private String image_url;
@@ -123,14 +122,6 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         this.mapping_name = mapping_name;
     }
 
-    public long getId() {
-        return id;
-    }
-
-    public void setId(long id) {
-        this.id = id;
-    }
-
     public String getValue() {
         return value;
     }
@@ -227,28 +218,10 @@ public class Object_MerchantProductLink extends Object_BaseObject {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null) return false;
-
-        if (o instanceof Object_MerchantProductLink) {
-            Object_MerchantProductLink that = (Object_MerchantProductLink) o;
-            return that.getId() == id;
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return (int) (id ^ (id >>> 32));
-    }
-
-    @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         dest.writeLong(this.variant_id);
         dest.writeString(this.mapping_name);
-        dest.writeLong(this.id);
         dest.writeString(this.value);
         dest.writeString(this.landing_url);
         dest.writeString(this.image_url);
@@ -273,7 +246,6 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         super(in);
         this.variant_id = in.readLong();
         this.mapping_name = in.readString();
-        this.id = in.readLong();
         this.value = in.readString();
         this.landing_url = in.readString();
         this.image_url = in.readString();

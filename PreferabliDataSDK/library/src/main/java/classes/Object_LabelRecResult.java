@@ -26,7 +26,7 @@ public class Object_LabelRecResult implements Parcelable {
         return score;
     }
 
-    public Object_Product getWine() {
+    public Object_Product getProduct() {
         return product;
     }
 

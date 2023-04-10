@@ -16,7 +16,6 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class Object_Venue extends Object_BaseObject {
-    private ArrayList<Object_Collection> collections;
     private String name;
     private String display_name;
     private String address_l1;
@@ -305,10 +304,6 @@ public class Object_Venue extends Object_BaseObject {
         }
     }
 
-    public ArrayList<Object_Collection> getCollections() {
-        return collections;
-    }
-
     public String getName() {
         return name;
     }
@@ -388,7 +383,6 @@ public class Object_Venue extends Object_BaseObject {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
-        dest.writeTypedList(this.collections);
         dest.writeString(this.name);
         dest.writeString(this.display_name);
         dest.writeString(this.address_l1);
@@ -423,7 +417,6 @@ public class Object_Venue extends Object_BaseObject {
 
     protected Object_Venue(Parcel in) {
         super(in);
-        this.collections = in.createTypedArrayList(Object_Collection.CREATOR);
         this.name = in.readString();
         this.display_name = in.readString();
         this.address_l1 = in.readString();

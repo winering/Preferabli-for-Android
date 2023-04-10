@@ -296,6 +296,10 @@ public class Object_Product extends Object_BaseObject {
         this.type = type;
     }
 
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
     public void setName(String name) {
         this.name = name;
     }
@@ -637,6 +641,10 @@ public class Object_Product extends Object_BaseObject {
 
 
         return mostRecentVariant;
+    }
+
+    void setLatestVariantNumDollarSigns(int num_dollar_signs) {
+        getMostRecentVariant().setNumDollarSigns(num_dollar_signs);
     }
 
     public Object_Variant getVariantForUpload() {

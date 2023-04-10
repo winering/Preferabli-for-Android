@@ -15,6 +15,9 @@ import java.util.Collections;
 import java.util.Comparator;
 
 public class Object_GuidedRec extends Object_BaseObject {
+
+    public static long WINE_DEFAULT = 1;
+
     private String name;
     private String default_currency;
     private int default_price_min;
@@ -85,7 +88,6 @@ public class Object_GuidedRec extends Object_BaseObject {
     }
 
     public static class Object_GuidedRecChoice extends Object_BaseObject {
-        private long id;
         private int number;
         private ArrayList<Long> requires_choice_ids;
         private String text;
@@ -94,11 +96,11 @@ public class Object_GuidedRec extends Object_BaseObject {
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
-            dest.writeLong(this.id);
+            super.writeToParcel(dest, flags);
         }
 
         protected Object_GuidedRecChoice(Parcel in) {
-            this.id = in.readLong();
+            super(in);
         }
 
 
@@ -132,24 +134,6 @@ public class Object_GuidedRec extends Object_BaseObject {
 
         public String getText() {
             return text;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Object_GuidedRecChoice quizChoice = (Object_GuidedRecChoice) o;
-            return id == quizChoice.id;
-        }
-
-        @Override
-        public int hashCode() {
-            return (int) (id ^ (id >>> 32));
-        }
-
-        public long getId() {
-            return id;
         }
 
         public boolean isSelected() {

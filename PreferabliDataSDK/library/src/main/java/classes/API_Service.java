@@ -48,6 +48,9 @@ public interface API_Service {
     @GET("integrations/{id}")
     Call<JsonObject> getIntegration(@Path("id") long id);
 
+    @POST("integrations/{id}/lookups")
+    Call<JsonArray> lookupConversion(@Path("id") long id, @Body JsonArray jsonArray);
+
     @GET("users/{user_id}/usercollections")
     Call<ArrayList<Object_UserCollection>> getUserCollections(@Path("user_id") long user_id, @Query("limit") int limit, @Query("offset") int offset);
 
@@ -60,6 +63,9 @@ public interface API_Service {
     @PUT("users/{user_id}")
     Call<Object_PreferabliUser> updateUser(@Path("user_id") long user_id, @Body Object_PreferabliUser user);
 
+    @Multipart
+    @POST("media")
+    Call<Object_Media> uploadImage(@Part("file\"; filename=\"file.png\" ") RequestBody file);
     @Multipart
     @POST("media")
     Call<Object_Media> uploadImage(@Part("user_id") RequestBody user_id, @Part("file\"; filename=\"file.png\" ") RequestBody file);
@@ -111,10 +117,10 @@ public interface API_Service {
     Call<JsonObject> getRecs(@Body JsonObject body);
 
     @POST("query")
-    Call<JsonObject> guidedRec(@Body JsonObject body);
+    Call<JsonObject> guidedRecResults(@Body JsonObject body);
 
     @POST("query")
-    Call<JsonObject> guidedRecWithCollection(@Query("override_collection_ids[]") ArrayList<Long> ids, @Body JsonObject body);
+    Call<JsonObject> guidedRecResultsWithCollection(@Query("override_collection_ids[]") long id, @Body JsonObject body);
 
     @GET("collections/{collectionId}/versions/{versionId}/groups/{groupId}/orderings")
     Call<ArrayList<Object_Collection.Version.Group.Ordering>> getOrderings(@Path("collectionId") long collectionId, @Path("versionId") long versionId, @Path("groupId") long groupId, @Query("limit") int limit, @Query("offset") int offset);
@@ -162,7 +168,7 @@ public interface API_Service {
     Call<Object_Product> getProduct(@Path("product_id") long product_id);
 
     @GET("questionnaire/{id}")
-    Call<Object_GuidedRec> getQuestionnaire(@Path("id") long id);
+    Call<Object_GuidedRec> getGuidedRec(@Path("id") long id);
 
     @GET("imagerec")
     Call<ArrayList<Object_LabelRecResult>> imageRec(@Query("media_id") long media_id);

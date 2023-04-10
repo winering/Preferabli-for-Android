@@ -261,7 +261,7 @@ public class Object_Tag extends Object_BaseObject {
     }
 
     public Object_Tag getMostRecentRatingFromSameCollection() {
-        HashSet<Object_Tag> ratingsTags = getVariant().getRatingsTags();
+        HashSet<Object_Tag> ratingsTags = getVariant().getRatings_tags();
         Date date = new Date(0);
         Object_Tag mostRecentRatingFromCollection = null;
         for (Object_Tag tag : ratingsTags) {
@@ -273,7 +273,7 @@ public class Object_Tag extends Object_BaseObject {
         }
 
         if (mostRecentRatingFromCollection == null) {
-            return getVariant().getMostRecentRating();
+            return getVariant().getMost_recent_rating();
         }
 
         return mostRecentRatingFromCollection;

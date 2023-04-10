@@ -11,14 +11,29 @@ package classes;
 import android.app.Application;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.appcompat.content.res.AppCompatResources;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.ringit.datasdk.R;
 
-import java.io.IOException;
+import org.greenrobot.eventbus.EventBus;
+import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 import okhttp3.ResponseBody;
 import retrofit2.Response;
 
@@ -158,6 +173,7 @@ public class Preferabli {
 
     /**
      * Get the Powered By Preferabli logo for use in your app.
+     *
      * @param light_background pass true if you want the version suitable for a light background. Pass false for the dark background version.
      * @return Powered By Preferabli logo.
      */
@@ -167,6 +183,7 @@ public class Preferabli {
 
     /**
      * Will let you know if a user is logged in or not.
+     *
      * @return bool.
      */
     static public boolean isPreferabliUserLoggedIn() {
@@ -175,6 +192,7 @@ public class Preferabli {
 
     /**
      * Will let you know if a customer is logged in or not.
+     *
      * @return bool.
      */
     static public boolean isCustomerLoggedIn() {
@@ -312,6 +330,335 @@ public class Preferabli {
         });
     }
 
+    /**
+     * Search for a {@link Object_Product}.
+     *
+     * @param query                  your search query.
+     * @param lock_to_integration    pass true if you only want to draw results from your integration. Defaults to true.
+     * @param product_categories     pass any {@link Other_ProductCategory} that you would like the results to conform to. Pass null for all results.
+     * @param product_types          pass any {@link Other_ProductType} that you would like the results to conform to. Pass null for all results.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} that connect Preferabli products to your own. Defaults to true.
+     * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void searchProducts(String query, Boolean lock_to_integration, ArrayList<Other_ProductCategory> product_categories, ArrayList<Other_ProductType> product_types, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            try {
+                canWeContinue(false);
+                Tools_Preferabli.createAnalyticsPost("search_products");
+
+                Map<String, Object> map = new HashMap<>();
+                map.put("search", query);
+                if (lock_to_integration == null || lock_to_integration) {
+                    map.put("channel_id", CHANNEL_ID);
+                    map.put("search_types[]", "tags");
+                } else {
+                    map.put("search_types[]", "products");
+                }
+
+                ArrayList<String> categories_as_strings = new ArrayList<>();
+                if (product_categories != null && product_categories.size() > 0) {
+                    categories_as_strings = new ArrayList<>(product_categories.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                }
+
+                ArrayList<String> types_as_strings = new ArrayList<>();
+                if (product_types != null && product_types.size() > 0) {
+                    types_as_strings = new ArrayList<>(product_types.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                }
+
+                Response<JsonObject> searchResponse = api.search(map, categories_as_strings, types_as_strings).execute();
+                if (!searchResponse.isSuccessful())
+                    throw new API_PreferabliException(searchResponse.errorBody());
+
+                JsonObject jsonObject = searchResponse.body();
+
+                if (jsonObject == null) {
+                    throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+                }
+
+                ArrayList<Object_Product> products_to_return = new ArrayList<>();
+                Tools_Database.getInstance().openDatabase();
+
+                if (jsonObject.has("products")) {
+                    JsonArray items = jsonObject.getAsJsonArray("products");
+                    for (JsonElement item : items) {
+                        Object_Product product_from_api = Tools_Preferabli.convertJsonToObject(item.toString(), Object_Product.class);
+                        Tools_Database.getInstance().updateWineTable(product_from_api);
+                        Object_Product product_from_db = Tools_Database.getInstance().getWineWithWineId(product_from_api.getId());
+                        product_from_db.setLatestVariantNumDollarSigns(item.getAsJsonObject().get("latest_variant_num_dollar_signs").getAsInt());
+                        products_to_return.add(product_from_db);
+                    }
+                } else {
+                    JsonArray items = jsonObject.getAsJsonArray("tags");
+                    for (JsonElement item : items) {
+                        Object_Product product_from_api = Tools_Database.getInstance().getWineWithWineId(item.getAsJsonObject().get("product_id").getAsLong());
+                        if (product_from_api == null) {
+                            product_from_api = Tools_Preferabli.convertJsonToObject(item.toString(), Object_Product.class);
+                        }
+                        product_from_api.setName(item.getAsJsonObject().get("product_name").getAsString());
+                        product_from_api.setType(item.getAsJsonObject().get("product_type").getAsString());
+                        product_from_api.setCategory(item.getAsJsonObject().get("product_category").getAsString());
+                        product_from_api.setId(item.getAsJsonObject().get("product_id").getAsLong());
+
+                        Object_Variant variant = Tools_Database.getInstance().getVariant(item.getAsJsonObject().get("variant_id").getAsLong());
+                        if (variant == null) {
+                            variant = new Object_Variant(item.getAsJsonObject().get("variant_id").getAsLong(), product_from_api.getId());
+                        }
+                        variant.setPrice(item.getAsJsonObject().get("price").getAsDouble());
+                        variant.setNumDollarSigns(item.getAsJsonObject().get("num_dollar_signs").getAsInt());
+                        product_from_api.addVariant(variant);
+
+                        Tools_Database.getInstance().updateWineTable(product_from_api);
+                        Object_Product product_from_db = new Object_Product(Tools_Database.getInstance().getWineWithWineId(product_from_api.getId()));
+                        products_to_return.add(product_from_db);
+                    }
+                }
+
+                Tools_Database.getInstance().closeDatabase();
+
+                if (include_merchant_links == null || include_merchant_links) {
+                    addMerchantDataToProducts(products_to_return);
+                }
+
+                handleSuccess(handler, products_to_return);
+
+            } catch (API_PreferabliException | IOException e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    /**
+     * Performs label recognition on a supplied image. Returns any {@link Object_Product} matches.
+     *
+     * @param label_file             label image you want to search for.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} that connect Preferabli products to your own. Defaults to true.
+     * @param handler                returns {@link Object_LabelRecResults} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void labelRecognition(File label_file, Boolean include_merchant_links, API_ResultHandler<Object_LabelRecResults> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            try {
+                canWeContinue(false);
+                Tools_Preferabli.createAnalyticsPost("label_rec");
+
+                RequestBody file = RequestBody.create(label_file, MediaType.parse("image/*"));
+                Response<Object_Media> imageResponse;
+
+                if (isPreferabliUserLoggedIn()) {
+                    RequestBody user_id = RequestBody.create(Long.toString(Tools_Preferabli.getPreferabliUserId()), MediaType.parse("text/plain"));
+                    imageResponse = api.uploadImage(user_id, file).execute();
+                } else {
+                    imageResponse = api.uploadImage(file).execute();
+                }
+
+                if (!imageResponse.isSuccessful())
+                    throw new API_PreferabliException(imageResponse.errorBody());
+
+                Object_Media media = imageResponse.body();
+
+                if (media == null) {
+                    throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+                }
+
+                Response<ArrayList<Object_LabelRecResult>> imageRecResponse = api.imageRec(imageResponse.body().getId()).execute();
+                if (!imageRecResponse.isSuccessful())
+                    throw new API_PreferabliException(imageRecResponse.errorBody());
+
+                ArrayList<Object_LabelRecResult> labelRecResults = imageRecResponse.body();
+
+                if (labelRecResults == null) {
+                    throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+                }
+
+                if (include_merchant_links == null || include_merchant_links) {
+                    ArrayList<Object_Product> products = new ArrayList<>(labelRecResults.stream().map(x -> x.getProduct()).collect(Collectors.toList()));
+                    addMerchantDataToProducts(products);
+                }
+
+                handleSuccess(handler, new Object_LabelRecResults(media, labelRecResults));
+
+            } catch (API_PreferabliException | IOException e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    /**
+     * Get all the questions and choices needed to run a Guided Rec. Present the questions to the user, then pass the answers to {@link Preferabli#getGuidedRecResults(long, ArrayList, Integer, Integer, Long, Boolean, API_ResultHandler)}.
+     *
+     * @param guided_rec_id id of the Guided Rec you wish to run. See {@link Object_GuidedRec} for all the default Guided Rec options.
+     * @param handler       returns {@link Object_GuidedRec} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void getGuidedRec(long guided_rec_id, API_ResultHandler<Object_GuidedRec> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            try {
+                canWeContinue(false);
+                Tools_Preferabli.createAnalyticsPost("get_guided_rec");
+
+                Response<Object_GuidedRec> guidedRecResponse = api.getGuidedRec(guided_rec_id).execute();
+                if (!guidedRecResponse.isSuccessful())
+                    throw new API_PreferabliException(guidedRecResponse.errorBody());
+
+                Object_GuidedRec guidedRec = guidedRecResponse.body();
+
+                if (guidedRec == null) {
+                    throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+                }
+
+                handleSuccess(handler, guidedRec);
+
+            } catch (API_PreferabliException | IOException e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    /**
+     * Get Guided Rec results based on the selected {@link Object_GuidedRec.Object_GuidedRecChoice}.
+     * @param guided_rec_id id of the Guided Rec you wish to run.
+     * @param selected_choice_ids an array of selected {@link Object_GuidedRec.Object_GuidedRecChoice} ids.
+     * @param price_min pass if you want to lock results to a minimum price. Pass null to ignore.
+     * @param price_max pass if you want to lock results to a maximum price. Pass null to ignore.
+     * @param collection_id the id of a specific {@link Object_Collection} that you want to draw results from. Pass {@link Preferabli#PRIMARY_INVENTORY_ID} for results from your primary inventory. Pass null for results from anywhere.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} that connect Preferabli products to your own. Defaults to true.
+     * @param handler returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void getGuidedRecResults(long guided_rec_id, ArrayList<Long> selected_choice_ids, Integer price_min, Integer price_max, Long collection_id, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            try {
+                canWeContinue(false);
+                Tools_Preferabli.createAnalyticsPost("get_guided_rec_results");
+
+                JsonObject dictionary = new JsonObject();
+                dictionary.addProperty("limit", 8);
+                dictionary.addProperty("sort_by", "preference");
+                dictionary.addProperty("questionnaire_id", guided_rec_id);
+                dictionary.addProperty("offset", 0);
+
+                JsonArray questionnaire_choice_ids = new JsonArray();
+                for (long choice_id : selected_choice_ids) {
+                    questionnaire_choice_ids.add(choice_id);
+                }
+                dictionary.add("questionnaire_choice_ids", questionnaire_choice_ids);
+
+                JsonArray filters = new JsonArray();
+                if (price_min != null) {
+                    JsonObject minObject = new JsonObject();
+                    minObject.addProperty("key", "price_min");
+                    minObject.addProperty("value", price_min);
+                    filters.add(minObject);
+                }
+
+                if (price_max != null) {
+                    JsonObject maxObject = new JsonObject();
+                    maxObject.addProperty("key", "price_max");
+                    maxObject.addProperty("value", price_max);
+                    filters.add(maxObject);
+                }
+
+                if (filters.size() > 0) {
+                    dictionary.add("filters", filters);
+                }
+
+                Response<JsonObject> recResponse;
+                if (collection_id != null) {
+                    recResponse = api.guidedRecResultsWithCollection(collection_id, dictionary).execute();
+                } else {
+                    recResponse = api.guidedRecResults(dictionary).execute();
+                }
+
+                if (!recResponse.isSuccessful())
+                    throw new API_PreferabliException(recResponse.errorBody());
+
+                if (recResponse.body() == null) {
+                    throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+                }
+
+                JsonArray types = recResponse.body().getAsJsonArray("types");
+
+                ArrayList<Object_Product> products_to_return = new ArrayList<>();
+
+                for (JsonElement type : types) {
+                    ArrayList<Long> variantIds = new ArrayList<>();
+
+                    JsonObject object = type.getAsJsonObject();
+                    JsonArray results = object.getAsJsonArray("results");
+                    for (JsonElement result : results) {
+                        variantIds.add(result.getAsJsonObject().get("variant_id").getAsLong());
+                    }
+
+                    Response<ArrayList<Object_Product>> productsResponse = api.getProducts(variantIds).execute();
+                    if (!productsResponse.isSuccessful())
+                        throw new API_PreferabliException(productsResponse.errorBody());
+
+                    if (productsResponse.body() == null) {
+                        throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+                    }
+
+                    Tools_Database.getInstance().openDatabase();
+                    for (Object_Product product : productsResponse.body()) {
+                        Tools_Database.getInstance().updateWineTable(product);
+                        Object_Product product_from_db = Tools_Database.getInstance().getWineWithWineId(product.getId());
+                        products_to_return.add(product_from_db);
+                    }
+                    Tools_Database.getInstance().closeDatabase();
+                }
+
+                if (include_merchant_links) {
+                    addMerchantDataToProducts(products_to_return);
+                }
+
+                handleSuccess(handler, products_to_return);
+
+            } catch (API_PreferabliException | IOException e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    private void addMerchantDataToProducts(ArrayList<Object_Product> products) throws API_PreferabliException, IOException {
+        if (products.size() == 0) {
+            return;
+        }
+
+        JsonArray dictionaries = new JsonArray();
+        for (Object_Product product : products) {
+            for (Object_Variant variant : product.getVariants()) {
+                JsonObject dictionary = new JsonObject();
+                dictionary.addProperty("number", variant.getId());
+                JsonArray variant_ids = new JsonArray();
+                variant_ids.add(variant.getId());
+                dictionary.add("variant_ids", variant_ids);
+                dictionaries.add(dictionary);
+            }
+        }
+
+        Response<JsonArray> conversionResponse = api.lookupConversion(INTEGRATION_ID, dictionaries).execute();
+        if (!conversionResponse.isSuccessful())
+            throw new API_PreferabliException(conversionResponse.errorBody());
+
+        JsonArray jsonArray = conversionResponse.body();
+
+        outerloop:
+        for (JsonElement element : jsonArray) {
+            JsonObject object = element.getAsJsonObject();
+            long variant_id = object.get("number").getAsLong();
+            for (Object_Product product : products) {
+                for (Object_Variant variant : product.getVariants()) {
+                    if (variant.getId() == variant_id) {
+                        JsonArray lookups = object.getAsJsonArray("lookups");
+                        ArrayList<Object_MerchantProductLink> merchant_links = new ArrayList<>();
+                        for (JsonElement lookup : lookups) {
+                            Object_MerchantProductLink merchant_link = Tools_Preferabli.convertJsonToObject(lookup.toString(), Object_MerchantProductLink.class);
+                            merchant_links.add(merchant_link);
+                        }
+                        variant.setMerchantLinks(merchant_links);
+                        continue outerloop;
+                    }
+                }
+            }
+        }
+    }
+
     private void handleError(Exception e, API_ResultHandler handler) {
         API_PreferabliException preferabliException;
         if (e instanceof API_PreferabliException) {
@@ -320,11 +667,15 @@ public class Preferabli {
             preferabliException = new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.NetworkError, e.getMessage(), 0);
         }
 
-        new android.os.Handler(Looper.getMainLooper()).post(() -> handler.onFailure(preferabliException));
+        if (handler != null) {
+            new android.os.Handler(Looper.getMainLooper()).post(() -> handler.onFailure(preferabliException));
+        }
     }
 
     private void handleSuccess(API_ResultHandler handler, Object data) {
-        new android.os.Handler(Looper.getMainLooper()).post(() -> handler.onSuccess(data));
+        if (handler != null) {
+            new android.os.Handler(Looper.getMainLooper()).post(() -> handler.onSuccess(data));
+        }
     }
 
     /**

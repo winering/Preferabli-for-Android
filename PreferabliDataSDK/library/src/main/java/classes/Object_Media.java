@@ -30,7 +30,7 @@ public class Object_Media extends Object_BaseObject {
         this.imageRecResults = Object_LabelRecResult.sortLabelRecs(imageRecResults);
         Tools_Database.getInstance().openDatabase();
         for (Object_LabelRecResult imageRec : imageRecResults) {
-            Object_Product product = imageRec.getWine();
+            Object_Product product = imageRec.getProduct();
             product.setRateSourceLocation("label_rec");
             Tools_Database.getInstance().updateWineTable(product);
             for (Object_Variant variant : product.getVariants()) {
@@ -43,7 +43,7 @@ public class Object_Media extends Object_BaseObject {
     public ArrayList<Object_Product> getImageRecResults() {
         ArrayList<Object_Product> results = new ArrayList<>();
         for (Object_LabelRecResult rec : imageRecResults) {
-            results.add(rec.getWine());
+            results.add(rec.getProduct());
         }
         return results;
     }

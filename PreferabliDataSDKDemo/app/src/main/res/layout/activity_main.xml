@@ -90,6 +90,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:textColor="#ADD8E6"
                 android:text="Results (press and hold a product for more actions):"
                 android:textSize="20sp" />
 

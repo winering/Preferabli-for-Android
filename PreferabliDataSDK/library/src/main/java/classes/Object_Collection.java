@@ -23,8 +23,6 @@ import java.util.Comparator;
 import java.util.Date;
 
 public class Object_Collection extends Object_BaseObject {
-
-    private long id;
     private long channel_id;
     private long sort_channel_id;
     private String name;
@@ -72,7 +70,7 @@ public class Object_Collection extends Object_BaseObject {
     private transient Date saveDate;
 
     public Object_Collection(Object_Collection collection) {
-        this.id = collection.getId();
+        super(collection.getId());
         this.channel_id = collection.getChannelId();
         this.sort_channel_id = collection.getSortChannelId();
         this.name = collection.getName();
@@ -126,23 +124,8 @@ public class Object_Collection extends Object_BaseObject {
         return is_browsable;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Object_Collection that = (Object_Collection) o;
-
-        return id == that.id;
-    }
-
     public boolean isIs_pinned() {
         return is_pinned;
-    }
-
-    @Override
-    public int hashCode() {
-        return (int) (id ^ (id >>> 32));
     }
 
     public int getWineCount() {
@@ -207,10 +190,6 @@ public class Object_Collection extends Object_BaseObject {
 
     public String getCurrency() {
         return currency;
-    }
-
-    public void setId(long id) {
-        this.id = id;
     }
 
     public void setName(String name) {
@@ -456,10 +435,6 @@ public class Object_Collection extends Object_BaseObject {
 
     public void setOrder(int order) {
         this.order = order;
-    }
-
-    public long getId() {
-        return id;
     }
 
     public long getChannelId() {
@@ -1159,7 +1134,6 @@ public class Object_Collection extends Object_BaseObject {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
-        dest.writeLong(this.id);
         dest.writeLong(this.channel_id);
         dest.writeLong(this.sort_channel_id);
         dest.writeString(this.name);
@@ -1203,7 +1177,6 @@ public class Object_Collection extends Object_BaseObject {
 
     protected Object_Collection(Parcel in) {
         super(in);
-        this.id = in.readLong();
         this.channel_id = in.readLong();
         this.sort_channel_id = in.readLong();
         this.name = in.readString();

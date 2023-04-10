@@ -31,14 +31,15 @@ public class Object_Variant extends Object_BaseObject {
     private Object_Media primary_image;
 
     private transient Object_Product product;
-    private transient Other_RatingType ratingType;
-    private transient Object_Tag mostRecentRating;
-    private transient HashSet<Object_Tag> ratingsTags;
+    private transient Other_RatingType rating_type;
+    private transient Object_Tag most_recent_rating;
+    private transient HashSet<Object_Tag> ratings_tags;
+    private transient ArrayList<Object_MerchantProductLink> merchant_links;
 
     public void clearTransients() {
-        ratingsTags = null;
-        mostRecentRating = null;
-        ratingType = null;
+        ratings_tags = null;
+        most_recent_rating = null;
+        rating_type = null;
     }
 
     public Object_Variant(Object_Tag tag) {
@@ -46,6 +47,11 @@ public class Object_Variant extends Object_BaseObject {
         this.year = 0;
         this.product_id = tag.getWineId();
         addTag(tag);
+    }
+
+    public Object_Variant(long id, long product_id) {
+        super(id);
+        this.product_id = product_id;
     }
 
     public Object_Variant(long product_id, int year) {
@@ -67,34 +73,34 @@ public class Object_Variant extends Object_BaseObject {
         this.addImage(Tools_Preferabli.convertJsonToObject(image, Object_Media.class));
     }
 
-    public Other_RatingType getRatingType() {
-        if (getMostRecentRating() == null) return Other_RatingType.NONE;
-        else if (ratingType == null) {
-            Object_Tag tag = getMostRecentRating();
-            ratingType = Other_RatingType.getRatingTypeBasedOffTagValue(tag.getValue());
+    public Other_RatingType getRating_type() {
+        if (getMost_recent_rating() == null) return Other_RatingType.NONE;
+        else if (rating_type == null) {
+            Object_Tag tag = getMost_recent_rating();
+            rating_type = Other_RatingType.getRatingTypeBasedOffTagValue(tag.getValue());
         }
 
-        return ratingType;
+        return rating_type;
     }
 
-    public Object_Tag getMostRecentRating() {
-        if (mostRecentRating == null) {
+    public Object_Tag getMost_recent_rating() {
+        if (most_recent_rating == null) {
             Date date = new Date(0);
-            for (Object_Tag tag : getRatingsTags()) {
+            for (Object_Tag tag : getRatings_tags()) {
                 Date compareToDate = Tools_Preferabli.convertAPITimeStampToDate(tag.getCreatedAt());
                 if (compareToDate.after(date)) {
                     date = compareToDate;
-                    mostRecentRating = tag;
+                    most_recent_rating = tag;
                 }
             }
         }
 
-        return mostRecentRating;
+        return most_recent_rating;
     }
 
-    public HashSet<Object_Tag> getRatingsTags() {
-        if (ratingsTags == null) getTags();
-        return ratingsTags;
+    public HashSet<Object_Tag> getRatings_tags() {
+        if (ratings_tags == null) getTags();
+        return ratings_tags;
     }
 
     public Object_Product getWine() {
@@ -113,6 +119,10 @@ public class Object_Variant extends Object_BaseObject {
         clearTransients();
         if (tags == null) tags = new ArrayList<>();
         tags.add(tag);
+    }
+
+    public void setMerchantLinks(ArrayList<Object_MerchantProductLink> merchant_links) {
+        this.merchant_links = merchant_links;
     }
 
     public void updateTag(Object_Tag tag) {
@@ -143,6 +153,14 @@ public class Object_Variant extends Object_BaseObject {
             return primary_image.getPath();
 
         return null;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
+    void setNumDollarSigns(int num_dollar_signs) {
+        this.num_dollar_signs = num_dollar_signs;
     }
 
     public long getImageId() {
@@ -217,9 +235,9 @@ public class Object_Variant extends Object_BaseObject {
             tags = new ArrayList<Object_Tag>();
         }
 
-        ratingsTags = new HashSet<>();
+        ratings_tags = new HashSet<>();
         for (Object_Tag tag : tags) {
-            if (tag.isRating()) ratingsTags.add(tag);
+            if (tag.isRating()) ratings_tags.add(tag);
         }
 
         return tags;

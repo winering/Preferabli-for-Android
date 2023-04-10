@@ -1,7 +1,11 @@
 package com.ringit.sdk.demo;
 
 import android.app.Activity;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -11,16 +15,30 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
+
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
 import com.google.android.material.snackbar.Snackbar;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Random;
+import java.util.stream.Collectors;
+
 import classes.API_PreferabliException;
 import classes.API_ResultHandler;
 import classes.Object_Customer;
+import classes.Object_GuidedRec;
+import classes.Object_LabelRecResult;
+import classes.Object_LabelRecResults;
 import classes.Object_PreferabliUser;
 import classes.Object_Product;
+import classes.Other_ProductCategory;
+import classes.Other_ProductType;
 import classes.Preferabli;
 
 public class MainActivity extends Activity implements RecyclerViewAdapter.LongClickListener, AdapterView.OnItemSelectedListener {
@@ -83,7 +101,7 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
             email.setVisibility(View.GONE);
             password.setVisibility(View.GONE);
             submit.setText("LOGOUT");
-            second.setText("You are now browsing as an authenticated " + (Preferabli.isPreferabliUserLoggedIn() ? "Preferabli ser" : "customer") +  ". You can log them out below.");
+            second.setText("You are now browsing as an authenticated " + (Preferabli.isPreferabliUserLoggedIn() ? "Preferabli ser" : "customer") + ". You can log them out below.");
             customerButton.setVisibility(View.GONE);
             authenticatedActions.setVisibility(View.VISIBLE);
         } else {
@@ -96,14 +114,6 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
             customerButton.setVisibility(View.VISIBLE);
             authenticatedActions.setVisibility(View.GONE);
         }
-    }
-
-    public void unauthenticatedActionsClicked(View view) {
-
-    }
-
-    public void authenticatedActionsClicked(View view) {
-
     }
 
     public void submitClicked(View view) {
@@ -164,6 +174,114 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
         }
     }
 
+    public void searchProducts() {
+        showLoadingView();
+
+        Preferabli.main().searchProducts("wine", true, null, null, true, new API_ResultHandler<ArrayList<Object_Product>>() {
+            @Override
+            public void onSuccess(ArrayList<Object_Product> data) {
+                products = data;
+                items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
+    public void labelRec() {
+        showLoadingView();
+        Preferabli.main().labelRecognition(getExampleAsFile(), true, new API_ResultHandler<Object_LabelRecResults>() {
+            @Override
+            public void onSuccess(Object_LabelRecResults results) {
+                ArrayList<Object_LabelRecResult> data = results.getResults();
+                products = new ArrayList<>(data.stream().map(x -> x.getProduct()).collect(Collectors.toList()));
+                items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
+    public void guidedRec() {
+        showLoadingView();
+        Preferabli.main().getGuidedRec(Object_GuidedRec.WINE_DEFAULT, new API_ResultHandler<Object_GuidedRec>() {
+            @Override
+            public void onSuccess(Object_GuidedRec data) {
+                ArrayList<Long> selected_choice_ids = new ArrayList<>();
+                for (Object_GuidedRec.Object_GuidedRecQuestion question : data.getQuestions()) {
+                    if (question.getChoices().size() > 0) {
+                        selected_choice_ids.add(question.getChoices().get(new Random().nextInt(question.getChoices().size())).getId());
+                    }
+                }
+                Preferabli.main().getGuidedRecResults(data.getId(), selected_choice_ids, null, null, Preferabli.PRIMARY_INVENTORY_ID, true, new API_ResultHandler<ArrayList<Object_Product>>() {
+                    @Override
+                    public void onSuccess(ArrayList<Object_Product> data) {
+                        products = data;
+                        items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                        adapter.updateData(items);
+                        hideLoadingView();
+                        handleViews();
+                    }
+
+                    @Override
+                    public void onFailure(API_PreferabliException e) {
+                        hideLoadingView();
+                        showSnackbar(e.getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
+    public File getExampleAsFile() {
+        Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.label_rec_example);
+
+        File imageFile = new File(getExternalCacheDir(), "label_rec_example.png");
+
+        FileOutputStream fos = null;
+        try {
+            fos = new FileOutputStream(imageFile);
+
+            bm.compress(Bitmap.CompressFormat.PNG, 100, fos);
+
+            fos.close();
+
+            return imageFile;
+
+        } catch (IOException e) {
+            Log.e("app", e.getMessage());
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (IOException e1) {
+                    e1.printStackTrace();
+                }
+            }
+
+            return null;
+        }
+    }
+
     public void showLoadingView() {
         findViewById(R.id.progressRL).setVisibility(View.VISIBLE);
     }
@@ -193,7 +311,19 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
 
     @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-
+        if (adapterView == authenticatedActions) {
+            if (i == 1) {
+                showSnackbar("HEY");
+            }
+        } else {
+            if (i == 1) {
+                searchProducts();
+            } else if (i == 2) {
+                labelRec();
+            } else if (i == 3) {
+                guidedRec();
+            }
+        }
     }
 
     @Override
