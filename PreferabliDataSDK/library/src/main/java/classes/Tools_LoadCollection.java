@@ -53,7 +53,7 @@ public class Tools_LoadCollection {
 
         if (collection == null) {
             // We don't have the collection in question
-            throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.UnknownError);
+            throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.OtherError);
         }
 
         int limit = 50;
@@ -119,7 +119,7 @@ public class Tools_LoadCollection {
 
         if (collection == null) {
             // We don't have the collection in question
-            throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.UnknownError);
+            throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.OtherError);
         }
 
         Object_Collection.Version version = collection.getFirstVersion();

@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -37,8 +36,7 @@ import classes.Object_LabelRecResult;
 import classes.Object_LabelRecResults;
 import classes.Object_PreferabliUser;
 import classes.Object_Product;
-import classes.Other_ProductCategory;
-import classes.Other_ProductType;
+import classes.Object_WhereToBuy;
 import classes.Preferabli;
 
 public class MainActivity extends Activity implements RecyclerViewAdapter.LongClickListener, AdapterView.OnItemSelectedListener {
@@ -253,6 +251,42 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
         });
     }
 
+    public void whereToBuy() {
+        showLoadingView();
+
+        Preferabli.main().getPreferabliProductId(null, "107811", new API_ResultHandler<Long>() {
+            @Override
+            public void onSuccess(Long data) {
+                Preferabli.main().whereToBuy(data, null, null, null, new API_ResultHandler<Object_WhereToBuy>() {
+                    @Override
+                    public void onSuccess(Object_WhereToBuy data) {
+                        products.clear();
+                        if (data.getLinks().size() > 0) {
+                            items = new ArrayList<>(data.getLinks().stream().map(x -> x.getProductName()).collect(Collectors.toList()));
+                        } else {
+                            items = new ArrayList<>(data.getVenues().stream().map(x -> x.getName()).collect(Collectors.toList()));
+                        }
+                        adapter.updateData(items);
+                        hideLoadingView();
+                        handleViews();
+                    }
+
+                    @Override
+                    public void onFailure(API_PreferabliException e) {
+                        hideLoadingView();
+                        showSnackbar(e.getMessage());
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
     public File getExampleAsFile() {
         Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.label_rec_example);
 
@@ -322,6 +356,8 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
                 labelRec();
             } else if (i == 3) {
                 guidedRec();
+            } else if (i == 4) {
+                whereToBuy();
             }
         }
     }

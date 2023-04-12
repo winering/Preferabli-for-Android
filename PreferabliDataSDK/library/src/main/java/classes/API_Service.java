@@ -84,10 +84,7 @@ public interface API_Service {
     Call<JsonArray> whereToBuy(@Query("lat") double lat, @Query("long") double lon, @Query("product_id") long product_id, @Query("distance_miles") int distance_miles, @Query("merge_products") boolean merge_products, @Query("sort_by") String sort_by, @Query("pickup") boolean pickup, @Query("local_delivery") boolean local_delivery, @Query("standard_shipping") boolean standard_shipping, @Query("years[]") ArrayList<Integer> years, @Query("channel_ids[]") ArrayList<Long> channel_ids, @Query("in_stock_anywhere") boolean in_stock_anywhere, @Query("append_nonconforming_results") boolean append_nonconforming_results, @Query("limit") int limit, @Query("offset") int offset, @Query("venue_id") Long venue_id, @Query("lookup_id") Long lookup_id);
 
     @GET("wheretobuy")
-    Call<JsonArray> whereToBuy(@Query("zip_code") String zip_code, @Query("product_id") long product_id, @Query("distance_miles") int distance_miles, @Query("merge_products") boolean merge_products, @Query("sort_by") String sort_by, @Query("pickup") boolean pickup, @Query("local_delivery") boolean local_delivery, @Query("standard_shipping") boolean standard_shipping, @Query("years[]") ArrayList<Integer> years, @Query("channel_ids[]") ArrayList<Long> channel_ids, @Query("in_stock_anywhere") boolean in_stock_anywhere, @Query("append_nonconforming_results") boolean append_nonconforming_results, @Query("limit") int limit, @Query("offset") int offset, @Query("venue_id") Long venue_id, @Query("lookup_id") Long lookup_id);
-
-    @GET("wheretobuy")
-    Call<JsonArray> whereToBuy(@Query("product_id") long product_id, @Query("merge_products") boolean merge_products, @Query("sort_by") String sort_by, @Query("channel_ids[]") ArrayList<Long> channel_ids, @Query("in_stock_anywhere") boolean in_stock_anywhere, @Query("limit") int limit);
+    Call<JsonArray> whereToBuy(@QueryMap Map<String, Object> options);
 
     @GET("lttt")
     Call<JsonObject> lttt(@QueryMap Map<String, Object> options);

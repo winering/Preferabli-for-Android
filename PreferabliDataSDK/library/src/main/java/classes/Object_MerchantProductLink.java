@@ -17,6 +17,7 @@ import java.util.ArrayList;
 
 public class Object_MerchantProductLink extends Object_BaseObject {
     private long variant_id;
+    private long product_id;
     private Integer variant_year;
     private String mapping_name;
     private String value;
@@ -34,6 +35,9 @@ public class Object_MerchantProductLink extends Object_BaseObject {
     private boolean nonconforming_result;
     private boolean exclude_from_system;
     private String exclude_reason;
+
+    private String merchant_product_id;
+    private String merchant_variant_id;
 
     private transient Object_Variant variant;
 
@@ -75,6 +79,10 @@ public class Object_MerchantProductLink extends Object_BaseObject {
 
     public String getChannel_name() {
         return channel_name;
+    }
+
+    public long getProductId() {
+        return product_id;
     }
 
     public void setChannel_name(String channel_name) {
@@ -146,7 +154,7 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         this.image_url = image_url;
     }
 
-    public String getProduct_name() {
+    public String getProductName() {
         return product_name;
     }
 
@@ -195,7 +203,7 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         for (String term : terms) {
             if (getMapping_name() != null && getMapping_name().toLowerCase().contains(term))
                 continue;
-            else if (getProduct_name() != null && getProduct_name().toLowerCase().contains(term))
+            else if (getProductName() != null && getProductName().toLowerCase().contains(term))
                 continue;
             else if (getVenues() != null && filterVenues) {
                 for (Object_Venue venue : getVenues()) {
@@ -221,6 +229,7 @@ public class Object_MerchantProductLink extends Object_BaseObject {
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         dest.writeLong(this.variant_id);
+        dest.writeLong(this.product_id);
         dest.writeString(this.mapping_name);
         dest.writeString(this.value);
         dest.writeString(this.landing_url);
@@ -237,6 +246,8 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         dest.writeInt(this.nonconforming_result ? 1 : 0);
         dest.writeInt(this.exclude_from_system ? 1 : 0);
         dest.writeString(this.exclude_reason);
+        dest.writeString(this.merchant_product_id);
+        dest.writeString(this.merchant_variant_id);
     }
 
     public Object_MerchantProductLink() {
@@ -245,6 +256,7 @@ public class Object_MerchantProductLink extends Object_BaseObject {
     protected Object_MerchantProductLink(Parcel in) {
         super(in);
         this.variant_id = in.readLong();
+        this.product_id = in.readLong();
         this.mapping_name = in.readString();
         this.value = in.readString();
         this.landing_url = in.readString();
@@ -261,6 +273,8 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         this.nonconforming_result = in.readInt() == 1;
         this.exclude_from_system = in.readInt() == 1;
         this.exclude_reason = in.readString();
+        this.merchant_product_id = in.readString();
+        this.merchant_variant_id = in.readString();
     }
 
     public static final Parcelable.Creator<Object_MerchantProductLink> CREATOR = new Parcelable.Creator<Object_MerchantProductLink>() {

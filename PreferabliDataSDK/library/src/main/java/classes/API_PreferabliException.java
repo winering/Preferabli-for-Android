@@ -40,6 +40,11 @@ public class API_PreferabliException extends Exception {
         this(type, null, 0);
     }
 
+    public API_PreferabliException(PreferabliExceptionType type, String message) {
+        this.type = type;
+        this.message = message;
+    }
+
     public API_PreferabliException(PreferabliExceptionType type, String message, int code) {
         this.type = type;
         this.message = message;
@@ -94,7 +99,7 @@ public class API_PreferabliException extends Exception {
         /**
          * An unknown / other error.
          */
-        UnknownError,
+        OtherError,
         /**
          * An error decoding JSON.
          */
@@ -138,7 +143,7 @@ public class API_PreferabliException extends Exception {
                 return "API error.";
                 case NetworkError:
                 return "Network issue.";
-                case UnknownError:
+                case OtherError:
                 return "Other / unknown issue. Contact support.";
                 case JSONError:
                 return "JSON error. Contact support.";

@@ -11,24 +11,19 @@ package classes;
 import android.app.Application;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
-import android.util.Log;
 
 import androidx.appcompat.content.res.AppCompatResources;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import com.ringit.datasdk.R;
-
-import org.greenrobot.eventbus.EventBus;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -514,13 +509,14 @@ public class Preferabli {
 
     /**
      * Get Guided Rec results based on the selected {@link Object_GuidedRec.Object_GuidedRecChoice}.
-     * @param guided_rec_id id of the Guided Rec you wish to run.
-     * @param selected_choice_ids an array of selected {@link Object_GuidedRec.Object_GuidedRecChoice} ids.
-     * @param price_min pass if you want to lock results to a minimum price. Pass null to ignore.
-     * @param price_max pass if you want to lock results to a maximum price. Pass null to ignore.
-     * @param collection_id the id of a specific {@link Object_Collection} that you want to draw results from. Pass {@link Preferabli#PRIMARY_INVENTORY_ID} for results from your primary inventory. Pass null for results from anywhere.
+     *
+     * @param guided_rec_id          id of the Guided Rec you wish to run.
+     * @param selected_choice_ids    an array of selected {@link Object_GuidedRec.Object_GuidedRecChoice} ids.
+     * @param price_min              pass if you want to lock results to a minimum price. Pass null to ignore.
+     * @param price_max              pass if you want to lock results to a maximum price. Pass null to ignore.
+     * @param collection_id          the id of a specific {@link Object_Collection} that you want to draw results from. Pass {@link Preferabli#PRIMARY_INVENTORY_ID} for results from your primary inventory. Pass null for results from anywhere.
      * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} that connect Preferabli products to your own. Defaults to true.
-     * @param handler returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
     public void getGuidedRecResults(long guided_rec_id, ArrayList<Long> selected_choice_ids, Integer price_min, Integer price_max, Long collection_id, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
         Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
@@ -615,6 +611,163 @@ public class Preferabli {
         });
     }
 
+    /**
+     * Get help finding out where a {@link Object_Product} is in stock.
+     *
+     * @param product_id                   id of the starting {@link Object_Product}`.  Only pass a Preferabli product id. If necessary, call {@link Preferabli#getPreferabliProductId(String, String, API_ResultHandler)} to convert your product id into a Preferabli product id.
+     * @param fulfill_sort                 pass {@link Other_FulfillSort} for sorting & filtering options. If sorting by distance, {@link Object_Location} MUST be present!
+     * @param append_nonconforming_results pass true if you want results that DO NOT conform to all filtering & sorting parameters to be returned. Useful so that something is returned even if the user's filter parameters are too narrow. All results that do not conform contain nonconforming_result = true within. Defaults to true.
+     * @param lock_to_integration          pass true if you only want to draw results from your integration. Defaults to true.
+     * @param handler                      returns {@link Object_WhereToBuy} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void whereToBuy(long product_id, Other_FulfillSort fulfill_sort, Boolean append_nonconforming_results, Boolean lock_to_integration, API_ResultHandler<Object_WhereToBuy> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            try {
+                canWeContinue(false);
+                Tools_Preferabli.createAnalyticsPost("where_to_buy");
+
+                Other_FulfillSort sort = fulfill_sort;
+                if (sort == null) {
+                    sort = Other_FulfillSort.getDefaultFulfillSort();
+                }
+
+                String sort_by;
+                if (sort.getType() == Other_Sort.SortType.DISTANCE && sort.isAscending()) {
+                    sort_by = "nearest_first";
+                } else if (sort.getType() == Other_Sort.SortType.DISTANCE) {
+                    sort_by = "furthest_first";
+                } else if (sort.isAscending()) {
+                    sort_by = "price_asc";
+                } else {
+                    sort_by = "price_desc";
+                }
+
+                Map<String, Object> map = new HashMap<>();
+                map.put("product_id", product_id);
+                map.put("sort_by", sort_by);
+                map.put("merge_products", true);
+                map.put("pickup", sort.isPickup());
+                map.put("local_delivery", sort.isDelivery());
+                map.put("standard_shipping", sort.isShipping());
+                map.put("append_nonconforming_results", append_nonconforming_results == null || append_nonconforming_results);
+                map.put("limit", 1000);
+                map.put("offset", 0);
+                map.put("distance_miles", sort.getDistanceMiles());
+
+                if (sort.getType() == Other_Sort.SortType.DISTANCE && sort.getLocation() == null) {
+                    throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.OtherError, "Sort by distance requires a location.");
+                } else if (sort.getLocation() != null) {
+                    if (Tools_Preferabli.isNullOrWhitespace(sort.getLocation().getZipCode())) {
+                        map.put("lat", sort.getLocation().getLatitude());
+                        map.put("long", sort.getLocation().getLongitude());
+                    } else {
+                        map.put("zip_code", sort.getLocation().getZipCode());
+                    }
+                } else {
+                    map.put("in_stock_anywhere", true);
+                }
+
+                ArrayList<Integer> years = new ArrayList<>();
+                if (sort.getVariantYear() != Object_Variant.NON_VARIANT) {
+                    years.add(sort.getVariantYear());
+                }
+
+                if (lock_to_integration == null || lock_to_integration) {
+                    map.put("channel_ids[]", CHANNEL_ID);
+                }
+
+                Response<JsonArray> wtbResponse = api.whereToBuy(map).execute();
+                if (!wtbResponse.isSuccessful())
+                    throw new API_PreferabliException(wtbResponse.errorBody());
+
+                JsonArray array = wtbResponse.body();
+
+                ArrayList<Object_MerchantProductLink> links = new ArrayList<>();
+                ArrayList<Object_Venue> venues = new ArrayList<>();
+
+                if (array.size() > 0) {
+                    JsonObject object = array.get(0).getAsJsonObject();
+                    if (object.has("lookup_results")) {
+                        JsonArray lookups = object.getAsJsonArray("lookup_results");
+                        for (JsonElement lookup : lookups) {
+                            Object_MerchantProductLink link = Tools_Preferabli.convertJsonToObject(lookup.toString(), Object_MerchantProductLink.class);
+                            links.add(link);
+                        }
+                    } else if (object.has("venue_results")) {
+                        JsonArray venue_array = object.getAsJsonArray("venue_results");
+                        for (JsonElement venue_string : venue_array) {
+                            Object_Venue venue = Tools_Preferabli.convertJsonToObject(venue_string.toString(), Object_Venue.class);
+                            venues.add(venue);
+                        }
+                    }
+                }
+
+
+                Object_WhereToBuy whereToBuy = new Object_WhereToBuy(links, venues);
+                handleSuccess(handler, whereToBuy);
+
+            } catch (API_PreferabliException | IOException e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    /**
+     * Call this to convert your merchant product / variant id to the Preferabli product id for use with our functions.
+     *
+     * @param merchant_product_id the id of your product (as it appears in your system). Either this or merchant_variant_id is required.
+     * @param merchant_variant_id the id of your product variant (as it appears in your system). Used only if you have a hierarchical database format for your products.
+     * @param handler returns product id as a long if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void getPreferabliProductId(String merchant_product_id, String merchant_variant_id, API_ResultHandler<Long> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            try {
+                canWeContinue(false);
+                Tools_Preferabli.createAnalyticsPost("get_preferabli_id");
+
+                if (Tools_Preferabli.isNullOrWhitespace(merchant_product_id) && Tools_Preferabli.isNullOrWhitespace(merchant_variant_id)) {
+                    throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.MappingNotFound);
+                }
+
+                JsonArray array = new JsonArray();
+                JsonObject dictionary = new JsonObject();
+                dictionary.addProperty("number", 1);
+                if (!Tools_Preferabli.isNullOrWhitespace(merchant_product_id)) {
+                    JsonArray nested_array = new JsonArray();
+                    nested_array.add(merchant_product_id);
+                    dictionary.add("merchant_product_ids", nested_array);
+                }
+                if (!Tools_Preferabli.isNullOrWhitespace(merchant_variant_id)) {
+                    JsonArray nested_array = new JsonArray();
+                    nested_array.add(merchant_variant_id);
+                    dictionary.add("merchant_variant_ids", nested_array);
+                }
+                array.add(dictionary);
+
+                Response<JsonArray> conversionResponse = api.lookupConversion(INTEGRATION_ID, array).execute();
+                if (!conversionResponse.isSuccessful())
+                    throw new API_PreferabliException(conversionResponse.errorBody());
+
+                JsonArray jsonArray = conversionResponse.body();
+
+                for (JsonElement element : jsonArray) {
+                    JsonObject object = element.getAsJsonObject();
+                    JsonArray lookups = object.getAsJsonArray("lookups");
+                    for (JsonElement lookup : lookups) {
+                        Object_MerchantProductLink merchant_link = Tools_Preferabli.convertJsonToObject(lookup.toString(), Object_MerchantProductLink.class);
+                        handleSuccess(handler, merchant_link.getProductId());
+                        return;
+                    }
+                }
+
+                throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.MappingNotFound);
+
+            } catch (API_PreferabliException | IOException e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
     private void addMerchantDataToProducts(ArrayList<Object_Product> products) throws API_PreferabliException, IOException {
         if (products.size() == 0) {
             return;
@@ -664,7 +817,7 @@ public class Preferabli {
         if (e instanceof API_PreferabliException) {
             preferabliException = (API_PreferabliException) e;
         } else {
-            preferabliException = new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.NetworkError, e.getMessage(), 0);
+            preferabliException = new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.NetworkError, e.getMessage());
         }
 
         if (handler != null) {

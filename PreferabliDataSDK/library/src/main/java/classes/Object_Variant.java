@@ -17,6 +17,10 @@ import java.util.Date;
 import java.util.HashSet;
 
 public class Object_Variant extends Object_BaseObject {
+
+    public static int CURRENT_VARIANT_YEAR = -1;
+    public static int NON_VARIANT = 0;
+
     private long product_id;
     private int year;
     private boolean fresh;

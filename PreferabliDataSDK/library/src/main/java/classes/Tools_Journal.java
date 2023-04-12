@@ -160,7 +160,7 @@ public class Tools_Journal {
 
         if (collection == null) {
             // We don't have the collection in question
-            throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.UnknownError);
+            throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.OtherError);
         }
 
         int limit = 50;
