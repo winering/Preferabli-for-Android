@@ -21,6 +21,10 @@ public class Object_PreferenceData {
         this.formatted_predict_rating = formatted_predict_rating;
     }
 
+    public Object_PreferenceData(int formatted_predict_rating) {
+        this.formatted_predict_rating = formatted_predict_rating;
+    }
+
     public String getTitle() {
         return title;
     }

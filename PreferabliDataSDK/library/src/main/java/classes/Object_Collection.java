@@ -10,7 +10,6 @@ package classes;
 
 import android.net.Uri;
 import android.os.Parcel;
-import android.os.Parcelable;
 
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
@@ -49,7 +48,7 @@ public class Object_Collection extends Object_BaseObject {
     private String comment;
     private String created_at;
     private String updated_at;
-    private ArrayList<Version> versions;
+    private ArrayList<Object_Version> versions;
     private ArrayList<Object_CollectionTrait> traits;
     private ArrayList<Object_Media> images;
     private Object_Venue venue;
@@ -211,16 +210,16 @@ public class Object_Collection extends Object_BaseObject {
         return sort_channel_id;
     }
 
-    public ArrayList<Version> getVersions() {
+    public ArrayList<Object_Version> getVersions() {
         if (versions == null) {
             versions = new ArrayList<>();
         }
         return versions;
     }
 
-    public Version getFirstVersion() {
+    public Object_Version getFirstVersion() {
         if (getVersions().size() == 0) {
-            return new Version();
+            return new Object_Version();
         }
 
         return getVersions().get(0);
@@ -251,7 +250,7 @@ public class Object_Collection extends Object_BaseObject {
         setSavedUserCollection();
     }
 
-    public void addVersion(Version version) {
+    public void addVersion(Object_Version version) {
         if (versions == null) versions = new ArrayList<>();
         versions.add(version);
     }
@@ -260,10 +259,10 @@ public class Object_Collection extends Object_BaseObject {
         this.is_pinned = is_pinned;
     }
 
-    public void deleteOrdering(Version.Group.Ordering ordering) {
-        for (Version version : getVersions()) {
-            for (Version.Group group : version.getGroups()) {
-                for (Version.Group.Ordering orderingInLoop : group.getOrderings()) {
+    public void deleteOrdering(Object_Version.Object_Group.Object_Ordering ordering) {
+        for (Object_Version version : getVersions()) {
+            for (Object_Version.Object_Group group : version.getGroups()) {
+                for (Object_Version.Object_Group.Object_Ordering orderingInLoop : group.getOrderings()) {
                     if (ordering == orderingInLoop) {
                         group.removeOrdering(orderingInLoop);
                         return;
@@ -273,10 +272,10 @@ public class Object_Collection extends Object_BaseObject {
         }
     }
 
-    public void updateOrdering(Version.Group.Ordering ordering) {
-        for (Version version : getVersions()) {
-            for (Version.Group group : version.getGroups()) {
-                for (Version.Group.Ordering orderingInLoop : group.getOrderings()) {
+    public void updateOrdering(Object_Version.Object_Group.Object_Ordering ordering) {
+        for (Object_Version version : getVersions()) {
+            for (Object_Version.Object_Group group : version.getGroups()) {
+                for (Object_Version.Object_Group.Object_Ordering orderingInLoop : group.getOrderings()) {
                     if (ordering == orderingInLoop) {
                         orderingInLoop.updateWith(ordering);
                         return;
@@ -286,7 +285,7 @@ public class Object_Collection extends Object_BaseObject {
         }
     }
 
-    public void addVersions(ArrayList<Version> versions) {
+    public void addVersions(ArrayList<Object_Version> versions) {
         if (this.versions == null) this.versions = new ArrayList<>();
         this.versions.addAll(versions);
     }
@@ -334,11 +333,11 @@ public class Object_Collection extends Object_BaseObject {
     }
 
     public Object_Product getWine(long variantId) {
-        for (Version version : getVersions()) {
-            for (Version.Group group : version.getGroups()) {
-                for (Version.Group.Ordering ordering : group.getOrderings()) {
+        for (Object_Version version : getVersions()) {
+            for (Object_Version.Object_Group group : version.getGroups()) {
+                for (Object_Version.Object_Group.Object_Ordering ordering : group.getOrderings()) {
                     if (ordering.getTag().getVariant().getId() == variantId) {
-                        return ordering.getTag().getVariant().getWine();
+                        return ordering.getTag().getVariant().getProduct();
                     }
                 }
             }
@@ -375,10 +374,10 @@ public class Object_Collection extends Object_BaseObject {
     }
 
     public Object_Product.WineGroup getWineGroup(Object_Product product) {
-        ArrayList<Version.Group> groups = versions.get(0).groups;
-        for (Version.Group group : groups) {
-            ArrayList<Version.Group.Ordering> orderings = group.getOrderings();
-            for (Version.Group.Ordering ordering : orderings) {
+        ArrayList<Object_Version.Object_Group> groups = versions.get(0).groups;
+        for (Object_Version.Object_Group group : groups) {
+            ArrayList<Object_Version.Object_Group.Object_Ordering> orderings = group.getOrderings();
+            for (Object_Version.Object_Group.Object_Ordering ordering : orderings) {
                 if (ordering.getCollectionVariantTagId() == product.getCollectionTag().getId()) {
                     return new Object_Product.WineGroup(group, ordering);
                 }
@@ -520,39 +519,34 @@ public class Object_Collection extends Object_BaseObject {
         return true;
     }
 
-    public static class Version implements Parcelable {
-        private long id;
+    public static class Object_Version extends Object_BaseObject {
         private String name;
         private int order;
-        private ArrayList<Group> groups;
+        private ArrayList<Object_Group> groups;
         private String created_at;
         private String updated_at;
 
-        public Version(long id) {
-            this.id = id;
+        public Object_Version(long id){
+            super(id);
         }
 
-        public long getId() {
-            return id;
-        }
-
-        public ArrayList<Group> getGroups() {
+        public ArrayList<Object_Group> getGroups() {
             if (groups == null) groups = new ArrayList<>();
             return groups;
         }
 
-        public void addGroup(Group group) {
+        public void addGroup(Object_Group group) {
             if (groups == null) groups = new ArrayList<>();
             groups.add(group);
         }
 
-        public void addGroups(ArrayList<Group> groups) {
+        public void addGroups(ArrayList<Object_Group> groups) {
             if (this.groups == null) this.groups = new ArrayList<>();
             this.groups.addAll(groups);
         }
 
-        public Group getGroupWithId(long id) {
-            for (Group group : getGroups()) {
+        public Object_Group getGroupWithId(long id) {
+            for (Object_Group group : getGroups()) {
                 if (group.getId() == id) {
                     return group;
                 }
@@ -561,35 +555,26 @@ public class Object_Collection extends Object_BaseObject {
             return null;
         }
 
-        public static class Group implements Parcelable {
-            private long id;
+        public static class Object_Group extends Object_BaseObject {
             private String name;
             private boolean display_name;
             private int order;
             private int orderings_count;
-            private ArrayList<Ordering> orderings;
+            private ArrayList<Object_Ordering> orderings;
             private String created_at;
             private String updated_at;
             private long version_id;
 
-            public Group(long id, String name, int orderings_count, int order, long version_id) {
-                this.id = id;
+            public Object_Group(long id, String name, int orderings_count, int order, long version_id) {
+                super(id);
                 this.name = name;
                 this.order = order;
                 this.orderings_count = orderings_count;
                 this.version_id = version_id;
             }
 
-            public long getId() {
-                return id;
-            }
-
             public String getName() {
                 return name;
-            }
-
-            public void setId(long id) {
-                this.id = id;
             }
 
             public void setName(String name) {
@@ -610,7 +595,7 @@ public class Object_Collection extends Object_BaseObject {
 
             public int getOrderForNewEntry() {
                 if (getOrderings().size() > 0) {
-                    ArrayList<Object_Collection.Version.Group.Ordering> sortedOrders = getOrderings();
+                    ArrayList<Object_Ordering> sortedOrders = getOrderings();
                     int currentHighestOrder = sortedOrders.get(sortedOrders.size() - 1).order;
                     return currentHighestOrder + 1;
                 }
@@ -618,48 +603,32 @@ public class Object_Collection extends Object_BaseObject {
                 return 1;
             }
 
-            @Override
-            public boolean equals(java.lang.Object o) {
-                if (this == o) return true;
-                if (o == null || getClass() != o.getClass()) return false;
-
-                Group group = (Group) o;
-
-                return id == group.id;
-
-            }
-
-            @Override
-            public int hashCode() {
-                return (int) (id ^ (id >>> 32));
-            }
-
             public int getOrder() {
                 return order;
             }
 
-            public ArrayList<Ordering> getOrderings() {
+            public ArrayList<Object_Ordering> getOrderings() {
                 if (this.orderings == null) {
                     this.orderings = new ArrayList<>();
                 }
                 return orderings;
             }
 
-            public void addOrdering(Ordering ordering) {
+            public void addOrdering(Object_Ordering ordering) {
                 if (this.orderings == null) {
                     this.orderings = new ArrayList<>();
                 }
                 this.orderings.add(ordering);
             }
 
-            public void removeOrdering(Ordering ordering) {
+            public void removeOrdering(Object_Ordering ordering) {
                 if (this.orderings == null) {
                     this.orderings = new ArrayList<>();
                 }
                 this.orderings.remove(ordering);
             }
 
-            public void addOrderings(ArrayList<Ordering> orderings) {
+            public void addOrderings(ArrayList<Object_Ordering> orderings) {
                 if (this.orderings == null) {
                     this.orderings = new ArrayList<>();
                 }
@@ -681,9 +650,9 @@ public class Object_Collection extends Object_BaseObject {
                 return updated_at;
             }
 
-            public static class GroupComparator implements Comparator<Group> {
+            public static class GroupComparator implements Comparator<Object_Group> {
                 @Override
-                public int compare(Group group1, Group group2) {
+                public int compare(Object_Group group1, Object_Group group2) {
                     if (group1 == null && group2 == null) {
                         return 0;
                     } else if (group1 == null) {
@@ -696,12 +665,12 @@ public class Object_Collection extends Object_BaseObject {
                 }
             }
 
-            public static ArrayList<Group> sortGroups(ArrayList<Group> groups) {
+            public static ArrayList<Object_Group> sortGroups(ArrayList<Object_Group> groups) {
                 Collections.sort(groups, new GroupComparator());
                 return groups;
             }
 
-            public static class Ordering extends Object_BaseObject {
+            public static class Object_Ordering extends Object_BaseObject {
                 private long tag_id;
                 private int order;
                 private String created_at;
@@ -710,11 +679,11 @@ public class Object_Collection extends Object_BaseObject {
                 private long group_id;
                 private boolean dirty;
 
-                public Ordering() {
+                public Object_Ordering() {
                     super(-System.currentTimeMillis());
                 }
 
-                public Ordering(long id, int order) {
+                public Object_Ordering(long id, int order) {
                     super(id);
                     this.order = order;
                 }
@@ -723,7 +692,7 @@ public class Object_Collection extends Object_BaseObject {
                     this.group_id = group_id;
                 }
 
-                public Ordering(long id, long tag_id, int order, boolean dirty, long group_id) {
+                public Object_Ordering(long id, long tag_id, int order, boolean dirty, long group_id) {
                     super(id);
                     this.tag_id = tag_id;
                     this.order = order;
@@ -731,7 +700,7 @@ public class Object_Collection extends Object_BaseObject {
                     this.group_id = group_id;
                 }
 
-                public void updateWith(Ordering ordering) {
+                public void updateWith(Object_Ordering ordering) {
                     setId(ordering.getId());
                     this.tag_id = ordering.getCollectionVariantTagId();
                     this.order = ordering.getOrder();
@@ -787,9 +756,9 @@ public class Object_Collection extends Object_BaseObject {
                     return updated_at;
                 }
 
-                public static class OrderComparator implements Comparator<Ordering> {
+                public static class OrderComparator implements Comparator<Object_Ordering> {
                     @Override
-                    public int compare(Ordering ordering1, Ordering ordering2) {
+                    public int compare(Object_Ordering ordering1, Object_Ordering ordering2) {
                         if (ordering1 == null && ordering2 == null) {
                             return 0;
                         } else if (ordering1 == null) {
@@ -802,7 +771,7 @@ public class Object_Collection extends Object_BaseObject {
                     }
                 }
 
-                public static ArrayList<Ordering> sortOrders(ArrayList<Ordering> orderings) {
+                public static ArrayList<Object_Ordering> sortOrders(ArrayList<Object_Ordering> orderings) {
                     Collections.sort(orderings, new OrderComparator());
                     return orderings;
                 }
@@ -818,7 +787,7 @@ public class Object_Collection extends Object_BaseObject {
                     dest.writeByte(this.dirty ? (byte) 1 : (byte) 0);
                 }
 
-                public Ordering(Object_Tag tag, long groupId, int order) {
+                public Object_Ordering(Object_Tag tag, long groupId, int order) {
                     super(-System.currentTimeMillis());
                     this.tag = tag;
                     this.dirty = true;
@@ -827,7 +796,7 @@ public class Object_Collection extends Object_BaseObject {
                     this.order = order;
                 }
 
-                protected Ordering(Parcel in) {
+                protected Object_Ordering(Parcel in) {
                     super(in);
                     this.tag_id = in.readLong();
                     this.order = in.readInt();
@@ -838,15 +807,15 @@ public class Object_Collection extends Object_BaseObject {
 
                 }
 
-                public static final Creator<Ordering> CREATOR = new Creator<Ordering>() {
+                public static final Creator<Object_Ordering> CREATOR = new Creator<Object_Ordering>() {
                     @Override
-                    public Ordering createFromParcel(Parcel source) {
-                        return new Ordering(source);
+                    public Object_Ordering createFromParcel(Parcel source) {
+                        return new Object_Ordering(source);
                     }
 
                     @Override
-                    public Ordering[] newArray(int size) {
-                        return new Ordering[size];
+                    public Object_Ordering[] newArray(int size) {
+                        return new Object_Ordering[size];
                     }
                 };
             }
@@ -858,7 +827,7 @@ public class Object_Collection extends Object_BaseObject {
 
             @Override
             public void writeToParcel(Parcel dest, int flags) {
-                dest.writeLong(this.id);
+                super.writeToParcel(dest, flags);
                 dest.writeString(this.name);
                 dest.writeByte(this.display_name ? (byte) 1 : (byte) 0);
                 dest.writeInt(this.order);
@@ -869,30 +838,30 @@ public class Object_Collection extends Object_BaseObject {
                 dest.writeLong(this.version_id);
             }
 
-            public Group() {
+            public Object_Group() {
             }
 
-            protected Group(Parcel in) {
-                this.id = in.readLong();
+            protected Object_Group(Parcel in) {
+                super(in);
                 this.name = in.readString();
                 this.display_name = in.readByte() != 0;
                 this.order = in.readInt();
                 this.orderings_count = in.readInt();
                 this.created_at = in.readString();
                 this.updated_at = in.readString();
-                this.orderings = in.createTypedArrayList(Ordering.CREATOR);
+                this.orderings = in.createTypedArrayList(Object_Ordering.CREATOR);
                 this.version_id = in.readLong();
             }
 
-            public static final Creator<Group> CREATOR = new Creator<Group>() {
+            public static final Creator<Object_Group> CREATOR = new Creator<Object_Group>() {
                 @Override
-                public Group createFromParcel(Parcel source) {
-                    return new Group(source);
+                public Object_Group createFromParcel(Parcel source) {
+                    return new Object_Group(source);
                 }
 
                 @Override
-                public Group[] newArray(int size) {
-                    return new Group[size];
+                public Object_Group[] newArray(int size) {
+                    return new Object_Group[size];
                 }
             };
         }
@@ -904,7 +873,7 @@ public class Object_Collection extends Object_BaseObject {
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
-            dest.writeLong(this.id);
+            super.writeToParcel(dest, flags);
             dest.writeString(this.name);
             dest.writeInt(this.order);
             dest.writeList(this.groups);
@@ -912,28 +881,28 @@ public class Object_Collection extends Object_BaseObject {
             dest.writeString(this.updated_at);
         }
 
-        public Version() {
+        public Object_Version() {
         }
 
-        protected Version(Parcel in) {
-            this.id = in.readLong();
+        protected Object_Version(Parcel in) {
+            super(in);
             this.name = in.readString();
             this.order = in.readInt();
-            this.groups = new ArrayList<Group>();
-            in.readList(this.groups, Group.class.getClassLoader());
+            this.groups = new ArrayList<Object_Group>();
+            in.readList(this.groups, Object_Group.class.getClassLoader());
             this.created_at = in.readString();
             this.updated_at = in.readString();
         }
 
-        public static final Creator<Version> CREATOR = new Creator<Version>() {
+        public static final Creator<Object_Version> CREATOR = new Creator<Object_Version>() {
             @Override
-            public Version createFromParcel(Parcel source) {
-                return new Version(source);
+            public Object_Version createFromParcel(Parcel source) {
+                return new Object_Version(source);
             }
 
             @Override
-            public Version[] newArray(int size) {
-                return new Version[size];
+            public Object_Version[] newArray(int size) {
+                return new Object_Version[size];
             }
         };
     }
@@ -1201,7 +1170,7 @@ public class Object_Collection extends Object_BaseObject {
         this.comment = in.readString();
         this.created_at = in.readString();
         this.updated_at = in.readString();
-        this.versions = in.createTypedArrayList(Version.CREATOR);
+        this.versions = in.createTypedArrayList(Object_Version.CREATOR);
         this.traits = in.createTypedArrayList(Object_CollectionTrait.CREATOR);
         this.images = in.createTypedArrayList(Object_Media.CREATOR);
         this.venue = in.readParcelable(Object_Venue.class.getClassLoader());

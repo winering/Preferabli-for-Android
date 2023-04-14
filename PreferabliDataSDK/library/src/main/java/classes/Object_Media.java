@@ -32,7 +32,7 @@ public class Object_Media extends Object_BaseObject {
         for (Object_LabelRecResult imageRec : imageRecResults) {
             Object_Product product = imageRec.getProduct();
             product.setRateSourceLocation("label_rec");
-            Tools_Database.getInstance().updateWineTable(product);
+            Tools_Database.getInstance().updateProductTable(product);
             for (Object_Variant variant : product.getVariants()) {
                 variant.addTags(Tools_Database.getInstance().getVariantTags(variant));
             }

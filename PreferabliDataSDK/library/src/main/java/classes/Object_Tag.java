@@ -47,7 +47,7 @@ public class Object_Tag extends Object_BaseObject {
     private Other_RatingType ratingType;
     private Other_TagType tag_type;
     private boolean dirty;
-    private Object_Collection.Version.Group.Ordering ordering;
+    private Object_Collection.Object_Version.Object_Group.Object_Ordering ordering;
 
     // only created once
     private transient Date date;
@@ -197,11 +197,11 @@ public class Object_Tag extends Object_BaseObject {
         return Tools_Preferabli.convertAPITimeStampToDate(created_at);
     }
 
-    public Object_Collection.Version.Group.Ordering getOrdering() {
+    public Object_Collection.Object_Version.Object_Group.Object_Ordering getOrdering() {
         return ordering;
     }
 
-    public void setOrdering(Object_Collection.Version.Group.Ordering ordering) {
+    public void setOrdering(Object_Collection.Object_Version.Object_Group.Object_Ordering ordering) {
         this.ordering = ordering;
     }
 

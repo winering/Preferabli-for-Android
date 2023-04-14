@@ -39,8 +39,8 @@ public interface API_Service {
     @POST("collections")
     Call<Object_Collection> createCollection(@Body JsonObject jsonData);
 
-    @GET("channels/{id}/customers/{customerId}")
-    Call<Object_Customer> getCustomer(@Path("id") long id, @Path("customerId") long customerId);
+    @GET("channels/{id}/customers/{customer_id}")
+    Call<Object_Customer> getCustomer(@Path("id") long id, @Path("customer_id") long customer_id);
 
     @GET("users/{user_id}")
     Call<Object_PreferabliUser> getUser(@Path("user_id") long user_id);
@@ -50,6 +50,12 @@ public interface API_Service {
 
     @POST("integrations/{id}/lookups")
     Call<JsonArray> lookupConversion(@Path("id") long id, @Body JsonArray jsonArray);
+
+    @GET("channels/{id}/customers/{customer_id}/profile")
+    Call<Object_Profile> getCustomerProfile(@Path("id") long id, @Path("customer_id") long customer_id);
+
+    @GET("channels/{id}/customers/{customer_id}/tags")
+    Call<ArrayList<Object_Tag>> getCustomerTags(@Path("id") long id, @Path("customer_id") long customer_id, @QueryMap Map<String, Object> options);
 
     @GET("users/{user_id}/usercollections")
     Call<ArrayList<Object_UserCollection>> getUserCollections(@Path("user_id") long user_id, @Query("limit") int limit, @Query("offset") int offset);
@@ -120,7 +126,7 @@ public interface API_Service {
     Call<JsonObject> guidedRecResultsWithCollection(@Query("override_collection_ids[]") long id, @Body JsonObject body);
 
     @GET("collections/{collectionId}/versions/{versionId}/groups/{groupId}/orderings")
-    Call<ArrayList<Object_Collection.Version.Group.Ordering>> getOrderings(@Path("collectionId") long collectionId, @Path("versionId") long versionId, @Path("groupId") long groupId, @Query("limit") int limit, @Query("offset") int offset);
+    Call<ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering>> getOrderings(@Path("collectionId") long collectionId, @Path("versionId") long versionId, @Path("groupId") long groupId, @Query("limit") int limit, @Query("offset") int offset);
 
     @GET("wili")
     Call<Object_PreferenceData> wili(@QueryMap Map<String, Object> options);

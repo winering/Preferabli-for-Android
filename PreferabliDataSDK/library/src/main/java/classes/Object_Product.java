@@ -71,7 +71,7 @@ public class Object_Product extends Object_BaseObject {
         this.dirty = dirty;
     }
 
-    public Object_Product(Object_Collection.Version.Group group, Object_Collection.Version.Group.Ordering ordering) {
+    public Object_Product(Object_Collection.Object_Version.Object_Group group, Object_Collection.Object_Version.Object_Group.Object_Ordering ordering) {
         this();
         setWineGroup(new WineGroup(group, ordering));
     }
@@ -454,11 +454,11 @@ public class Object_Product extends Object_BaseObject {
         return wineGroup;
     }
 
-    public Object_Collection.Version.Group getGroup() {
+    public Object_Collection.Object_Version.Object_Group getGroup() {
         return getWineGroup().getGroup();
     }
 
-    public Object_Collection.Version.Group.Ordering getOrdering() {
+    public Object_Collection.Object_Version.Object_Group.Object_Ordering getOrdering() {
         if (getWineGroup() == null) {
             return null;
         }
@@ -865,27 +865,27 @@ public class Object_Product extends Object_BaseObject {
     }
 
     public static class WineGroup {
-        private Object_Collection.Version.Group group;
-        private Object_Collection.Version.Group.Ordering ordering;
+        private Object_Collection.Object_Version.Object_Group group;
+        private Object_Collection.Object_Version.Object_Group.Object_Ordering ordering;
 
-        public WineGroup(Object_Collection.Version.Group group, Object_Collection.Version.Group.Ordering ordering) {
+        public WineGroup(Object_Collection.Object_Version.Object_Group group, Object_Collection.Object_Version.Object_Group.Object_Ordering ordering) {
             this.group = group;
             this.ordering = ordering;
         }
 
-        public Object_Collection.Version.Group.Ordering getOrdering() {
+        public Object_Collection.Object_Version.Object_Group.Object_Ordering getOrdering() {
             return ordering;
         }
 
-        public void setOrdering(Object_Collection.Version.Group.Ordering ordering) {
+        public void setOrdering(Object_Collection.Object_Version.Object_Group.Object_Ordering ordering) {
             this.ordering = ordering;
         }
 
-        public Object_Collection.Version.Group getGroup() {
+        public Object_Collection.Object_Version.Object_Group getGroup() {
             return group;
         }
 
-        public void setGroup(Object_Collection.Version.Group group) {
+        public void setGroup(Object_Collection.Object_Version.Object_Group group) {
             this.group = group;
         }
     }

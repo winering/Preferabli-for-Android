@@ -11,19 +11,21 @@ package classes;
 import android.app.Application;
 import android.graphics.drawable.Drawable;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.appcompat.content.res.AppCompatResources;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonNull;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import com.ringit.datasdk.R;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -122,13 +124,24 @@ public class Preferabli {
         }
     }
 
+    private void loadUserData() {
+        if (isPreferabliUserLoggedIn() || isCustomerLoggedIn()) {
+            Tools_Preferabli.startNewWorkThread(PRIORITY_REGULAR, () -> {
+                getProfile(PRIORITY_REGULAR, false, null);
+                getRatedProducts(PRIORITY_REGULAR, false, false, null);
+//                getWishlistProducts(PRIORITY_REGULAR, false, false, null);
+                getPurchasedProducts(PRIORITY_REGULAR, false, true, false, null);
+            });
+        }
+    }
+
     private static void handleStartupActions() {
         try {
             startupThreadRunning = true;
             createAnonymousSession();
             getIntegration();
             startupThreadRunning = false;
-
+            main().loadUserData();
         } catch (API_PreferabliException e) {
             // Don't worry about it here but it will be checked and run before any calls to SDK can be made.
             startupThreadRunning = false;
@@ -232,7 +245,7 @@ public class Preferabli {
 
                 handleSuccess(handler, user);
 
-            } catch (API_PreferabliException | IOException e) {
+            } catch (Exception e) {
                 handleError(e, handler);
             }
         });
@@ -276,7 +289,7 @@ public class Preferabli {
                 Tools_Preferabli.saveCustomer(customer);
                 handleSuccess(handler, customer);
 
-            } catch (API_PreferabliException | IOException e) {
+            } catch (Exception e) {
                 handleError(e, handler);
             }
         });
@@ -319,7 +332,7 @@ public class Preferabli {
                     throw new API_PreferabliException(responseResponse.errorBody());
                 handleSuccess(handler, true);
 
-            } catch (API_PreferabliException | IOException e) {
+            } catch (Exception e) {
                 handleError(e, handler);
             }
         });
@@ -332,7 +345,7 @@ public class Preferabli {
      * @param lock_to_integration    pass true if you only want to draw results from your integration. Defaults to true.
      * @param product_categories     pass any {@link Other_ProductCategory} that you would like the results to conform to. Pass null for all results.
      * @param product_types          pass any {@link Other_ProductType} that you would like the results to conform to. Pass null for all results.
-     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} that connect Preferabli products to your own. Defaults to true.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
      * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
     public void searchProducts(String query, Boolean lock_to_integration, ArrayList<Other_ProductCategory> product_categories, ArrayList<Other_ProductType> product_types, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
@@ -377,15 +390,15 @@ public class Preferabli {
                     JsonArray items = jsonObject.getAsJsonArray("products");
                     for (JsonElement item : items) {
                         Object_Product product_from_api = Tools_Preferabli.convertJsonToObject(item.toString(), Object_Product.class);
-                        Tools_Database.getInstance().updateWineTable(product_from_api);
-                        Object_Product product_from_db = Tools_Database.getInstance().getWineWithWineId(product_from_api.getId());
+                        Tools_Database.getInstance().updateProductTable(product_from_api);
+                        Object_Product product_from_db = Tools_Database.getInstance().getProductWithId(product_from_api.getId());
                         product_from_db.setLatestVariantNumDollarSigns(item.getAsJsonObject().get("latest_variant_num_dollar_signs").getAsInt());
                         products_to_return.add(product_from_db);
                     }
                 } else {
                     JsonArray items = jsonObject.getAsJsonArray("tags");
                     for (JsonElement item : items) {
-                        Object_Product product_from_api = Tools_Database.getInstance().getWineWithWineId(item.getAsJsonObject().get("product_id").getAsLong());
+                        Object_Product product_from_api = Tools_Database.getInstance().getProductWithId(item.getAsJsonObject().get("product_id").getAsLong());
                         if (product_from_api == null) {
                             product_from_api = Tools_Preferabli.convertJsonToObject(item.toString(), Object_Product.class);
                         }
@@ -402,8 +415,8 @@ public class Preferabli {
                         variant.setNumDollarSigns(item.getAsJsonObject().get("num_dollar_signs").getAsInt());
                         product_from_api.addVariant(variant);
 
-                        Tools_Database.getInstance().updateWineTable(product_from_api);
-                        Object_Product product_from_db = new Object_Product(Tools_Database.getInstance().getWineWithWineId(product_from_api.getId()));
+                        Tools_Database.getInstance().updateProductTable(product_from_api);
+                        Object_Product product_from_db = new Object_Product(Tools_Database.getInstance().getProductWithId(product_from_api.getId()));
                         products_to_return.add(product_from_db);
                     }
                 }
@@ -416,7 +429,7 @@ public class Preferabli {
 
                 handleSuccess(handler, products_to_return);
 
-            } catch (API_PreferabliException | IOException e) {
+            } catch (Exception e) {
                 handleError(e, handler);
             }
         });
@@ -426,7 +439,7 @@ public class Preferabli {
      * Performs label recognition on a supplied image. Returns any {@link Object_Product} matches.
      *
      * @param label_file             label image you want to search for.
-     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} that connect Preferabli products to your own. Defaults to true.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
      * @param handler                returns {@link Object_LabelRecResults} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
     public void labelRecognition(File label_file, Boolean include_merchant_links, API_ResultHandler<Object_LabelRecResults> handler) {
@@ -471,7 +484,7 @@ public class Preferabli {
 
                 handleSuccess(handler, new Object_LabelRecResults(media, labelRecResults));
 
-            } catch (API_PreferabliException | IOException e) {
+            } catch (Exception e) {
                 handleError(e, handler);
             }
         });
@@ -501,7 +514,7 @@ public class Preferabli {
 
                 handleSuccess(handler, guidedRec);
 
-            } catch (API_PreferabliException | IOException e) {
+            } catch (Exception e) {
                 handleError(e, handler);
             }
         });
@@ -515,7 +528,7 @@ public class Preferabli {
      * @param price_min              pass if you want to lock results to a minimum price. Pass null to ignore.
      * @param price_max              pass if you want to lock results to a maximum price. Pass null to ignore.
      * @param collection_id          the id of a specific {@link Object_Collection} that you want to draw results from. Pass {@link Preferabli#PRIMARY_INVENTORY_ID} for results from your primary inventory. Pass null for results from anywhere.
-     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} that connect Preferabli products to your own. Defaults to true.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
      * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
     public void getGuidedRecResults(long guided_rec_id, ArrayList<Long> selected_choice_ids, Integer price_min, Integer price_max, Long collection_id, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
@@ -592,8 +605,8 @@ public class Preferabli {
 
                     Tools_Database.getInstance().openDatabase();
                     for (Object_Product product : productsResponse.body()) {
-                        Tools_Database.getInstance().updateWineTable(product);
-                        Object_Product product_from_db = Tools_Database.getInstance().getWineWithWineId(product.getId());
+                        Tools_Database.getInstance().updateProductTable(product);
+                        Object_Product product_from_db = Tools_Database.getInstance().getProductWithId(product.getId());
                         products_to_return.add(product_from_db);
                     }
                     Tools_Database.getInstance().closeDatabase();
@@ -605,7 +618,7 @@ public class Preferabli {
 
                 handleSuccess(handler, products_to_return);
 
-            } catch (API_PreferabliException | IOException e) {
+            } catch (Exception e) {
                 handleError(e, handler);
             }
         });
@@ -614,7 +627,7 @@ public class Preferabli {
     /**
      * Get help finding out where a {@link Object_Product} is in stock.
      *
-     * @param product_id                   id of the starting {@link Object_Product}`.  Only pass a Preferabli product id. If necessary, call {@link Preferabli#getPreferabliProductId(String, String, API_ResultHandler)} to convert your product id into a Preferabli product id.
+     * @param product_id                   id of the starting {@link Object_Product}. Only pass a Preferabli product id. If necessary, call {@link Preferabli#getPreferabliProductId(String, String, API_ResultHandler)} to convert your product id into a Preferabli product id.
      * @param fulfill_sort                 pass {@link Other_FulfillSort} for sorting & filtering options. If sorting by distance, {@link Object_Location} MUST be present!
      * @param append_nonconforming_results pass true if you want results that DO NOT conform to all filtering & sorting parameters to be returned. Useful so that something is returned even if the user's filter parameters are too narrow. All results that do not conform contain nonconforming_result = true within. Defaults to true.
      * @param lock_to_integration          pass true if you only want to draw results from your integration. Defaults to true.
@@ -706,10 +719,399 @@ public class Preferabli {
                 Object_WhereToBuy whereToBuy = new Object_WhereToBuy(links, venues);
                 handleSuccess(handler, whereToBuy);
 
-            } catch (API_PreferabliException | IOException e) {
+            } catch (Exception e) {
                 handleError(e, handler);
             }
         });
+    }
+
+    /**
+     * Get a Like This, Try That recommendation. Start with a {@link Object_Product}, get similar tasting results. This function will return personalized results if a user is logged in.
+     *
+     * @param product_id             id of the starting {@link Object_Product}. Only pass a Preferabli product id. If necessary, call {@link Preferabli#getPreferabliProductId(String, String, API_ResultHandler)} to convert your product id into a Preferabli product id.
+     * @param year                   year of the {@link Object_Variant} that you want to get results on. Defaults to {@link Object_Variant#CURRENT_VARIANT_YEAR}.
+     * @param collection_id          the id of a specific {@link Object_Collection} that you want to draw results from. Defaults to {@link Preferabli#PRIMARY_INVENTORY_ID}.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
+     * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void lttt(long product_id, Integer year, Long collection_id, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            try {
+                canWeContinue(false);
+                Tools_Preferabli.createAnalyticsPost("lttt");
+
+                HashMap<String, Object> options = new HashMap<>();
+                if (isPreferabliUserLoggedIn()) {
+                    options.put("user_id", Tools_Preferabli.getPreferabliUserId());
+                } else if (isCustomerLoggedIn()) {
+                    options.put("channel_customer_id", Tools_Preferabli.getCustomerId());
+                }
+                options.put("product_id", product_id);
+                options.put("year", year == null ? Object_Variant.CURRENT_VARIANT_YEAR : year);
+                options.put("collection_id", collection_id == null ? PRIMARY_INVENTORY_ID : collection_id);
+
+                Response<JsonObject> response = api.lttt(options).execute();
+
+                if (!response.isSuccessful())
+                    throw new API_PreferabliException(response.errorBody());
+
+                JsonObject object = response.body();
+
+                if (object == null || object.get("results") == null) {
+                    throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+                }
+
+                Tools_Database.getInstance().openDatabase();
+                ArrayList<Object_Product> products_to_return = new ArrayList<>();
+                JsonArray jsonArray = object.get("results").getAsJsonArray();
+
+                for (JsonElement element : jsonArray) {
+                    JsonObject objectHere = element.getAsJsonObject();
+                    Object_Product product = Tools_Preferabli.getGson().fromJson(objectHere.get("product").toString(), new TypeToken<Object_Product>() {
+                    }.getType());
+                    Tools_Database.getInstance().updateProductTable(product);
+                    Object_Product product_from_db = Tools_Database.getInstance().getProductWithId(product.getId());
+                    if (objectHere.has("formatted_predict_rating") && !(objectHere.get("formatted_predict_rating") instanceof JsonNull)) {
+                        Object_PreferenceData data = new Object_PreferenceData(objectHere.get("formatted_predict_rating").getAsInt());
+                        product_from_db.getMostRecentVariant().setPreferenceData(data);
+                    }
+                    products_to_return.add(product_from_db);
+                }
+
+                if (include_merchant_links == null || include_merchant_links) {
+                    addMerchantDataToProducts(products_to_return);
+                }
+
+                handleSuccess(handler, products_to_return);
+
+            } catch (Exception e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    /**
+     * Get the Preference Profile of the customer / user. Customer / user must be logged in to run this call.
+     *
+     * @param force_refresh pass true if you want to force a refresh from the API and wait for the results to return. Otherwise, the call will load locally if available and run a background refresh only if one has not been initiated in the past 5 minutes. Defaults to false.
+     * @param handler       returns {@link Object_Profile} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void getProfile(Boolean force_refresh, API_ResultHandler<Object_Profile> handler) {
+        getProfile(PRIORITY_HIGH, force_refresh, handler);
+    }
+
+    private void getProfile(int priority, Boolean force_refresh, API_ResultHandler<Object_Profile> handler) {
+        Tools_Preferabli.startNewWorkThread(priority, () -> {
+            try {
+                canWeContinue(true);
+                Tools_Preferabli.createAnalyticsPost("get_profile");
+
+                if ((force_refresh != null && force_refresh) || !Tools_Preferabli.getKeyStore().getBoolean("hasLoadedProfile", false)) {
+                    getProfileActual(force_refresh != null && force_refresh);
+                } else if (Tools_Preferabli.hasMinutesPassed(5, Tools_Preferabli.getKeyStore().getLong("lastCalledProfile", 0))) {
+                    Tools_Preferabli.startNewWorkThread(PRIORITY_LOW, () -> {
+                        try {
+                            getProfileActual(false);
+                        } catch (Exception e) {
+                            // catching any issues here so that we can still pull up our saved data
+                            if (isLoggingEnabled()) {
+                                Log.e(getClass().getName(), e.getMessage());
+                            }
+                        }
+                    });
+                }
+
+                Tools_Database.getInstance().openDatabase();
+                ArrayList<Object_ProfileStyle> profile_styles = Tools_Database.getInstance().getStyles();
+                Tools_Database.getInstance().closeDatabase();
+                Object_Profile profile = new Object_Profile(profile_styles);
+
+                handleSuccess(handler, profile);
+
+            } catch (Exception e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    private void getProfileActual(Boolean force_refresh) throws IOException, API_PreferabliException {
+        Response<Object_Profile> profilesResponse;
+        if (isPreferabliUserLoggedIn()) {
+            profilesResponse = api.getProfile(Tools_Preferabli.getPreferabliUserId()).execute();
+        } else {
+            profilesResponse = api.getCustomerProfile(CHANNEL_ID, Tools_Preferabli.getCustomerId()).execute();
+        }
+
+        if (!profilesResponse.isSuccessful())
+            throw new API_PreferabliException(profilesResponse.errorBody());
+
+        Object_Profile profile = profilesResponse.body();
+
+        if (profile == null) {
+            throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+        }
+
+        Tools_Database.getInstance().openDatabase();
+
+        ArrayList<Long> style_ids = new ArrayList<>();
+        HashMap<Long, Object_ProfileStyle> styleMap = new HashMap<>();
+        for (Object_ProfileStyle objectProfileStyle : profile.getProfileStyles()) {
+            if (force_refresh) {
+                style_ids.add(objectProfileStyle.getStyle_id());
+                styleMap.put(objectProfileStyle.getStyle_id(), objectProfileStyle);
+            } else {
+                Object_ProfileStyle objectProfileStyleFromDB = Tools_Database.getInstance().getStyleById(objectProfileStyle.getId());
+                if (objectProfileStyleFromDB == null || objectProfileStyleFromDB.getStyle() == null) {
+                    style_ids.add(objectProfileStyle.getStyle_id());
+                    styleMap.put(objectProfileStyle.getStyle_id(), objectProfileStyle);
+                }
+            }
+        }
+
+        Tools_Database.getInstance().closeDatabase();
+
+        if (style_ids.size() > 0) {
+            Response<ArrayList<Object_Style>> stylesResponse = api.getStyles(style_ids).execute();
+            if (!stylesResponse.isSuccessful())
+                throw new API_PreferabliException(stylesResponse.errorBody());
+
+            if (stylesResponse.body() == null) {
+                throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+            }
+
+            for (Object_Style style : stylesResponse.body()) {
+                styleMap.get(style.getId()).setStyle(style);
+            }
+        }
+
+        Tools_Database.getInstance().openDatabase();
+        if (force_refresh) {
+            Tools_Database.getInstance().clearStyleTable();
+        }
+        for (Object_ProfileStyle objectProfileStyle : profile.getProfileStyles()) {
+            Tools_Database.getInstance().updateStyleTable(objectProfileStyle);
+        }
+        Tools_Database.getInstance().closeDatabase();
+
+        Tools_Preferabli.getKeyStore().edit().putLong("lastCalledProfile", System.currentTimeMillis()).apply();
+        Tools_Preferabli.getKeyStore().edit().putBoolean("hasLoadedProfile", true).apply();
+    }
+
+    /**
+     * Get rated products. Customer / Preferabli user must be logged in to run this call.
+     *
+     * @param force_refresh          pass true if you want to force a refresh from the API and wait for the results to return. Otherwise, the call will load locally if available and run a background refresh only if one has not been initiated in the past 5 minutes. Defaults to false.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
+     * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void getRatedProducts(Boolean force_refresh, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        getRatedProducts(PRIORITY_HIGH, force_refresh, include_merchant_links, handler);
+    }
+
+    private void getRatedProducts(int priority, Boolean force_refresh, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        Tools_Preferabli.startNewWorkThread(priority, () -> {
+            try {
+                canWeContinue(true);
+                Tools_Preferabli.createAnalyticsPost("get_rated_products");
+
+                ArrayList<Object_Product> products_to_return;
+                if (isPreferabliUserLoggedIn()) {
+                    products_to_return = getProductsInCollection(priority, force_refresh, Tools_Preferabli.getKeyStore().getLong("ratings_id", 0));
+                } else {
+                    products_to_return = getCustomerTags(force_refresh, "rating");
+                }
+
+                if (include_merchant_links == null || include_merchant_links) {
+                    addMerchantDataToProducts(products_to_return);
+                }
+
+                canWeContinue(true);
+
+                handleSuccess(handler, products_to_return);
+
+            } catch (Exception e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    /**
+     * Get wishlisted products. Customer / Preferabli user must be logged in to run this call.
+     *
+     * @param force_refresh          pass true if you want to force a refresh from the API and wait for the results to return. Otherwise, the call will load locally if available and run a background refresh only if one has not been initiated in the past 5 minutes. Defaults to false.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
+     * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void getWishlistProducts(Boolean force_refresh, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        getWishlistedProducts(PRIORITY_HIGH, force_refresh, include_merchant_links, handler);
+    }
+
+    private void getWishlistedProducts(int priority, Boolean force_refresh, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        Tools_Preferabli.startNewWorkThread(priority, () -> {
+            try {
+                canWeContinue(true);
+                Tools_Preferabli.createAnalyticsPost("get_wishlist_products");
+
+                ArrayList<Object_Product> products_to_return;
+                if (isPreferabliUserLoggedIn()) {
+                    products_to_return = getProductsInCollection(priority, force_refresh, Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0));
+                } else {
+                    products_to_return = getCustomerTags(force_refresh, "wishlist");
+                }
+
+                if (include_merchant_links == null || include_merchant_links) {
+                    addMerchantDataToProducts(products_to_return);
+                }
+
+                canWeContinue(true);
+
+                handleSuccess(handler, products_to_return);
+
+            } catch (Exception e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    /**
+     * Get purchased products. Customer / Preferabli user must be logged in to run this call.
+     *
+     * @param force_refresh          pass true if you want to force a refresh from the API and wait for the results to return. Otherwise, the call will load locally if available and run a background refresh only if one has not been initiated in the past 5 minutes. Defaults to false.
+     * @param lock_to_integration    pass true if you only want to draw results from your integration. Defaults to true.
+     * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
+     * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void getPurchasedProducts(Boolean force_refresh, Boolean lock_to_integration, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        getPurchasedProducts(PRIORITY_HIGH, force_refresh, include_merchant_links, handler);
+    }
+
+    private void getPurchasedProducts(int priority, Boolean force_refresh, Boolean lock_to_integration, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        Tools_Preferabli.startNewWorkThread(priority, () -> {
+            try {
+                canWeContinue(true);
+                Tools_Preferabli.createAnalyticsPost("get_purchase_history");
+
+                ArrayList<Object_Product> products_to_return;
+                if (isPreferabliUserLoggedIn()) {
+                    need tow ork on this
+                } else {
+                    products_to_return = getCustomerTags(force_refresh, "purchase");
+                }
+
+                if (include_merchant_links == null || include_merchant_links) {
+                    addMerchantDataToProducts(products_to_return);
+                }
+
+                canWeContinue(true);
+
+                handleSuccess(handler, products_to_return);
+
+            } catch (Exception e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    private ArrayList<Object_Product> getProductsInCollection(int priority, Boolean force_refresh, long collection_id) throws Exception {
+        if ((force_refresh != null && force_refresh) || !Tools_Preferabli.getKeyStore().getBoolean("hasLoaded" + collection_id, false)) {
+            Tools_LoadCollection.getInstance().loadCollectionViaTags(collection_id, priority);
+        } else if (Tools_Preferabli.hasMinutesPassed(5, Tools_Preferabli.getKeyStore().getLong("lastCalled" + collection_id, 0))) {
+            Tools_Preferabli.startNewWorkThread(PRIORITY_LOW, () -> {
+                try {
+                    Tools_LoadCollection.getInstance().loadCollectionViaTags(collection_id, PRIORITY_LOW);
+                } catch (Exception e) {
+                    // catching any issues here so that we can still pull up our saved data
+                    if (isLoggingEnabled()) {
+                        Log.e(getClass().getName(), e.getMessage());
+                    }
+                }
+            });
+        }
+
+        Tools_Database.getInstance().openDatabase();
+        Object_Collection collection = Tools_Database.getInstance().getCollection(collection_id);
+        Tools_Database.getInstance().closeDatabase();
+
+        ArrayList<Object_Product> products_to_return = Tools_LoadCollection.getInstance().getCachedProducts(collection, false);
+
+        canWeContinue(true);
+
+        return products_to_return;
+    }
+
+    private ArrayList<Object_Product> getCustomerTags(Boolean force_refresh, String tag_type) throws Exception {
+        if ((force_refresh != null && force_refresh) || !Tools_Preferabli.getKeyStore().getBoolean("hasLoaded" + (tag_type == null ? "AllCustomerTags" : tag_type), false)) {
+            getCustomerTagsActual(tag_type);
+        } else if (Tools_Preferabli.hasMinutesPassed(5, Tools_Preferabli.getKeyStore().getLong("lastCalled" + (tag_type == null ? "AllCustomerTags" : tag_type), 0))) {
+            Tools_Preferabli.startNewWorkThread(PRIORITY_LOW, () -> {
+                try {
+                    getCustomerTagsActual(tag_type);
+                } catch (Exception e) {
+                    // catching any issues here so that we can still pull up our saved data
+                    if (isLoggingEnabled()) {
+                        Log.e(getClass().getName(), e.getMessage());
+                    }
+                }
+            });
+        }
+
+        Tools_Database.getInstance().openDatabase();
+        ArrayList<Object_Product> products_to_return = Tools_Database.getInstance().getCustomerTags(Tools_Preferabli.getCustomerId());
+        Tools_Database.getInstance().closeDatabase();
+
+        canWeContinue(true);
+
+        return products_to_return;
+    }
+
+    private ArrayList<Object_Product> getCustomerTagsActual(String tag_type) throws Exception {
+        Map<String, Object> map = new HashMap<>();
+        if (!Tools_Preferabli.isNullOrWhitespace(tag_type)) {
+            map.put("tag_type", tag_type);
+        }
+        map.put("offset", 0);
+        map.put("limit", 9999);
+
+        Response<ArrayList<Object_Tag>> historyResponse = api.getCustomerTags(CHANNEL_ID, Tools_Preferabli.getCustomerId(), map).execute();
+        if (!historyResponse.isSuccessful())
+            throw new API_PreferabliException(historyResponse.errorBody());
+
+        ArrayList<Object_Tag> tags = historyResponse.body();
+
+        Tools_Database.getInstance().openDatabase();
+        ArrayList<Long> variant_ids = new ArrayList<>();
+        for (Object_Tag tag : tags) {
+            Tools_Database.getInstance().updateTagTable(Tools_Preferabli.getCustomerId(), null, tag);
+            variant_ids.add(tag.getVariantId());
+        }
+        Tools_Database.getInstance().closeDatabase();
+
+        Response<ArrayList<Object_Product>> productsResponse = api.getProducts(variant_ids).execute();
+        if (!productsResponse.isSuccessful())
+            throw new API_PreferabliException(productsResponse.errorBody());
+
+        ArrayList<Object_Product> products = productsResponse.body();
+
+        if (products == null) {
+            throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+        }
+
+        Tools_Database.getInstance().openDatabase();
+        for (Object_Product product : products) {
+            Tools_Database.getInstance().updateProductTable(product);
+            for (Object_Variant variant : product.getVariants()) {
+                variant.setProduct(product);
+                for (Object_Tag tag : tags) {
+                    if (variant.getId() == tag.getVariantId()) {
+                        variant.addTag(tag);
+                        tag.setVariant(variant);
+                    }
+                }
+            }
+        }
+        Tools_Database.getInstance().closeDatabase();
+
+        return products;
     }
 
     /**
@@ -717,7 +1119,7 @@ public class Preferabli {
      *
      * @param merchant_product_id the id of your product (as it appears in your system). Either this or merchant_variant_id is required.
      * @param merchant_variant_id the id of your product variant (as it appears in your system). Used only if you have a hierarchical database format for your products.
-     * @param handler returns product id as a long if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     * @param handler             returns product id as a long if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
     public void getPreferabliProductId(String merchant_product_id, String merchant_variant_id, API_ResultHandler<Long> handler) {
         Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
@@ -762,7 +1164,7 @@ public class Preferabli {
 
                 throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.MappingNotFound);
 
-            } catch (API_PreferabliException | IOException e) {
+            } catch (Exception e) {
                 handleError(e, handler);
             }
         });
@@ -818,6 +1220,10 @@ public class Preferabli {
             preferabliException = (API_PreferabliException) e;
         } else {
             preferabliException = new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.NetworkError, e.getMessage());
+        }
+
+        if (loggingEnabled) {
+            Log.e(getClass().getName(), preferabliException.getMessage());
         }
 
         if (handler != null) {

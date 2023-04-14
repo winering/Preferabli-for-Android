@@ -194,7 +194,7 @@ public class Tools_Journal {
 
                             Tools_Database.getInstance().openDatabase();
                             for (Object_Product product : products) {
-                                Tools_Database.getInstance().updateWineTable(product);
+                                Tools_Database.getInstance().updateProductTable(product);
                             }
                             Tools_Database.getInstance().closeDatabase();
 

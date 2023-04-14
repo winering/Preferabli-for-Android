@@ -36,6 +36,7 @@ import classes.Object_LabelRecResult;
 import classes.Object_LabelRecResults;
 import classes.Object_PreferabliUser;
 import classes.Object_Product;
+import classes.Object_Profile;
 import classes.Object_WhereToBuy;
 import classes.Preferabli;
 
@@ -287,6 +288,69 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
         });
     }
 
+    public void lttt() {
+        showLoadingView();
+
+        Preferabli.main().lttt(11263, null, null, null, new API_ResultHandler<ArrayList<Object_Product>>() {
+            @Override
+            public void onSuccess(ArrayList<Object_Product> data) {
+                products = data;
+                items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
+    public void getRatedProducts() {
+        showLoadingView();
+
+        Preferabli.main().getRatedProducts(null, null, new API_ResultHandler<ArrayList<Object_Product>>() {
+            @Override
+            public void onSuccess(ArrayList<Object_Product> data) {
+                products = data;
+                items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
+    public void getProfile() {
+        showLoadingView();
+
+        Preferabli.main().getProfile(null, new API_ResultHandler<Object_Profile>() {
+            @Override
+            public void onSuccess(Object_Profile data) {
+                products.clear();
+                items = new ArrayList<>(data.getProfileStyles().stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
     public File getExampleAsFile() {
         Bitmap bm = BitmapFactory.decodeResource(getResources(), R.drawable.label_rec_example);
 
@@ -348,6 +412,11 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
         if (adapterView == authenticatedActions) {
             if (i == 1) {
                 showSnackbar("HEY");
+            } else if (i == 2) {
+            } else if (i == 3) {
+                getProfile();
+            } else if (i == 6) {
+                getRatedProducts();
             }
         } else {
             if (i == 1) {
@@ -358,6 +427,8 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
                 guidedRec();
             } else if (i == 4) {
                 whereToBuy();
+            } else if (i == 5) {
+                lttt();
             }
         }
     }

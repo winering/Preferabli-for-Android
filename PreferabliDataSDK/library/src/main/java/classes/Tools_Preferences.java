@@ -141,7 +141,7 @@ public class Tools_Preferences {
         try {
             Response<Object_Profile> profilesResponse = API_Singleton.getInstanceService().getProfile(Tools_Preferabli.getPreferabliUserId()).execute();
             if (profilesResponse.isSuccessful()) {
-                saveStylesToDB(profilesResponse.body().getPreferenceStyles(), forceRefresh);
+                saveStylesToDB(profilesResponse.body().getProfileStyles(), forceRefresh);
                 Tools_Preferabli.getKeyStore().edit().putBoolean("hasCalledStyles", true).apply();
             } else throw new API_PreferabliException(profilesResponse.errorBody());
         } catch (API_PreferabliException | IOException e) {

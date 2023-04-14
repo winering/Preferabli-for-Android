@@ -39,6 +39,7 @@ public class Object_Variant extends Object_BaseObject {
     private transient Object_Tag most_recent_rating;
     private transient HashSet<Object_Tag> ratings_tags;
     private transient ArrayList<Object_MerchantProductLink> merchant_links;
+    private transient Object_PreferenceData preference_data;
 
     public void clearTransients() {
         ratings_tags = null;
@@ -107,7 +108,7 @@ public class Object_Variant extends Object_BaseObject {
         return ratings_tags;
     }
 
-    public Object_Product getWine() {
+    public Object_Product getProduct() {
         return product;
     }
 
@@ -143,11 +144,19 @@ public class Object_Variant extends Object_BaseObject {
         this.tags.addAll(tags);
     }
 
+    public void setPreferenceData(Object_PreferenceData preference_data) {
+        this.preference_data = preference_data;
+    }
+
+    public Object_PreferenceData getPreferenceData() {
+        return preference_data;
+    }
+
     public String getImage() {
         if (primary_image != null && !Tools_Preferabli.isNullOrWhitespace(primary_image.getPath()) && !primary_image.getPath().contains("placeholder"))
             return primary_image.getPath();
-        else if (getWine() != null && getWine().getPrimaryImagePath() != null && !getWine().getPrimaryImagePath().contains("placeholder")) {
-            return getWine().getPrimaryImagePath();
+        else if (getProduct() != null && getProduct().getPrimaryImagePath() != null && !getProduct().getPrimaryImagePath().contains("placeholder")) {
+            return getProduct().getPrimaryImagePath();
         }
         return null;
     }
