@@ -8,8 +8,11 @@
 
 package classes;
 
+import android.util.Log;
+
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 
@@ -32,29 +35,50 @@ public class Tools_LoadCollection {
         loadCollectionTools = null;
     }
 
-    public Object_Collection loadCollection(long collectionId) throws IOException, API_PreferabliException {
-        Response<Object_Collection> collectionResponse = API_Singleton.getInstanceService().getCollection(collectionId).execute();
-        if (!collectionResponse.isSuccessful()) throw new API_PreferabliException(collectionResponse.errorBody());
-        Tools_Preferabli.saveCollectionEtag(collectionResponse, collectionId);
-        Object_Collection collection = collectionResponse.body();
+    public Object_Collection getCollection(boolean force_refresh, long collectionId) throws IOException, API_PreferabliException {
         Tools_Database.getInstance().openDatabase();
-        Tools_Database.getInstance().deleteCollection(collection);
-        Tools_Database.getInstance().updateCollectionTable(collection);
-        collection = Tools_Database.getInstance().getCollection(collectionId);
+        Object_Collection collection = Tools_Database.getInstance().getCollection(collectionId);
         Tools_Database.getInstance().closeDatabase();
+
+        if (collection == null || force_refresh) {
+            Response<Object_Collection> collectionResponse = API_Singleton.getInstanceService().getCollection(collectionId).execute();
+            if (!collectionResponse.isSuccessful())
+                throw new API_PreferabliException(collectionResponse.errorBody());
+            Tools_Preferabli.saveCollectionEtag(collectionResponse, collectionId);
+            collection = collectionResponse.body();
+            Tools_Database.getInstance().openDatabase();
+            Tools_Database.getInstance().deleteCollection(collection);
+            Tools_Database.getInstance().updateCollectionTable(collection);
+            collection = Tools_Database.getInstance().getCollection(collectionId);
+            Tools_Database.getInstance().closeDatabase();
+        }
+
         return collection;
     }
 
-    public void loadCollectionViaTags(long collectionId, int priority) throws InterruptedException, API_PreferabliException {
+    public void loadCollectionViaTags(int priority, boolean force_refresh, long collection_id) throws Exception {
+        if (force_refresh || !Tools_Preferabli.getKeyStore().getBoolean("hasLoaded" + collection_id, false)) {
+            Tools_LoadCollection.getInstance().getTagsAndProducts(collection_id, priority, force_refresh);
+        } else if (Tools_Preferabli.hasMinutesPassed(5, Tools_Preferabli.getKeyStore().getLong("lastCalled" + collection_id, 0))) {
+            Tools_Preferabli.startNewWorkThread(Preferabli.PRIORITY_LOW, () -> {
+                try {
+                    Tools_LoadCollection.getInstance().getTagsAndProducts(collection_id, Preferabli.PRIORITY_LOW, false);
+                } catch (Exception e) {
+                    // catching any issues here so that we can still pull up our saved data
+                    if (Preferabli.isLoggingEnabled()) {
+                        Log.e(getClass().getName(), e.getMessage());
+                    }
+                }
+            });
+        }
+    }
+
+    private void getTagsAndProducts(long collectionId, int priority, boolean force_refresh) throws InterruptedException, API_PreferabliException, IOException {
+        Object_Collection collection = getCollection(force_refresh, collectionId);
+
         Tools_Database.getInstance().openDatabase();
-        Object_Collection collection = Tools_Database.getInstance().getCollection(collectionId);
         Tools_Database.getInstance().clearTagTable(collectionId, false);
         Tools_Database.getInstance().closeDatabase();
-
-        if (collection == null) {
-            // We don't have the collection in question
-            throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.OtherError);
-        }
 
         int limit = 50;
         Semaphore getItemsSempahore = new Semaphore(10);
@@ -64,7 +88,7 @@ public class Tools_LoadCollection {
             getItemsSempahore.acquire();
             offsetOverall = offsetOverall + limit;
             final int offset = offsetOverall;
-            Tools_Preferabli.startNewWorkThread(priority, () -> {
+            Tools_Preferabli.startNewAPIWorkThread(priority, () -> {
                 try {
                     Response<ArrayList<Object_Tag>> tagsResponse = API_Singleton.getInstanceService().getTags(collectionId, offset, limit).execute();
                     if (!tagsResponse.isSuccessful())

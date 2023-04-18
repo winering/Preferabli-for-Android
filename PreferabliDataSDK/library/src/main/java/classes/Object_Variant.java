@@ -50,7 +50,7 @@ public class Object_Variant extends Object_BaseObject {
     public Object_Variant(Object_Tag tag) {
         super(-System.currentTimeMillis());
         this.year = 0;
-        this.product_id = tag.getWineId();
+        this.product_id = tag.getProductId();
         addTag(tag);
     }
 

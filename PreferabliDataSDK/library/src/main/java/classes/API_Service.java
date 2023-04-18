@@ -31,19 +31,22 @@ import retrofit2.http.QueryMap;
 public interface API_Service {
 
     @POST("sessions")
-    Call<Object_SessionData> getSession(@Body JsonObject jsonData);
+    Call<Object_SessionData> getSession(@Body JsonObject body);
 
     @POST("users")
-    Call<Object_PreferabliUser> createUser(@Body JsonObject jsonData);
+    Call<Object_PreferabliUser> createUser(@Body JsonObject body);
 
     @POST("collections")
-    Call<Object_Collection> createCollection(@Body JsonObject jsonData);
+    Call<Object_Collection> createCollection(@Body JsonObject body);
 
     @GET("channels/{id}/customers/{customer_id}")
     Call<Object_Customer> getCustomer(@Path("id") long id, @Path("customer_id") long customer_id);
 
     @GET("users/{user_id}")
     Call<Object_PreferabliUser> getUser(@Path("user_id") long user_id);
+
+    @POST("collections/{collection_id}/tags")
+    Call<Object_Tag> createCollectionTag(@Path("collection_id") long collection_id, @Body JsonObject body);
 
     @GET("integrations/{id}")
     Call<JsonObject> getIntegration(@Path("id") long id);
@@ -61,7 +64,7 @@ public interface API_Service {
     Call<ArrayList<Object_UserCollection>> getUserCollections(@Path("user_id") long user_id, @Query("limit") int limit, @Query("offset") int offset);
 
     @POST("users/{user_id}/usercollections")
-    Call<Object_UserCollection> createUserCollection(@Path("user_id") long user_id, @Body JsonObject jsonObject);
+    Call<Object_UserCollection> createUserCollection(@Path("user_id") long user_id, @Body JsonObject body);
 
     @GET("resetpassword")
     Call<ResponseBody> resetPassword(@Query("email") String email);
@@ -141,10 +144,10 @@ public interface API_Service {
     Call<Object_Tag> createTag(@Path("user_id") long user_id, @Body Object_Tag tag);
 
     @POST("collections/{collection_id}/tags")
-    Call<Object_Tag> createTag(@Path("collection_id") long collection_id, @Body JsonObject tag);
+    Call<Object_Tag> createTag(@Path("collection_id") long collection_id, @Body JsonObject body);
 
     @PUT("collections/{collection_id}")
-    Call<Object_Collection> updateCollection(@Path("collection_id") long collection_id, @Body JsonObject collection);
+    Call<Object_Collection> updateCollection(@Path("collection_id") long collection_id, @Body JsonObject body);
 
     @DELETE("collections/{collectionId}/versions/{versionId}/groups/{groupId}/orderings/{orderingId}")
     Call<ResponseBody> deleteOrdering(@Path("collectionId") long collectionId, @Path("versionId") long versionId, @Path("groupId") long groupId, @Path("orderingId") long orderingId);
@@ -153,19 +156,19 @@ public interface API_Service {
     Call<Object_Style> getStyle(@Path("style_id") long style_id);
 
     @POST("products/{product_id}/variants")
-    Call<Object_Variant> createVariant(@Path("product_id") long product_id, @Body JsonObject variant);
+    Call<Object_Variant> createVariant(@Path("product_id") long product_id, @Body JsonObject body);
 
     @PUT("media/{id}")
-    Call<Object_Media> updateMedia(@Path("id") long id, @Body JsonObject jsonObject);
+    Call<Object_Media> updateMedia(@Path("id") long id, @Body JsonObject body);
 
     @PUT("users/{user_id}/tags/{tag_id}")
-    Call<Object_Tag> updateTag(@Path("user_id") long user_id, @Path("tag_id") long tag_id, @Body JsonObject tag);
+    Call<Object_Tag> updateTag(@Path("user_id") long user_id, @Path("tag_id") long tag_id, @Body JsonObject body);
 
     @DELETE("users/{user_id}/tags/{tag_id}")
     Call<ResponseBody> deleteTag(@Path("user_id") long user_id, @Path("tag_id") long tag_id);
 
     @POST("products")
-    Call<Object_Product> createProduct(@Body JsonObject product);
+    Call<Object_Product> createProduct(@Body JsonObject body);
 
     @GET("products/{product_id}")
     Call<Object_Product> getProduct(@Path("product_id") long product_id);
@@ -175,4 +178,10 @@ public interface API_Service {
 
     @GET("imagerec")
     Call<ArrayList<Object_LabelRecResult>> imageRec(@Query("media_id") long media_id);
+
+    @POST("channels/{channel_id}/customers/{customer_id}/tags")
+    Call<Object_Tag> createCustomerTag(@Path("channel_id") long channel_id, @Path("customer_id") long customerId, @Body JsonObject body);
+
+    @DELETE("channels/{channel_id}/customers/{customer_id}/tags/{tag_id}")
+    Call<ResponseBody> deleteCustomerTag(@Path("channel_id") long channel_id, @Path("customer_id") long customerId, @Path("tag_id") long tagId);
 }

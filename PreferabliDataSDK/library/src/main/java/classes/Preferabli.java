@@ -806,8 +806,8 @@ public class Preferabli {
                 canWeContinue(true);
                 Tools_Preferabli.createAnalyticsPost("get_profile");
 
-                if ((force_refresh != null && force_refresh) || !Tools_Preferabli.getKeyStore().getBoolean("hasLoadedProfile", false)) {
-                    getProfileActual(force_refresh != null && force_refresh);
+                if (Tools_Preferabli.isForceRefresh(force_refresh) || !Tools_Preferabli.getKeyStore().getBoolean("hasLoadedProfile", false)) {
+                    getProfileActual(Tools_Preferabli.isForceRefresh(force_refresh));
                 } else if (Tools_Preferabli.hasMinutesPassed(5, Tools_Preferabli.getKeyStore().getLong("lastCalledProfile", 0))) {
                     Tools_Preferabli.startNewWorkThread(PRIORITY_LOW, () -> {
                         try {
@@ -856,7 +856,7 @@ public class Preferabli {
         ArrayList<Long> style_ids = new ArrayList<>();
         HashMap<Long, Object_ProfileStyle> styleMap = new HashMap<>();
         for (Object_ProfileStyle objectProfileStyle : profile.getProfileStyles()) {
-            if (force_refresh) {
+            if (Tools_Preferabli.isForceRefresh(force_refresh)) {
                 style_ids.add(objectProfileStyle.getStyle_id());
                 styleMap.put(objectProfileStyle.getStyle_id(), objectProfileStyle);
             } else {
@@ -885,7 +885,7 @@ public class Preferabli {
         }
 
         Tools_Database.getInstance().openDatabase();
-        if (force_refresh) {
+        if (Tools_Preferabli.isForceRefresh(force_refresh)) {
             Tools_Database.getInstance().clearStyleTable();
         }
         for (Object_ProfileStyle objectProfileStyle : profile.getProfileStyles()) {
@@ -916,9 +916,9 @@ public class Preferabli {
 
                 ArrayList<Object_Product> products_to_return;
                 if (isPreferabliUserLoggedIn()) {
-                    products_to_return = getProductsInCollection(priority, force_refresh, Tools_Preferabli.getKeyStore().getLong("ratings_id", 0));
+                    products_to_return = getProductsInCollection(priority, Tools_Preferabli.isForceRefresh(force_refresh), Tools_Preferabli.getKeyStore().getLong("ratings_id", 0));
                 } else {
-                    products_to_return = getCustomerTags(force_refresh, "rating");
+                    products_to_return = getCustomerTags(Tools_Preferabli.isForceRefresh(force_refresh), "rating");
                 }
 
                 if (include_merchant_links == null || include_merchant_links) {
@@ -954,9 +954,9 @@ public class Preferabli {
 
                 ArrayList<Object_Product> products_to_return;
                 if (isPreferabliUserLoggedIn()) {
-                    products_to_return = getProductsInCollection(priority, force_refresh, Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0));
+                    products_to_return = getProductsInCollection(priority, Tools_Preferabli.isForceRefresh(force_refresh), Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0));
                 } else {
-                    products_to_return = getCustomerTags(force_refresh, "wishlist");
+                    products_to_return = getCustomerTags(Tools_Preferabli.isForceRefresh(force_refresh), "wishlist");
                 }
 
                 if (include_merchant_links == null || include_merchant_links) {
@@ -982,7 +982,7 @@ public class Preferabli {
      * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
     public void getPurchasedProducts(Boolean force_refresh, Boolean lock_to_integration, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
-        getPurchasedProducts(PRIORITY_HIGH, force_refresh, include_merchant_links, handler);
+        getPurchasedProducts(PRIORITY_HIGH, force_refresh, lock_to_integration, include_merchant_links, handler);
     }
 
     private void getPurchasedProducts(int priority, Boolean force_refresh, Boolean lock_to_integration, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
@@ -993,9 +993,9 @@ public class Preferabli {
 
                 ArrayList<Object_Product> products_to_return;
                 if (isPreferabliUserLoggedIn()) {
-                    need tow ork on this
+                    products_to_return = Tools_PreferabliUser.getInstance().getPurchaseHistory(priority, Tools_Preferabli.isForceRefresh(force_refresh), lock_to_integration);
                 } else {
-                    products_to_return = getCustomerTags(force_refresh, "purchase");
+                    products_to_return = getCustomerTags(Tools_Preferabli.isForceRefresh(force_refresh), "purchase");
                 }
 
                 if (include_merchant_links == null || include_merchant_links) {
@@ -1012,21 +1012,8 @@ public class Preferabli {
         });
     }
 
-    private ArrayList<Object_Product> getProductsInCollection(int priority, Boolean force_refresh, long collection_id) throws Exception {
-        if ((force_refresh != null && force_refresh) || !Tools_Preferabli.getKeyStore().getBoolean("hasLoaded" + collection_id, false)) {
-            Tools_LoadCollection.getInstance().loadCollectionViaTags(collection_id, priority);
-        } else if (Tools_Preferabli.hasMinutesPassed(5, Tools_Preferabli.getKeyStore().getLong("lastCalled" + collection_id, 0))) {
-            Tools_Preferabli.startNewWorkThread(PRIORITY_LOW, () -> {
-                try {
-                    Tools_LoadCollection.getInstance().loadCollectionViaTags(collection_id, PRIORITY_LOW);
-                } catch (Exception e) {
-                    // catching any issues here so that we can still pull up our saved data
-                    if (isLoggingEnabled()) {
-                        Log.e(getClass().getName(), e.getMessage());
-                    }
-                }
-            });
-        }
+    private ArrayList<Object_Product> getProductsInCollection(int priority, boolean force_refresh, long collection_id) throws Exception {
+        Tools_LoadCollection.getInstance().loadCollectionViaTags(priority, force_refresh, collection_id);
 
         Tools_Database.getInstance().openDatabase();
         Object_Collection collection = Tools_Database.getInstance().getCollection(collection_id);
@@ -1040,7 +1027,7 @@ public class Preferabli {
     }
 
     private ArrayList<Object_Product> getCustomerTags(Boolean force_refresh, String tag_type) throws Exception {
-        if ((force_refresh != null && force_refresh) || !Tools_Preferabli.getKeyStore().getBoolean("hasLoaded" + (tag_type == null ? "AllCustomerTags" : tag_type), false)) {
+        if (Tools_Preferabli.isForceRefresh(force_refresh) || !Tools_Preferabli.getKeyStore().getBoolean("hasLoaded" + (tag_type == null ? "AllCustomerTags" : tag_type), false)) {
             getCustomerTagsActual(tag_type);
         } else if (Tools_Preferabli.hasMinutesPassed(5, Tools_Preferabli.getKeyStore().getLong("lastCalled" + (tag_type == null ? "AllCustomerTags" : tag_type), 0))) {
             Tools_Preferabli.startNewWorkThread(PRIORITY_LOW, () -> {
@@ -1163,6 +1150,163 @@ public class Preferabli {
                 }
 
                 throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.MappingNotFound);
+
+            } catch (Exception e) {
+                handleError(e, handler);
+            }
+        });
+    }
+
+    /**
+     * Rate a {@link Object_Product}. Creates a {@link Object_Tag} of type {@link Other_TagType#RATING} which is returned within the relevant product {@link Object_Variant}. Customer / user must be logged in to run this call.
+     *
+     * @param product_id id of the starting {@link Object_Product}. Only pass a Preferabli product id. If necessary, call {@link Preferabli#getPreferabliProductId(String, String, API_ResultHandler)} to convert your product id into a Preferabli product id.
+     * @param year       year of the {@link Object_Variant} that you want to rate. Can use {@link Object_Variant#CURRENT_VARIANT_YEAR} if you want to rate the latest variant, or {@link Object_Variant#NON_VARIANT} if the product is not vintaged.
+     * @param rating     pass one of {@link Other_RatingType#LOVE}, {@link Other_RatingType#LIKE}, {@link Other_RatingType#SOSO}, {@link Other_RatingType#DISLIKE}.
+     * @param location   location where the rating occurred. Defaults to null.
+     * @param notes      any notes to go along with the rating. Defaults to null.
+     * @param price      price of the product rated. Defaults to null.
+     * @param quantity   quantity purchased of the product rated. Defaults to null.
+     * @param format_ml  size of the product rated. Defaults to null.
+     * @param handler    returns {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void rateProduct(long product_id, int year, Other_RatingType rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            createTagActual(product_id, year, Tools_Preferabli.getKeyStore().getLong("ratings_id", 0), rating.getValue(), Other_TagType.RATING, location, notes, price, quantity, format_ml, handler);
+            Tools_Preferabli.createAnalyticsPost("rate_product");
+        });
+    }
+
+    /**
+     * Wishlist a {@link Object_Product}. Creates a {@link Object_Tag} of type {@link Other_TagType#WISHLIST} which is returned within the relevant product {@link Object_Variant}. Customer / user must be logged in to run this call.
+     *
+     * @param product_id id of the starting {@link Object_Product}. Only pass a Preferabli product id. If necessary, call {@link Preferabli#getPreferabliProductId(String, String, API_ResultHandler)} to convert your product id into a Preferabli product id.
+     * @param year       year of the {@link Object_Variant} that you want to wishlist. Can use {@link Object_Variant#CURRENT_VARIANT_YEAR} if you want to wishlist the latest variant, or {@link Object_Variant#NON_VARIANT} if the product is not vintaged.
+     * @param location   location where the wishlisted item exists. Defaults to null.
+     * @param notes      any notes to go along with the wishlisting. Defaults to null.
+     * @param price      price of the product wishlisted. Defaults to null.
+     * @param quantity   quantity desired of the product wishlisted. Defaults to null.
+     * @param format_ml  size of the product wishlisted. Defaults to null.
+     * @param handler    returns {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void wishlistProduct(long product_id, int year, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            createTagActual(product_id, year, Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0), null, Other_TagType.WISHLIST, location, notes, price, quantity, format_ml, handler);
+            Tools_Preferabli.createAnalyticsPost("wishlist_product");
+        });
+    }
+
+    private void createTagActual(long product_id, int year, long collection_id, String value, Other_TagType tag_type, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+        try {
+            canWeContinue(true);
+            Tools_Preferabli.createAnalyticsPost("rate_product");
+
+            JsonObject dictionary = new JsonObject();
+            dictionary.addProperty("type", tag_type.getDatabaseName());
+            dictionary.addProperty("location", location);
+            dictionary.addProperty("comment", notes);
+            dictionary.addProperty("value", value);
+            dictionary.addProperty("year", year);
+            dictionary.addProperty("product_id", product_id);
+            dictionary.addProperty("price", price);
+            dictionary.addProperty("quantity", quantity);
+            dictionary.addProperty("format_ml", format_ml);
+            dictionary.addProperty("collection_id", collection_id);
+
+            Response<Object_Tag> tagResponse;
+            if (tag_type == Other_TagType.CELLAR) {
+                tagResponse = api.createCollectionTag(collection_id, dictionary).execute();
+            } else if (Preferabli.isPreferabliUserLoggedIn()) {
+                tagResponse = api.createTag(Tools_Preferabli.getPreferabliUserId(), dictionary).execute();
+            } else {
+                tagResponse = api.createCustomerTag(CHANNEL_ID, Tools_Preferabli.getCustomerId(), dictionary).execute();
+            }
+
+            if (!tagResponse.isSuccessful())
+                throw new API_PreferabliException(tagResponse.errorBody());
+
+            Object_Tag tag = tagResponse.body();
+
+            if (tag == null) {
+                throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+            }
+
+            long variant_id = tag.getVariantId();
+
+            Tools_Database.getInstance().openDatabase();
+            Object_Variant variant = Tools_Database.getInstance().getVariant(variant_id);
+            Tools_Database.getInstance().closeDatabase();
+
+            if (variant == null) {
+                ArrayList<Long> variantIds = new ArrayList<>();
+                variantIds.add(variant_id);
+
+                Response<ArrayList<Object_Product>> productsResponse = api.getProducts(variantIds).execute();
+                if (!productsResponse.isSuccessful())
+                    throw new API_PreferabliException(productsResponse.errorBody());
+
+                if (productsResponse.body() == null) {
+                    throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.BadData);
+                }
+
+                Tools_Database.getInstance().openDatabase();
+                for (Object_Product product : productsResponse.body()) {
+                    Tools_Database.getInstance().updateProductTable(product);
+                }
+                Tools_Database.getInstance().closeDatabase();
+            }
+
+            Tools_Database.getInstance().openDatabase();
+            Object_Product product_from_db = Tools_Database.getInstance().getProductWithId(tag.getProductId());
+            Tools_Database.getInstance().closeDatabase();
+
+            ArrayList<Object_Product> products = new ArrayList<>();
+            products.add(product_from_db);
+            addMerchantDataToProducts(products);
+
+            canWeContinue(true);
+
+            handleSuccess(handler, product_from_db);
+
+        } catch (Exception e) {
+            handleError(e, handler);
+        }
+    }
+
+    /**
+     * Delete the specified {@link Object_Tag}.
+     * @param tag_id id of the {@link Object_Tag} you want to delete.
+     * @param handler returns {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
+     */
+    public void deleteTag(long tag_id, API_ResultHandler<Object_Product> handler) {
+        Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
+            try {
+                canWeContinue(true);
+                Tools_Preferabli.createAnalyticsPost("delete_tag");
+
+                if (isCustomerLoggedIn()) {
+                    Response<ResponseBody> tagResponse = api.deleteCustomerTag(CHANNEL_ID, Tools_Preferabli.getCustomerId(), tag_id).execute();
+                    if (!tagResponse.isSuccessful())
+                        throw new API_PreferabliException(tagResponse.errorBody());
+                } else {
+                    Response<ResponseBody> tagResponse = api.deleteTag(Tools_Preferabli.getPreferabliUserId(), tag_id).execute();
+                    if (!tagResponse.isSuccessful())
+                        throw new API_PreferabliException(tagResponse.errorBody());
+                }
+
+                Tools_Database.getInstance().openDatabase();
+                Object_Tag tag = Tools_Database.getInstance().getTag(tag_id);
+                Tools_Database.getInstance().deleteTag(tag_id);
+                Object_Product product_from_db = Tools_Database.getInstance().getProductWithId(tag.getProductId());
+                Tools_Database.getInstance().closeDatabase();
+
+                ArrayList<Object_Product> products = new ArrayList<>();
+                products.add(product_from_db);
+                addMerchantDataToProducts(products);
+
+                canWeContinue(true);
+
+                handleSuccess(handler, product_from_db);
 
             } catch (Exception e) {
                 handleError(e, handler);

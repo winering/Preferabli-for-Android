@@ -301,8 +301,7 @@ class Tools_Preferabli {
         Tools_Database.getInstance().deleteDatabase();
         Tools_Database.getInstance().closeDatabase();
         Tools_Preferabli.getKeyStore().edit().clear().apply();
-        Tools_UserCollections.getInstance().clearData();
-        Tools_Journal.getInstance().clearData();
+        Tools_PreferabliUser.getInstance().clearData();
         Tools_LoadCollection.getInstance().clearData();
         Tools_Preferences.getInstance().clearData();
 
@@ -438,5 +437,9 @@ class Tools_Preferabli {
         } catch (JSONException e) {
             Log.e(Tools_Preferabli.class.getSimpleName(), e.toString());
         }
+    }
+
+    static boolean isForceRefresh(Boolean force_refresh) {
+        return force_refresh != null && force_refresh;
     }
 }

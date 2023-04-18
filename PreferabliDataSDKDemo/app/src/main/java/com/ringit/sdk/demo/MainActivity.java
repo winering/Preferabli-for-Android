@@ -37,7 +37,9 @@ import classes.Object_LabelRecResults;
 import classes.Object_PreferabliUser;
 import classes.Object_Product;
 import classes.Object_Profile;
+import classes.Object_Variant;
 import classes.Object_WhereToBuy;
+import classes.Other_RatingType;
 import classes.Preferabli;
 
 public class MainActivity extends Activity implements RecyclerViewAdapter.LongClickListener, AdapterView.OnItemSelectedListener {
@@ -330,6 +332,27 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
         });
     }
 
+    public void getPurchasedProducts() {
+        showLoadingView();
+
+        Preferabli.main().getPurchasedProducts(null, null, null, new API_ResultHandler<ArrayList<Object_Product>>() {
+            @Override
+            public void onSuccess(ArrayList<Object_Product> data) {
+                products = data;
+                items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
     public void getProfile() {
         showLoadingView();
 
@@ -338,6 +361,50 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
             public void onSuccess(Object_Profile data) {
                 products.clear();
                 items = new ArrayList<>(data.getProfileStyles().stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
+    public void rateProduct() {
+        showLoadingView();
+
+        Preferabli.main().rateProduct(11263, Object_Variant.CURRENT_VARIANT_YEAR, Other_RatingType.SOSO, null, null, null, null, null, new API_ResultHandler<Object_Product>() {
+            @Override
+            public void onSuccess(Object_Product data) {
+                products.clear();
+                products.add(data);
+                items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
+    public void wishlistProduct() {
+        showLoadingView();
+
+        Preferabli.main().wishlistProduct(11263, Object_Variant.CURRENT_VARIANT_YEAR, null, null, null, null, null, new API_ResultHandler<Object_Product>() {
+            @Override
+            public void onSuccess(Object_Product data) {
+                products.clear();
+                products.add(data);
+                items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
                 adapter.updateData(items);
                 hideLoadingView();
                 handleViews();
@@ -411,12 +478,15 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
         if (adapterView == authenticatedActions) {
             if (i == 1) {
-                showSnackbar("HEY");
+                rateProduct();
             } else if (i == 2) {
+                wishlistProduct();
             } else if (i == 3) {
                 getProfile();
             } else if (i == 6) {
                 getRatedProducts();
+            } else if (i == 8) {
+                getPurchasedProducts();
             }
         } else {
             if (i == 1) {

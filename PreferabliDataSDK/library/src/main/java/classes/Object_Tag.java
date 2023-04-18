@@ -256,7 +256,7 @@ public class Object_Tag extends Object_BaseObject {
         this.channel_id = channel_id;
     }
 
-    public long getWineId() {
+    public long getProductId() {
         return product_id;
     }
 

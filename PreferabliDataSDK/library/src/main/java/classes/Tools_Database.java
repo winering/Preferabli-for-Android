@@ -516,7 +516,7 @@ public class Tools_Database {
         cv.put(KEY_TAGGEDINCID, tag.getTaggedInCollectionId());
         cv.put(KEY_TAGGEDINCVID, tag.getTaggedInCollectionVersionId());
         cv.put(KEY_TAGID, tag.getId());
-        cv.put(KEY_TAGWINEID, tag.getWineId());
+        cv.put(KEY_TAGWINEID, tag.getProductId());
         cv.put(KEY_TAGTYPE, tag.getType());
         cv.put(KEY_TAGUA, tag.getUpdatedAt());
         cv.put(KEY_TAGVINTAGEID, tag.getVariantId());
@@ -593,7 +593,7 @@ public class Tools_Database {
         cv.put(KEY_UCOLLECTIONADMIN, userCollection.isIs_admin());
         cv.put(KEY_UCOLLECTIONAT, userCollection.getArchived_at());
         cv.put(KEY_UCOLLECTIONCA, userCollection.getCreated_at());
-        cv.put(KEY_UCOLLECTIONCID, userCollection.getCollection_id());
+        cv.put(KEY_UCOLLECTIONCID, userCollection.getCollectionId());
         cv.put(KEY_UCOLLECTIONEDITOR, userCollection.isIs_editor());
         cv.put(KEY_UCOLLECTIONPINNED, userCollection.isIs_pinned());
         cv.put(KEY_UCOLLECTIONRT, userCollection.getRelationship_type());
@@ -726,7 +726,7 @@ public class Tools_Database {
         cv.put(KEY_TAGGEDINCID, tag.getTaggedInCollectionId());
         cv.put(KEY_TAGGEDINCVID, tag.getTaggedInCollectionVersionId());
         cv.put(KEY_TAGID, tag.getId());
-        cv.put(KEY_TAGWINEID, tag.getWineId());
+        cv.put(KEY_TAGWINEID, tag.getProductId());
         cv.put(KEY_TAGCUSTOMERID, customerId);
         cv.put(KEY_TAGTYPE, tag.getType());
         cv.put(KEY_TAGUA, tag.getUpdatedAt());
@@ -878,7 +878,7 @@ public class Tools_Database {
 
         ArrayList<Object_UserCollection> userCollections = getUserCollections("purchase");
         for (Object_UserCollection userCollection : userCollections) {
-            getProductsFromCollection(userCollection.getCollection_id(), products, productsHash, variantsHash);
+            getProductsFromCollection(userCollection.getCollectionId(), products, productsHash, variantsHash);
         }
 
         // add all our personal cellar tags in
@@ -898,12 +898,41 @@ public class Tools_Database {
         return new ArrayList<>(products);
     }
 
+    public ArrayList<Object_Product> getPurchasedProducts(boolean lock_to_integration) {
+        Set<Object_Product> products = new HashSet<>();
+        HashMap<Long, Object_Product> productsHash = new HashMap<>();
+        HashMap<Long, Object_Variant> variantsHash = new HashMap<>();
+
+        ArrayList<Object_UserCollection> userCollections = getUserCollections("purchase");
+        for (Object_UserCollection userCollection : userCollections) {
+            if (!lock_to_integration || (userCollection.getCollection().getChannelId() == Preferabli.CHANNEL_ID)) {
+                getProductsFromCollection(userCollection.getCollectionId(), products, productsHash, variantsHash);
+            }
+        }
+
+        // add all our personal cellar tags in
+        ArrayList<Object_Tag> personalCellarTags = getPersonalCellarTags();
+        for (Object_Product product : products) {
+            for (Object_Variant variant : product.getVariants()) {
+                for (Object_Tag tag : personalCellarTags) {
+                    if (variant.getId() == tag.getVariantId()) {
+                        variant.addTag(tag);
+                        tag.setVariant(variant);
+                    }
+                }
+            }
+        }
+
+        return new ArrayList<>(products);
+    }
+
     public void getProductsFromCollection(long collectionId, Set<Object_Product> products, HashMap<Long, Object_Product> productsHash, HashMap<Long, Object_Variant> variantsHash) {
         Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_TAGS + " INNER JOIN " + TABLE_VINTAGES + " ON " + KEY_TAGWINEID + " = " + KEY_VINTAGEWINEID + " INNER JOIN " + TABLE_WINES + " ON " + KEY_VINTAGEWINEID + " = " + KEY_WINEID + " WHERE " + KEY_TAGCOLLECTIONID + " = ?", new String[]{ Long.toString(collectionId)} );
         if(c instanceof SQLiteCursor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             // fixed bug where cursor is not big enough for getting certain collections.
             ((SQLiteCursor) c).setWindow(new CursorWindow(null, 1024*1024*100));
         }
+
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             Object_Product product;
             if (productsHash.containsKey(c.getLong(c.getColumnIndex(KEY_WINEID)))) {
@@ -1243,10 +1272,10 @@ public class Tools_Database {
         ArrayList<Object_Tag> tags = getPersonalTags();
         for (Object_Tag tag : tags) {
             for (Object_Variant variant : variantHash.values()) {
-                if (tag.getTagType() == Other_TagType.WISHLIST && tag.getWineId() == variant.getWineId()) {
+                if (tag.getTagType() == Other_TagType.WISHLIST && tag.getProductId() == variant.getWineId()) {
                     variant.addTag(tag);
                     tag.setVariant(variant);
-                } else if (tag.getType().equalsIgnoreCase("skipped") && tag.getWineId() == variant.getWineId()) {
+                } else if (tag.getType().equalsIgnoreCase("skipped") && tag.getProductId() == variant.getWineId()) {
                     variant.addTag(tag);
                     tag.setVariant(variant);
                 } else if (variant.getId() == tag.getVariantId()) {
@@ -1346,6 +1375,19 @@ public class Tools_Database {
         return group;
     }
 
+    public Object_Tag getTag(long tag_id) {
+        Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_TAGS + " WHERE " + KEY_TAGID + " = ?", new String[]{Long.toString(tag_id)});
+
+        Object_Tag tag = null;
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            tag = getTagFromCursor(c);
+
+        }
+        c.close();
+
+        return tag;
+    }
+
     public ArrayList<Object_Product> getDirtyProductsWithOrderings() {
         Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_ORDERINGS + " INNER JOIN " + TABLE_TAGS + " ON " + KEY_ORDERINGID + " = " + KEY_TAGORDERINGID + " INNER JOIN " + TABLE_VINTAGES + " ON " + KEY_TAGVINTAGEID + " = " + KEY_VINTAGEID + " INNER JOIN " + TABLE_WINES + " ON " + KEY_VINTAGEWINEID + " = " + KEY_WINEID + " WHERE " + KEY_ORDERINGDIRTY + " = ?", new String[]{"1"});
 
@@ -1406,10 +1448,10 @@ public class Tools_Database {
         ArrayList<Object_Tag> tags = getPersonalTags();
         for (Object_Tag tag : tags) {
             for (Object_Variant variant : variantHash.values()) {
-                if (tag.getTagType() == Other_TagType.WISHLIST && tag.getWineId() == variant.getWineId()) {
+                if (tag.getTagType() == Other_TagType.WISHLIST && tag.getProductId() == variant.getWineId()) {
                     variant.addTag(tag);
                     tag.setVariant(variant);
-                } else if (tag.getType().equalsIgnoreCase("skipped") && tag.getWineId() == variant.getWineId()) {
+                } else if (tag.getType().equalsIgnoreCase("skipped") && tag.getProductId() == variant.getWineId()) {
                     variant.addTag(tag);
                     tag.setVariant(variant);
                 } else if (variant.getId() == tag.getVariantId()) {
@@ -1440,7 +1482,7 @@ public class Tools_Database {
         ArrayList<Object_Tag> tags = new ArrayList<>();
 
         for (Object_UserCollection userCollection : userCollections) {
-            Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_TAGS + " WHERE " + KEY_TAGCOLLECTIONID + " = ?", new String[]{Long.toString(userCollection.getCollection_id())});
+            Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_TAGS + " WHERE " + KEY_TAGCOLLECTIONID + " = ?", new String[]{Long.toString(userCollection.getCollectionId())});
             for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
                 Object_Tag tag = getTagFromCursor(c);
                 tags.add(tag);

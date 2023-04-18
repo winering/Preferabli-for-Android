@@ -52,7 +52,7 @@ public class Object_UserCollection extends Object_BaseObject {
         return archived_at;
     }
 
-    public long getCollection_id() {
+    public long getCollectionId() {
         return collection_id;
     }
 
