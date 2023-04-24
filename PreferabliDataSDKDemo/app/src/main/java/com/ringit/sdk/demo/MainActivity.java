@@ -31,14 +31,18 @@ import java.util.stream.Collectors;
 import classes.API_PreferabliException;
 import classes.API_ResultHandler;
 import classes.Object_Customer;
+import classes.Object_Food;
 import classes.Object_GuidedRec;
 import classes.Object_LabelRecResult;
 import classes.Object_LabelRecResults;
 import classes.Object_PreferabliUser;
 import classes.Object_Product;
 import classes.Object_Profile;
+import classes.Object_Recommendation;
 import classes.Object_Variant;
 import classes.Object_WhereToBuy;
+import classes.Other_ProductCategory;
+import classes.Other_ProductType;
 import classes.Other_RatingType;
 import classes.Preferabli;
 
@@ -78,7 +82,7 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
         dropdown.setOnItemSelectedListener(this);
 
         authenticatedActions = findViewById(R.id.spinner2);
-        String[] items2 = new String[]{"View Authenticated Actions", "Rate Product", "Wishlist Product", "Get Profile", "Get Recs", "Get Foods", "Get Rated Products", "Get Wishlisted Products", "Get Purchased Products"};
+        String[] items2 = new String[]{"View Authenticated Actions", "Rate Product", "Wishlist Product", "Get Profile", "Get Recs", "Get Foods", "Get Rated Products", "Get Wishlisted Products", "Get Purchased Products", "Get Customer"};
         ArrayAdapter<String> spinAdapter2 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, items2);
         authenticatedActions.setAdapter(spinAdapter2);
         authenticatedActions.setOnItemSelectedListener(this);
@@ -196,6 +200,25 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
         });
     }
 
+    public void getCustomer() {
+        Preferabli.main().getCustomer(null, new API_ResultHandler<Object_Customer>() {
+            @Override
+            public void onSuccess(Object_Customer data) {
+                products.clear();
+                items = new ArrayList<>(Arrays.asList("Got the customer.", "Display Name: " + data.getName()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
     public void labelRec() {
         showLoadingView();
         Preferabli.main().labelRecognition(getExampleAsFile(), true, new API_ResultHandler<Object_LabelRecResults>() {
@@ -298,6 +321,48 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
             public void onSuccess(ArrayList<Object_Product> data) {
                 products = data;
                 items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
+    public void getRecs() {
+        showLoadingView();
+
+        Preferabli.main().getRecs(Other_ProductCategory.WINE, Other_ProductType.RED, Preferabli.PRIMARY_INVENTORY_ID, null, null, null, null, null, new API_ResultHandler<Object_Recommendation>() {
+            @Override
+            public void onSuccess(Object_Recommendation data) {
+                products = data.getProducts();
+                items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                adapter.updateData(items);
+                hideLoadingView();
+                handleViews();
+            }
+
+            @Override
+            public void onFailure(API_PreferabliException e) {
+                hideLoadingView();
+                showSnackbar(e.getMessage());
+            }
+        });
+    }
+
+    public void getFoods() {
+        showLoadingView();
+
+        Preferabli.main().getFoods(new API_ResultHandler<ArrayList<Object_Food>>() {
+            @Override
+            public void onSuccess(ArrayList<Object_Food> data) {
+                products.clear();
+                items = new ArrayList<>(data.stream().map(x -> x.getName()).collect(Collectors.toList()));
                 adapter.updateData(items);
                 hideLoadingView();
                 handleViews();
@@ -483,10 +548,16 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
                 wishlistProduct();
             } else if (i == 3) {
                 getProfile();
+            } else if (i == 4) {
+                getRecs();
+            } else if (i == 5) {
+                getFoods();
             } else if (i == 6) {
                 getRatedProducts();
             } else if (i == 8) {
                 getPurchasedProducts();
+            } else if (i == 9) {
+                getCustomer();
             }
         } else {
             if (i == 1) {

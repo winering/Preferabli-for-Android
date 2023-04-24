@@ -11,6 +11,9 @@ package classes;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+/**
+ * A location (must have either a latitude / longitude or a zip code).
+ */
 public class Object_Location extends Object_BaseObject {
     private double latitude;
     private double longitude;

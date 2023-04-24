@@ -10,7 +10,11 @@ package classes;
 
 import android.os.Parcel;
 
+/**
+ * A logged in Preferabli user.
+ */
 public class Object_PreferabliUser extends Object_BaseObject {
+
     private String display_name;
     private int account_level;
     private boolean enable_image_rec;
@@ -29,7 +33,6 @@ public class Object_PreferabliUser extends Object_BaseObject {
     private int ratings_count;
     private String updated_at;
     private int admin;
-    private String password;
     private long avatar_id;
     private boolean has_merchant_access;
     private boolean has_personal_cellar;
@@ -38,117 +41,31 @@ public class Object_PreferabliUser extends Object_BaseObject {
     private String use_user_claim_code;
     private boolean has_where_to_buy;
     private String intercom_hmac;
-
     private long rating_collection_id;
-
     private long wishlist_collection_id;
 
-    public String getIntercom_hmac() {
+    public String getIntercomHmac() {
         return intercom_hmac;
     }
 
-    public long getRating_collection_id() {
+    public long getRatingCollectionId() {
         return rating_collection_id;
     }
 
-    public long getWishlist_collection_id() {
+    public long getWishlistCollectionId() {
         return wishlist_collection_id;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setClaimCode(String claim_code) {
-        this.use_user_claim_code = claim_code;
     }
 
     public String getClaimCode() {
         return claim_code;
     }
 
-    public void setDisplayName(String display_name) {
-        this.display_name = display_name;
-    }
-
-    public void setAccountLevel(int account_level) {
-        this.account_level = account_level;
-    }
-
     public boolean isLocked() {
         return account_level != 2;
     }
 
-    public void setEnableImageRec(boolean enable_image_rec) {
-        this.enable_image_rec = enable_image_rec;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setFirst(String fname) {
-        this.fname = fname;
-    }
-
-    public void setLast(String lname) {
-        this.lname = lname;
-    }
-
-    public boolean isHas_where_to_buy() {
+    public boolean hasWhereToBuy() {
         return has_where_to_buy;
-    }
-
-    public void setHas_where_to_buy(boolean has_where_to_buy) {
-        this.has_where_to_buy = has_where_to_buy;
-    }
-
-    public void setBirthyear(int birthyear) {
-        this.birthyear = birthyear;
-    }
-
-    public void setZipCode(String zip_code) {
-        this.zip_code = zip_code;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public void setSubscribed(boolean subscribed) {
-        this.subscribed = subscribed;
-    }
-
-    public void setCreatedAt(String created_at) {
-        this.created_at = created_at;
-    }
-
-    public void setLocation(String location) {
-        this.location = location;
-    }
-
-    public void setRatingsCount(int ratings_count) {
-        this.ratings_count = ratings_count;
-    }
-
-    public void setUpdatedAt(String updated_at) {
-        this.updated_at = updated_at;
-    }
-
-    public void setAdmin(int admin) {
-        this.admin = admin;
     }
 
     public String getDisplayName() {
@@ -186,13 +103,15 @@ public class Object_PreferabliUser extends Object_BaseObject {
         return is_team_ringit;
     }
 
-    public void setIsTeamRingIT(boolean is_team_ringit) {
-        this.is_team_ringit = is_team_ringit;
-    }
-
-    public String getAvatar() {
-        if (avatar != null && !avatar.getPath().contains("connections_user_placeholder")) return avatar.getPath();
-        return null;
+    /**
+     * Get the user's avatar.
+     * @param width returns an image with the specified width in pixels.
+     * @param height returns an image with the specified height in pixels.
+     * @param quality returns an image with the specified quality. Scales from 0 - 100.
+     * @return the URL of the requested image.
+     */
+    public String getAvatar(int width, int height, int quality) {
+        return Tools_Preferabli.getImageUrl(avatar, width, height, quality);
     }
 
     public String getLocation() {
@@ -256,7 +175,6 @@ public class Object_PreferabliUser extends Object_BaseObject {
         dest.writeInt(this.ratings_count);
         dest.writeString(this.updated_at);
         dest.writeInt(this.admin);
-        dest.writeString(this.password);
         dest.writeLong(this.avatar_id);
         dest.writeByte(this.has_merchant_access ? (byte) 1 : (byte) 0);
         dest.writeByte(this.has_personal_cellar ? (byte) 1 : (byte) 0);
@@ -286,7 +204,6 @@ public class Object_PreferabliUser extends Object_BaseObject {
         this.ratings_count = in.readInt();
         this.updated_at = in.readString();
         this.admin = in.readInt();
-        this.password = in.readString();
         this.avatar_id = in.readLong();
         this.has_merchant_access = in.readByte() != 0;
         this.has_personal_cellar = in.readByte() != 0;

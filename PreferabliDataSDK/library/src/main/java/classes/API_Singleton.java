@@ -27,7 +27,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 /**
  * Internal class used for interacting with our API.
  */
-public class API_Singleton {
+class API_Singleton {
 
     private API_Service service;
     private Cache cache;
@@ -92,12 +92,6 @@ public class API_Singleton {
             sharedInstance = new API_Singleton();
         }
         return sharedInstance;
-    }
-
-    private void printHeaders(Headers headers) {
-        for (Map.Entry<String, List<String>> header : headers.toMultimap().entrySet()) {
-            Log.e(API_Singleton.class.getName(), header.getKey() + " " + header.getValue());
-        }
     }
 
     public API_Service getService() throws API_PreferabliException {

@@ -11,6 +11,9 @@ package classes;
 import android.os.Parcel;
 import java.util.ArrayList;
 
+/**
+ * An image or video.
+ */
 public class Object_Media extends Object_BaseObject {
     private long user_id;
     private String path;
@@ -18,46 +21,9 @@ public class Object_Media extends Object_BaseObject {
     private String created_at;
     private String position;
     private String type;
-    private ArrayList<Object_LabelRecResult> imageRecResults;
-    private boolean needsLinking;
-    private boolean selected;
-
-    public void setImageRecResults(ArrayList<Object_LabelRecResult> imageRecResults) {
-        if (imageRecResults == null) {
-            this.imageRecResults = null;
-            return;
-        }
-        this.imageRecResults = Object_LabelRecResult.sortLabelRecs(imageRecResults);
-        Tools_Database.getInstance().openDatabase();
-        for (Object_LabelRecResult imageRec : imageRecResults) {
-            Object_Product product = imageRec.getProduct();
-            product.setRateSourceLocation("label_rec");
-            Tools_Database.getInstance().updateProductTable(product);
-            for (Object_Variant variant : product.getVariants()) {
-                variant.addTags(Tools_Database.getInstance().getVariantTags(variant));
-            }
-        }
-        Tools_Database.getInstance().closeDatabase();
-    }
-
-    public ArrayList<Object_Product> getImageRecResults() {
-        ArrayList<Object_Product> results = new ArrayList<>();
-        for (Object_LabelRecResult rec : imageRecResults) {
-            results.add(rec.getProduct());
-        }
-        return results;
-    }
 
     public String getType() {
         return type;
-    }
-
-    public void setNeedsLinking(boolean needsLinking) {
-        this.needsLinking = needsLinking;
-    }
-
-    public boolean isNeedsLinking() {
-        return needsLinking;
     }
 
     public String getPosition() {
@@ -94,15 +60,15 @@ public class Object_Media extends Object_BaseObject {
         return path;
     }
 
-    public Object_Media() {
-    }
-
-    public void setSelected(boolean selected) {
-        this.selected = selected;
-    }
-
-    public boolean isSelected() {
-        return selected;
+    /**
+     * Get the media's path for display as an image. Only use if the media is an image.
+     * @param width returns an image with the specified width in pixels.
+     * @param height returns an image with the specified height in pixels.
+     * @param quality returns an image with the specified quality. Scales from 0 - 100.
+     * @return the URL of the requested image.
+     */
+    public String getImage(int width, int height, int quality) {
+        return Tools_Preferabli.getImageUrl(this, width, height, quality);
     }
 
     @Override
@@ -117,9 +83,7 @@ public class Object_Media extends Object_BaseObject {
         dest.writeString(this.path);
         dest.writeString(this.updated_at);
         dest.writeString(this.created_at);
-        dest.writeTypedList(this.imageRecResults);
         dest.writeString(this.position);
-        dest.writeByte(this.needsLinking ? (byte) 1 : (byte) 0);
         dest.writeString(this.type);
     }
 
@@ -129,9 +93,7 @@ public class Object_Media extends Object_BaseObject {
         this.path = in.readString();
         this.updated_at = in.readString();
         this.created_at = in.readString();
-        this.imageRecResults = in.createTypedArrayList(Object_LabelRecResult.CREATOR);
         this.position = in.readString();
-        this.needsLinking = in.readByte() != 0;
         this.type = in.readString();
     }
 

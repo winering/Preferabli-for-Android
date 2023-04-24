@@ -9,13 +9,20 @@
 package classes;
 
 import android.os.Parcel;
+
+import com.google.gson.annotations.SerializedName;
+
 import java.util.ArrayList;
 
+/**
+ * A user's preference profile represents appealing and unappealing {@link Object_ProfileStyle}s for a particular user.
+ */
 public class Object_Profile extends Object_BaseObject {
     private long user_id;
     private long customer_id;
     private int score;
-    private ArrayList<Object_ProfileStyle> preference_styles;
+    @SerializedName("preference_styles")
+    private ArrayList<Object_ProfileStyle> profile_styles;
     private String created_at;
     private String updated_at;
 
@@ -25,7 +32,7 @@ public class Object_Profile extends Object_BaseObject {
         } else {
             this.customer_id = Tools_Preferabli.getCustomerId();
         }
-        this.preference_styles = profile_styles;
+        this.profile_styles = profile_styles;
     }
 
     public long getUserId() {
@@ -37,7 +44,7 @@ public class Object_Profile extends Object_BaseObject {
     }
 
     public ArrayList<Object_ProfileStyle> getProfileStyles() {
-        return preference_styles;
+        return profile_styles;
     }
 
     @Override
@@ -46,12 +53,9 @@ public class Object_Profile extends Object_BaseObject {
         dest.writeLong(this.user_id);
         dest.writeLong(this.customer_id);
         dest.writeInt(this.score);
-        dest.writeTypedList(this.preference_styles);
+        dest.writeTypedList(this.profile_styles);
         dest.writeString(this.created_at);
         dest.writeString(this.updated_at);
-    }
-
-    public Object_Profile() {
     }
 
     protected Object_Profile(Parcel in) {
@@ -59,8 +63,20 @@ public class Object_Profile extends Object_BaseObject {
         this.user_id = in.readLong();
         this.customer_id = in.readLong();
         this.score = in.readInt();
-        this.preference_styles = in.createTypedArrayList(Object_ProfileStyle.CREATOR);
+        this.profile_styles = in.createTypedArrayList(Object_ProfileStyle.CREATOR);
         this.created_at = in.readString();
         this.updated_at = in.readString();
     }
+
+    public static final Creator<Object_Profile> CREATOR = new Creator<Object_Profile>() {
+        @Override
+        public Object_Profile createFromParcel(Parcel source) {
+            return new Object_Profile(source);
+        }
+
+        @Override
+        public Object_Profile[] newArray(int size) {
+            return new Object_Profile[size];
+        }
+    };
 }

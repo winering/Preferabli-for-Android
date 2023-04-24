@@ -1,0 +1,379 @@
+{
+  "project_info": {
+    "project_number": "971648003370",
+    "firebase_url": "https://wine-ring-app.firebaseio.com",
+    "project_id": "wine-ring-app",
+    "storage_bucket": "wine-ring-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971648003370:android:74395362ecc34cf0",
+        "android_client_info": {
+          "package_name": "com.ringit.consumer.beta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtr0_-GHSQl2ZVQajmBiQ_uo4C-zr2pcM"
+        },
+        {
+          "current_key": "AIzaSyD7tu4T7TDBC_zpMLsgyPOjsSI9YtKe43M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971648003370-1hbtuhs7gl8debp5hqosif06o8eo8bea.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ringit.consumer.thermador",
+                "app_store_id": "1462975814"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971648003370:android:004254e0c24710b9c3c253",
+        "android_client_info": {
+          "package_name": "com.ringit.consumer.kadeka"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtr0_-GHSQl2ZVQajmBiQ_uo4C-zr2pcM"
+        },
+        {
+          "current_key": "AIzaSyD7tu4T7TDBC_zpMLsgyPOjsSI9YtKe43M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971648003370-1hbtuhs7gl8debp5hqosif06o8eo8bea.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ringit.consumer.thermador",
+                "app_store_id": "1462975814"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971648003370:android:e09c473a533b4783",
+        "android_client_info": {
+          "package_name": "com.ringit.consumer.sks"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971648003370-nkct70ah7p4m9hja0c4o3ej68s11ilf4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ringit.consumer.sks",
+            "certificate_hash": "a5cb27c50355c33fc4f602a4f7c4aadfbc9fc649"
+          }
+        },
+        {
+          "client_id": "971648003370-sd808nhc4ropgs6hik3srfu0n9ih7j6v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ringit.consumer.sks",
+            "certificate_hash": "d9eee0729f0c6be1258c84755b035c337fb763a0"
+          }
+        },
+        {
+          "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtr0_-GHSQl2ZVQajmBiQ_uo4C-zr2pcM"
+        },
+        {
+          "current_key": "AIzaSyD7tu4T7TDBC_zpMLsgyPOjsSI9YtKe43M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971648003370-1hbtuhs7gl8debp5hqosif06o8eo8bea.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ringit.consumer.thermador",
+                "app_store_id": "1462975814"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971648003370:android:d46a3cf5153c898ec3c253",
+        "android_client_info": {
+          "package_name": "com.ringit.consumer.thermador"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtr0_-GHSQl2ZVQajmBiQ_uo4C-zr2pcM"
+        },
+        {
+          "current_key": "AIzaSyD7tu4T7TDBC_zpMLsgyPOjsSI9YtKe43M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971648003370-1hbtuhs7gl8debp5hqosif06o8eo8bea.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ringit.consumer.thermador",
+                "app_store_id": "1462975814"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971648003370:android:78b34484c8375025",
+        "android_client_info": {
+          "package_name": "com.ringit.manager"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971648003370-5tnoftptivm3fottn5i0vg3akuc1th1a.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ringit.manager",
+            "certificate_hash": "d9eee0729f0c6be1258c84755b035c337fb763a0"
+          }
+        },
+        {
+          "client_id": "971648003370-eeri8ml4iui4mr9sgq112hs52teb86ue.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.ringit.manager",
+            "certificate_hash": "a5cb27c50355c33fc4f602a4f7c4aadfbc9fc649"
+          }
+        },
+        {
+          "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtr0_-GHSQl2ZVQajmBiQ_uo4C-zr2pcM"
+        },
+        {
+          "current_key": "AIzaSyD7tu4T7TDBC_zpMLsgyPOjsSI9YtKe43M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971648003370-1hbtuhs7gl8debp5hqosif06o8eo8bea.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ringit.consumer.thermador",
+                "app_store_id": "1462975814"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971648003370:android:c03965121b9f1bff",
+        "android_client_info": {
+          "package_name": "com.ringit.manager.beta"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtr0_-GHSQl2ZVQajmBiQ_uo4C-zr2pcM"
+        },
+        {
+          "current_key": "AIzaSyD7tu4T7TDBC_zpMLsgyPOjsSI9YtKe43M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971648003370-1hbtuhs7gl8debp5hqosif06o8eo8bea.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ringit.consumer.thermador",
+                "app_store_id": "1462975814"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971648003370:android:c0600548416a039dc3c253",
+        "android_client_info": {
+          "package_name": "com.ringit.sdk.demo"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtr0_-GHSQl2ZVQajmBiQ_uo4C-zr2pcM"
+        },
+        {
+          "current_key": "AIzaSyD7tu4T7TDBC_zpMLsgyPOjsSI9YtKe43M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971648003370-1hbtuhs7gl8debp5hqosif06o8eo8bea.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ringit.consumer.thermador",
+                "app_store_id": "1462975814"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:971648003370:android:7ffd658083a6b224",
+        "android_client_info": {
+          "package_name": "com.winering.wine"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "971648003370-g3art5fdqmdeetq3i8pkd18m0n83e13f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.winering.wine",
+            "certificate_hash": "a5cb27c50355c33fc4f602a4f7c4aadfbc9fc649"
+          }
+        },
+        {
+          "client_id": "971648003370-m86pavloaf7i3n13eijduv04llc47kra.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.winering.wine",
+            "certificate_hash": "d9eee0729f0c6be1258c84755b035c337fb763a0"
+          }
+        },
+        {
+          "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBtr0_-GHSQl2ZVQajmBiQ_uo4C-zr2pcM"
+        },
+        {
+          "current_key": "AIzaSyD7tu4T7TDBC_zpMLsgyPOjsSI9YtKe43M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "971648003370-m6fm54ev9954dnl0aihcvaja446lsp1c.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "971648003370-1hbtuhs7gl8debp5hqosif06o8eo8bea.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.ringit.consumer.thermador",
+                "app_store_id": "1462975814"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

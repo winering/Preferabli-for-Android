@@ -15,6 +15,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+/**
+ * A logged in merchant customer.
+ */
 public class Object_Customer extends Object_BaseObject {
     private String avatar_url;
     private String merchant_user_email_address;
@@ -23,22 +26,8 @@ public class Object_Customer extends Object_BaseObject {
     private String merchant_user_display_name;
     private String claim_code;
     private String role;
-    private int order;
     private boolean has_profile;
     private long ratings_collection_id;
-
-    public Object_Customer(Object_Customer customer) {
-        super(customer.getId());
-        this.avatar_url = customer.getAvatar_url();
-        this.merchant_user_email_address = customer.getEmail();
-        this.merchant_user_id = customer.getMerchant_user_id();
-        this.merchant_user_name = customer.getMerchant_user_name();
-        this.role = customer.getRole();
-        this.has_profile = customer.isHas_profile();
-        this.merchant_user_display_name = customer.getMerchant_user_display_name();
-        this.claim_code = customer.getClaim_code();
-        this.order = customer.getOrder();
-    }
 
     public Object_Customer(long id, String avatar_url, String merchant_user_email_address, String merchant_user_id, String merchant_user_name, String role, boolean has_profile, String merchant_user_display_name, String claim_code, int order) {
         super(id);
@@ -50,38 +39,36 @@ public class Object_Customer extends Object_BaseObject {
         this.has_profile = has_profile;
         this.merchant_user_display_name = merchant_user_display_name;
         this.claim_code = claim_code;
-        this.order = order;
     }
 
-    public void setOrder(int order) {
-        this.order = order;
+    /**
+     * Get the customer's avatar.
+     * @param width returns an image with the specified width in pixels.
+     * @param height returns an image with the specified height in pixels.
+     * @param quality returns an image with the specified quality. Scales from 0 - 100.
+     * @return the URL of the requested image.
+     */
+    public String getAvatar(int width, int height, int quality) {
+        return Tools_Preferabli.getImageUrl(avatar_url, width, height, quality);
     }
 
-    public void setMerchant_user_display_name(String merchant_user_display_name) {
-        this.merchant_user_display_name = merchant_user_display_name;
-    }
-
-    public String getMerchant_user_display_name() {
+    public String getMerchantUserDisplayName() {
         return merchant_user_display_name;
     }
 
-    public String getClaim_code() {
+    public String getClaimCode() {
         return claim_code;
-    }
-
-    public String getAvatar_url() {
-        return avatar_url;
     }
 
     public String getEmail() {
         return merchant_user_email_address;
     }
 
-    public String getMerchant_user_id() {
+    public String getMerchantUserId() {
         return merchant_user_id;
     }
 
-    public String getMerchant_user_name() {
+    public String getMerchantUserName() {
         return merchant_user_name;
     }
 
@@ -89,6 +76,10 @@ public class Object_Customer extends Object_BaseObject {
         return role;
     }
 
+    /**
+     * Get a customer's display name.
+     * @return the name as a string.
+     */
     public String getName() {
         if (!Tools_Preferabli.isNullOrWhitespace(merchant_user_display_name)) {
             return merchant_user_display_name;
@@ -103,61 +94,7 @@ public class Object_Customer extends Object_BaseObject {
         return "";
     }
 
-    public String getMerchantName() {
-        if (!Tools_Preferabli.isNullOrWhitespace(merchant_user_name)) {
-            return merchant_user_name;
-        } else if (!Tools_Preferabli.isNullOrWhitespace(merchant_user_email_address)) {
-            return merchant_user_email_address;
-        }
-
-        return "";
-    }
-
-    public int getOrder() {
-        return order;
-    }
-
-    public static class CustomerComparator implements Comparator<Object_Customer> {
-        @Override
-        public int compare(Object_Customer customer1, Object_Customer customer2) {
-            if (customer1 == null && customer2 == null) {
-                return 0;
-            } else if (customer1 == null) {
-                return 1;
-            } else if (customer2 == null) {
-                return -1;
-            }
-
-            return Tools_Preferabli.alphaSortIgnoreThe(customer1.getName(), customer2.getName());
-        }
-    }
-
-    public static class CustomerOrderComparator implements Comparator<Object_Customer> {
-        @Override
-        public int compare(Object_Customer customer1, Object_Customer customer2) {
-            if (customer1 == null && customer2 == null) {
-                return 0;
-            } else if (customer1 == null) {
-                return 1;
-            } else if (customer2 == null) {
-                return -1;
-            }
-
-            return ((Integer) customer1.getOrder()).compareTo(customer2.getOrder());
-        }
-    }
-
-    public static ArrayList<Object_Customer> sortCustomers(ArrayList<Object_Customer> customers) {
-        Collections.sort(customers, new CustomerComparator());
-        return customers;
-    }
-
-    public static ArrayList<Object_Customer> sortCustomersByOrder(ArrayList<Object_Customer> customers) {
-        Collections.sort(customers, new CustomerOrderComparator());
-        return customers;
-    }
-
-    public boolean isHas_profile() {
+    public boolean hasProfile() {
         return has_profile;
     }
 
@@ -169,11 +106,12 @@ public class Object_Customer extends Object_BaseObject {
         for (String term : terms) {
             if (getEmail() != null && getEmail().toLowerCase().contains(term))
                 continue;
-            else if (getMerchant_user_id() != null && getMerchant_user_id().toLowerCase().contains(term))
+            else if (getMerchantUserId() != null && getMerchantUserId().toLowerCase().contains(term))
                 continue;
-            else if (getMerchant_user_name() != null && getMerchant_user_name().toLowerCase().contains(term))
+            else if (getName() != null && getName().toLowerCase().contains(term))
                 continue;
-            else return false;
+
+            return false;
         }
         return true;
     }
@@ -192,7 +130,6 @@ public class Object_Customer extends Object_BaseObject {
         dest.writeString(this.merchant_user_display_name);
         dest.writeString(this.claim_code);
         dest.writeString(this.role);
-        dest.writeInt(this.order);
         dest.writeByte(this.has_profile ? (byte) 1 : (byte) 0);
         dest.writeLong(ratings_collection_id);
     }
@@ -206,7 +143,6 @@ public class Object_Customer extends Object_BaseObject {
         this.merchant_user_display_name = in.readString();
         this.claim_code = in.readString();
         this.role = in.readString();
-        this.order = in.readInt();
         this.has_profile = in.readByte() != 0;
         this.ratings_collection_id = in.readLong();
     }

@@ -14,6 +14,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+/**
+ * You can use foods to get pairings within {@link Preferabli#getRecs(Other_ProductCategory, Other_ProductType, Long, Integer, Integer, ArrayList, ArrayList, Boolean, API_ResultHandler)}.
+ */
 public class Object_Food extends Object_BaseObject {
     private String name;
     private String description;
@@ -34,6 +37,17 @@ public class Object_Food extends Object_BaseObject {
         return description;
     }
 
+    /**
+     * Get the food's image.
+     * @param width returns an image with the specified width in pixels.
+     * @param height returns an image with the specified height in pixels.
+     * @param quality returns an image with the specified quality. Scales from 0 - 100.
+     * @return the URL of the requested image.
+     */
+    public String getImage(int width, int height, int quality) {
+        return Tools_Preferabli.getImageUrl(food_category_url, width, height, quality);
+    }
+
     @Override
     public boolean filter(Serializable serializable) {
         String constraint = ((String) serializable).toLowerCase();
@@ -43,13 +57,11 @@ public class Object_Food extends Object_BaseObject {
                 continue;
             else if (getKeywords() != null && getKeywords().toLowerCase().contains(term))
                 continue;
-            else return false;
-        }
-        return true;
-    }
 
-    public String getFood_category_url() {
-        return food_category_url;
+            return false;
+        }
+
+        return true;
     }
 
     public static class FoodComparator implements Comparator<Object_Food> {
@@ -65,10 +77,6 @@ public class Object_Food extends Object_BaseObject {
                 return Tools_Preferabli.alphaSortIgnoreThe(food1.getName(), food2.getName());
             }
         }
-    }
-
-    public String getImage() {
-        return food_category_url;
     }
 
     public static ArrayList<Object_Food> sortFoods(ArrayList<Object_Food> foods) {
@@ -104,4 +112,69 @@ public class Object_Food extends Object_BaseObject {
         @Override
         public Object_Food[] newArray(int size) {return new Object_Food[size];}
     };
+
+    /**
+     * Each food is a member of a Food category.
+     */
+    static class Object_FoodCategory extends Object_BaseObject {
+
+        private String name;
+        private String icon_url;
+
+        public String getName() {
+            return name;
+        }
+
+        /**
+         * Get the food category's image.
+         * @param width returns an image with the specified width in pixels.
+         * @param height returns an image with the specified height in pixels.
+         * @param quality returns an image with the specified quality. Scales from 0 - 100.
+         * @return the URL of the requested image.
+         */
+        public String getImage(int width, int height, int quality) {
+            return Tools_Preferabli.getImageUrl(icon_url, width, height, quality);
+        }
+
+        public static class FoodCategoryComparator implements Comparator<Object_FoodCategory> {
+            @Override
+            public int compare(Object_FoodCategory food1, Object_FoodCategory food2) {
+                if (food1 == null && food2 == null) {
+                    return 0;
+                } else if (food1 == null) {
+                    return 1;
+                } else if (food2 == null) {
+                    return -1;
+                } else {
+                    return Tools_Preferabli.alphaSortIgnoreThe(food1.getName(), food2.getName());
+                }
+            }
+        }
+
+        public static ArrayList<Object_FoodCategory> sortFoods(ArrayList<Object_FoodCategory> foods) {
+            Collections.sort(foods, new FoodCategoryComparator());
+            return foods;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeString(this.name);
+            dest.writeString(this.icon_url);
+        }
+
+        protected Object_FoodCategory(Parcel in) {
+            super(in);
+            this.name = in.readString();
+            this.icon_url = in.readString();
+        }
+
+        public static final Creator<Object_FoodCategory> CREATOR = new Creator<Object_FoodCategory>() {
+            @Override
+            public Object_FoodCategory createFromParcel(Parcel source) {return new Object_FoodCategory(source);}
+
+            @Override
+            public Object_FoodCategory[] newArray(int size) {return new Object_FoodCategory[size];}
+        };
+    }
 }

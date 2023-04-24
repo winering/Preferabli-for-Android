@@ -108,9 +108,7 @@ public class API_PreferabliException extends Exception {
          * The data you requested is already loaded.
          */
         AlreadyLoaded,
-        /**
-         * An error in the data that came back from the API.
-         */
+        /** An error in the data that came back from the API */
         BadData,
         /**
          * User / customer not logged in.

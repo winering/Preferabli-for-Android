@@ -44,10 +44,10 @@ public class Object_Tag extends Object_BaseObject {
     private String bin;
     private ArrayList<Share> sharing;
     private ArrayList<Parameter> parameters;
-    private Other_RatingType ratingType;
+    private Other_RatingLevel ratingType;
     private Other_TagType tag_type;
     private boolean dirty;
-    private Object_Collection.Object_Version.Object_Group.Object_Ordering ordering;
+    private Object_Collection.Object_CollectionOrder ordering;
 
     // only created once
     private transient Date date;
@@ -197,11 +197,11 @@ public class Object_Tag extends Object_BaseObject {
         return Tools_Preferabli.convertAPITimeStampToDate(created_at);
     }
 
-    public Object_Collection.Object_Version.Object_Group.Object_Ordering getOrdering() {
+    public Object_Collection.Object_CollectionOrder getOrdering() {
         return ordering;
     }
 
-    public void setOrdering(Object_Collection.Object_Version.Object_Group.Object_Ordering ordering) {
+    public void setOrdering(Object_Collection.Object_CollectionOrder ordering) {
         this.ordering = ordering;
     }
 
@@ -261,7 +261,7 @@ public class Object_Tag extends Object_BaseObject {
     }
 
     public Object_Tag getMostRecentRatingFromSameCollection() {
-        HashSet<Object_Tag> ratingsTags = getVariant().getRatings_tags();
+        HashSet<Object_Tag> ratingsTags = getVariant().getRatingTags();
         Date date = new Date(0);
         Object_Tag mostRecentRatingFromCollection = null;
         for (Object_Tag tag : ratingsTags) {
@@ -273,19 +273,19 @@ public class Object_Tag extends Object_BaseObject {
         }
 
         if (mostRecentRatingFromCollection == null) {
-            return getVariant().getMost_recent_rating();
+            return getVariant().getMostRecentRating();
         }
 
         return mostRecentRatingFromCollection;
     }
 
-    public Other_RatingType getMostRecentRatingTypeFromSameCollection() {
+    public Other_RatingLevel getMostRecentRatingTypeFromSameCollection() {
         Object_Tag mostRecentRatingFromCollection = getMostRecentRatingFromSameCollection();
         if (mostRecentRatingFromCollection != null) {
             return mostRecentRatingFromCollection.getRatingType();
         }
 
-        return Other_RatingType.NONE;
+        return Other_RatingLevel.NONE;
     }
 
     public Date getDate() {
@@ -309,8 +309,8 @@ public class Object_Tag extends Object_BaseObject {
         this.bin = bin;
     }
 
-    public Other_RatingType getRatingType() {
-        if (ratingType == null) ratingType = Other_RatingType.getRatingTypeBasedOffTagValue(value);
+    public Other_RatingLevel getRatingType() {
+        if (ratingType == null) ratingType = Other_RatingLevel.getRatingLevelBasedOffTagValue(value);
 
         return ratingType;
     }

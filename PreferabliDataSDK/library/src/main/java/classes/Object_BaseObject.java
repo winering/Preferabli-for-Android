@@ -1,9 +1,20 @@
+//
+//  Object_BaseObject.java
+//  Preferabli
+//
+//  Created by Nicholas Bortolussi on 7/7/16.
+//  Copyright © 2023 RingIT, Inc. All rights reserved.
+//
+
 package classes;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 import java.io.Serializable;
 
+/**
+ * Most of the Preferabli Data SDK classes inherit from this object.
+ */
 public class Object_BaseObject implements Parcelable {
     private long id;
 
@@ -47,11 +58,11 @@ public class Object_BaseObject implements Parcelable {
         dest.writeLong(this.id);
     }
 
-    public Object_BaseObject(Parcel in) {
+    Object_BaseObject(Parcel in) {
         this.id = in.readLong();
     }
 
-    public static final Creator<Object_BaseObject> CREATOR = new Creator<Object_BaseObject>() {
+    static final Creator<Object_BaseObject> CREATOR = new Creator<Object_BaseObject>() {
         @Override
         public Object_BaseObject createFromParcel(Parcel source) {return new Object_BaseObject(source);}
 

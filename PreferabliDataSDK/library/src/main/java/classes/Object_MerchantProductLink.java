@@ -10,14 +10,19 @@ package classes;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.preference.PreferenceDataStore;
 
 import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 
+/**
+ * This is the link between a Preferabli {@link Object_Product} and a merchant product. If returned as part of {@link Object_WhereToBuy}, will contain an array of {@link Object_Venue} as {@link Object_MerchantProductLink#venues}.
+ */
 public class Object_MerchantProductLink extends Object_BaseObject {
-    private long variant_id;
-    private long product_id;
+
+    private Long variant_id;
+    private Long product_id;
     private Integer variant_year;
     private String mapping_name;
     private String value;
@@ -35,58 +40,35 @@ public class Object_MerchantProductLink extends Object_BaseObject {
     private boolean nonconforming_result;
     private boolean exclude_from_system;
     private String exclude_reason;
-
     private String merchant_product_id;
     private String merchant_variant_id;
 
-    private transient Object_Variant variant;
-
-    public void setVariant(Object_Variant variant) {
-        this.variant = variant;
-    }
-
-    public Object_Variant getVariant() {
-        return variant;
-    }
-
-    public String getExclude_reason() {
+    public String getExcludeReason() {
         return exclude_reason;
     }
 
-    public Integer getVariant_year() {
+    public Integer getVariantYear() {
         return variant_year;
     }
 
-    public double getFormat_ml() {
+    public double getFormatML() {
         return format_ml;
     }
 
-    public boolean isExclude_from_system() {
+    public boolean isExcludeFromSystem() {
         return exclude_from_system;
     }
 
-    public void setFormat_ml(int format_ml) {
-        this.format_ml = format_ml;
-    }
-
-    public long getChannel_id() {
+    public long getChannelId() {
         return channel_id;
     }
 
-    public void setChannel_id(long channel_id) {
-        this.channel_id = channel_id;
-    }
-
-    public String getChannel_name() {
+    public String getChannelName() {
         return channel_name;
     }
 
     public long getProductId() {
         return product_id;
-    }
-
-    public void setChannel_name(String channel_name) {
-        this.channel_name = channel_name;
     }
 
     public ArrayList<Object_Venue> getVenues() {
@@ -96,81 +78,46 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         return venues;
     }
 
-    public void setVenues(ArrayList<Object_Venue> venues) {
-        this.venues = venues;
-    }
-
-    private transient int position;
-
-    public long getVariant_id() {
+    public long getVariantId() {
         return variant_id;
     }
 
-    public String getPrice_currency() {
+    public String getPriceCurrency() {
         return price_currency;
     }
 
-    public int getPosition() {
-        return position;
-    }
-
-    public void setPosition(int position) {
-        this.position = position;
-    }
-
-    public void setVariant_id(long variant_id) {
-        this.variant_id = variant_id;
-    }
-
-    public String getMapping_name() {
+    public String getMappingName() {
         return mapping_name;
-    }
-
-    public void setMapping_name(String mapping_name) {
-        this.mapping_name = mapping_name;
     }
 
     public String getValue() {
         return value;
     }
 
-    public void setValue(String value) {
-        this.value = value;
-    }
-
-    public String getLanding_url() {
+    public String getLandingUrl() {
         return landing_url;
-    }
-
-    public void setLanding_url(String landing_url) {
-        this.landing_url = landing_url;
-    }
-
-    public String getImage_url() {
-        return image_url;
-    }
-
-    public void setImage_url(String image_url) {
-        this.image_url = image_url;
     }
 
     public String getProductName() {
         return product_name;
     }
 
-    public void setProduct_name(String product_name) {
-        this.product_name = product_name;
-    }
-
-    public String getIntro_text() {
+    public String getIntroText() {
         return intro_text;
     }
 
-    public void setIntro_text(String intro_text) {
-        this.intro_text = intro_text;
+    /**
+     * Get the link's image.
+     * @param width returns an image with the specified width in pixels.
+     * @param height returns an image with the specified height in pixels.
+     * @param quality returns an image with the specified quality. Scales from 0 - 100.
+     * @return the URL of the requested image.
+     */
+    public String getImage(int width, int height, int quality) {
+        return Tools_Preferabli.getImageUrl(image_url, width, height, quality);
     }
 
-    public String getBottle_price() {
+    public String getBottlePrice() {
         DecimalFormat df = new DecimalFormat("0.00");
         if (!Tools_Preferabli.isNullOrWhitespace(bottle_price)) {
             double doublePrice = Double.parseDouble(bottle_price);
@@ -179,16 +126,8 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         return bottle_price;
     }
 
-    public void setBottle_price(String bottle_price) {
-        this.bottle_price = bottle_price;
-    }
-
-    public String getWebsite_data_verified_at() {
+    public String getWebsiteDataVerifiedAt() {
         return website_data_verified_at;
-    }
-
-    public void setWebsite_data_verified_at(String website_data_verified_at) {
-        this.website_data_verified_at = website_data_verified_at;
     }
 
     @Override
@@ -201,7 +140,7 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         String[] terms = constraint.split("\\s+");
         innerloop:
         for (String term : terms) {
-            if (getMapping_name() != null && getMapping_name().toLowerCase().contains(term))
+            if (getMappingName() != null && getMappingName().toLowerCase().contains(term))
                 continue;
             else if (getProductName() != null && getProductName().toLowerCase().contains(term))
                 continue;
@@ -211,7 +150,9 @@ public class Object_MerchantProductLink extends Object_BaseObject {
                         continue innerloop;
                 }
                 return false;
-            } else return false;
+            }
+
+            return false;
         }
         return true;
     }
@@ -221,7 +162,7 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         return 0;
     }
 
-    public boolean isNonconforming_result() {
+    public boolean isNonconformingResult() {
         return nonconforming_result;
     }
 
@@ -248,9 +189,6 @@ public class Object_MerchantProductLink extends Object_BaseObject {
         dest.writeString(this.exclude_reason);
         dest.writeString(this.merchant_product_id);
         dest.writeString(this.merchant_variant_id);
-    }
-
-    public Object_MerchantProductLink() {
     }
 
     protected Object_MerchantProductLink(Parcel in) {
@@ -288,4 +226,51 @@ public class Object_MerchantProductLink extends Object_BaseObject {
             return new Object_MerchantProductLink[size];
         }
     };
+
+    /**
+     * See {@link Preferabli#whereToBuy(long, Other_FulfillSort, Boolean, Boolean, API_ResultHandler)}.
+     */
+    public void whereToBuy(Other_FulfillSort fulfill_sort, Boolean append_nonconforming_results, Boolean lock_to_integration, API_ResultHandler<Object_WhereToBuy> handler) {
+        if (product_id != null) {
+            Preferabli.main().whereToBuy(product_id, fulfill_sort, append_nonconforming_results, lock_to_integration, handler);
+        }
+    }
+
+    /**
+     * See {@link Preferabli#rateProduct(long, int, Other_RatingLevel, String, String, Double, Integer, Integer, API_ResultHandler)}.
+     */
+    public void rate(Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+        if (product_id != null) {
+            if (variant_year == null) {
+                variant_year = Object_Variant.CURRENT_VARIANT_YEAR;
+            }
+            Preferabli.main().rateProduct(product_id, variant_year, rating, location, notes, price, quantity, format_ml, handler);
+        }
+    }
+
+    /**
+     * See {@link Preferabli#lttt(long, Integer, Long, Boolean, API_ResultHandler)}.
+     */
+    public void lttt(Long collection_id, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        if (product_id != null) {
+            if (variant_year == null) {
+                variant_year = Object_Variant.CURRENT_VARIANT_YEAR;
+            }
+            Preferabli.main().lttt(product_id, variant_year, collection_id, include_merchant_links, handler);
+        }
+    }
+
+    /**
+     * See {@link Preferabli#getPreferabliScore(long, Integer, API_ResultHandler)}.
+     */
+    public void getPreferabliScore(API_ResultHandler<Object_PreferenceData> handler) {
+        if (product_id != null) {
+            if (variant_year == null) {
+                variant_year = Object_Variant.CURRENT_VARIANT_YEAR;
+            }
+            Preferabli.main().getPreferabliScore(product_id, variant_year, handler);
+        }
+    }
 }
+
+

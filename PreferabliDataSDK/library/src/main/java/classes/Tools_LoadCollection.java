@@ -12,7 +12,6 @@ import android.util.Log;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
 
@@ -84,7 +83,7 @@ public class Tools_LoadCollection {
         Semaphore getItemsSempahore = new Semaphore(10);
         final boolean[] error = { false };
         int offsetOverall = -limit;
-        while (offsetOverall <= collection.getWineCount()) {
+        while (offsetOverall <= collection.getProductCount()) {
             getItemsSempahore.acquire();
             offsetOverall = offsetOverall + limit;
             final int offset = offsetOverall;
@@ -146,15 +145,15 @@ public class Tools_LoadCollection {
             throw new API_PreferabliException(API_PreferabliException.PreferabliExceptionType.OtherError);
         }
 
-        Object_Collection.Object_Version version = collection.getFirstVersion();
+        Object_Collection.Object_CollectionVersion version = collection.getFirstVersion();
         final int limit = 100;
         Semaphore getItemsSempahore = new Semaphore(10);
         final boolean[] error = { false };
 
-        HashMap<Object_Collection.Object_Version.Object_Group, ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering>> orderingMap = new HashMap<>();
-        for (Object_Collection.Object_Version.Object_Group group : version.getGroups()) {
+        HashMap<Object_Collection.Object_CollectionGroup, ArrayList<Object_Collection.Object_CollectionOrder>> orderingMap = new HashMap<>();
+        for (Object_Collection.Object_CollectionGroup group : version.getGroups()) {
             int offset = 0;
-            ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering> orderingsToInsert = new ArrayList<>();
+            ArrayList<Object_Collection.Object_CollectionOrder> orderingsToInsert = new ArrayList<>();
             Semaphore addSem = new Semaphore(1);
             orderingMap.put(group, orderingsToInsert);
             while (offset <= group.getOrderingsCount()) {
@@ -163,7 +162,7 @@ public class Tools_LoadCollection {
                     @Override
                     public void run() {
                         try {
-                            ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering> orderings = getGroupItems(collection, version, group, limit, finalOffset, 0);
+                            ArrayList<Object_Collection.Object_CollectionOrder> orderings = getGroupItems(collection, version, group, limit, finalOffset, 0);
                             addSem.acquire();
                             orderingsToInsert.addAll(orderings);
                             addSem.release();
@@ -190,8 +189,8 @@ public class Tools_LoadCollection {
 
         // we need to insert all orderings together after the old are cleared after all is done so to prevent data loss.
         Tools_Database.getInstance().openDatabase();
-        for (Object_Collection.Object_Version.Object_Group group : version.getGroups()) {
-            ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering> orderingsToInsert = orderingMap.get(group);
+        for (Object_Collection.Object_CollectionGroup group : version.getGroups()) {
+            ArrayList<Object_Collection.Object_CollectionOrder> orderingsToInsert = orderingMap.get(group);
             Tools_Database.getInstance().clearGroupOrderings(group);
             Tools_Database.getInstance().updateOrderingTable(orderingsToInsert);
         }
@@ -201,20 +200,20 @@ public class Tools_LoadCollection {
         Tools_Preferabli.getKeyStore().edit().putBoolean("hasLoaded" + collectionId, true).apply();
     }
 
-    public ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering> getGroupItems(Object_Collection collection, Object_Collection.Object_Version version, Object_Collection.Object_Version.Object_Group group, int limit, int offset, int failCount) throws API_PreferabliException {
+    public ArrayList<Object_Collection.Object_CollectionOrder> getGroupItems(Object_Collection collection, Object_Collection.Object_CollectionVersion version, Object_Collection.Object_CollectionGroup group, int limit, int offset, int failCount) throws API_PreferabliException {
         try {
             if (Thread.interrupted()) return new ArrayList<>();
-            Response<ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering>> orderingResponse = API_Singleton.getInstanceService().getOrderings(collection.getId(), version.getId(), group.getId(), limit, offset).execute();
+            Response<ArrayList<Object_Collection.Object_CollectionOrder>> orderingResponse = API_Singleton.getInstanceService().getOrderings(collection.getId(), version.getId(), group.getId(), limit, offset).execute();
             if (Thread.interrupted()) return new ArrayList<>();
             if (!orderingResponse.isSuccessful())
                 throw new API_PreferabliException(orderingResponse.errorBody());
             Tools_Preferabli.saveCollectionEtag(orderingResponse, collection.getId());
-            ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering> orderings = orderingResponse.body();
+            ArrayList<Object_Collection.Object_CollectionOrder> orderings = orderingResponse.body();
 
             if (orderings.size() != 0) {
                 ArrayList<Long> tagIds = new ArrayList<>();
-                for (Object_Collection.Object_Version.Object_Group.Object_Ordering ordering : orderings) {
-                    tagIds.add(ordering.getCollectionVariantTagId());
+                for (Object_Collection.Object_CollectionOrder ordering : orderings) {
+                    tagIds.add(ordering.getTagId());
                     ordering.setGroupId(group.getId());
                 }
 
@@ -230,8 +229,8 @@ public class Tools_LoadCollection {
                 ArrayList<Long> variantIds = new ArrayList<>();
                 for (Object_Tag tag : tags) {
                     tag.setLocation(collection.getName());
-                    for (Object_Collection.Object_Version.Object_Group.Object_Ordering ordering : orderings) {
-                        if (ordering.getCollectionVariantTagId() == tag.getId()) {
+                    for (Object_Collection.Object_CollectionOrder ordering : orderings) {
+                        if (ordering.getTagId() == tag.getId()) {
                             Tools_Database.getInstance().updateTagTable(ordering, tag);
                             ordering.setTag(tag);
                             break;
@@ -279,23 +278,21 @@ public class Tools_LoadCollection {
 
     public ArrayList<Object_Product> getCachedProducts(Object_Collection collection, boolean manage) {
         ArrayList<Object_Product> cachedProducts = new ArrayList<>();
-        ArrayList<Object_Collection.Object_Version.Object_Group> groups = collection.getFirstVersion().getGroups();
+        ArrayList<Object_Collection.Object_CollectionGroup> groups = collection.getFirstVersion().getGroups();
         int totalPosition = 1;
-        for (Object_Collection.Object_Version.Object_Group group : groups) {
+        for (Object_Collection.Object_CollectionGroup group : groups) {
             int positionInGroup = 1;
-            ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering> sortedOrders = group.getOrderings();
+            ArrayList<Object_Collection.Object_CollectionOrder> sortedOrders = group.getOrderings();
             if (sortedOrders.size() == 0 && manage) {
                 Object_Product product = new Object_Product();
-                product.setWineGroup(new Object_Product.WineGroup(group, new Object_Collection.Object_Version.Object_Group.Object_Ordering()));
                 product.setPositionInGroup(positionInGroup);
                 product.setTotalPosition(totalPosition);
                 cachedProducts.add(product);
             } else {
-                for (Object_Collection.Object_Version.Object_Group.Object_Ordering ordering : sortedOrders) {
+                for (Object_Collection.Object_CollectionOrder ordering : sortedOrders) {
                     Object_Tag tag = ordering.getTag();
                     Object_Variant variant = tag.getVariant();
                     Object_Product product = new Object_Product(variant.getProduct());
-                    product.setWineGroup(new Object_Product.WineGroup(group, ordering));
                     product.setPositionInGroup(positionInGroup);
                     product.setTotalPosition(totalPosition);
                     variant.setProduct(product);

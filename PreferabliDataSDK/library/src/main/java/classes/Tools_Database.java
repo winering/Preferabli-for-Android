@@ -241,6 +241,20 @@ public class Tools_Database {
     public static final String KEY_UCOLLECTIONCID = "UserCollectionCollectionId";
     public static final String KEY_UCOLLECTIONAT = "UserCollectionArchivedAt";
 
+    // constants for customers
+    public static final String KEY_CUSTOMERLOCALID = "CustomerLocalId";
+    public static final String KEY_CUSTOMERID = "CustomerId";
+    public static final String KEY_CUSTOMERAVA = "CustomerAvatar";
+    public static final String KEY_CUSTOMERMEMAIL = "CustomerMerchantEmail";
+    public static final String KEY_CUSTOMERMUID = "CustomerMerchantUserId";
+    public static final String KEY_CUSTOMERMUN = "CustomerMerchantUsername";
+    public static final String KEY_CUSTOMERROLE = "CustomerRole";
+    public static final String KEY_CUSTOMERUID = "CustomerUserId";
+    public static final String KEY_CUSTOMERCHID = "CustomerChannelId";
+    public static final String KEY_CUSTOMERHP = "CustomerHasProfile";
+    public static final String KEY_CUSTOMERMUDN = "CustomerMUDN";
+    public static final String KEY_CUSTOMERCC = "CustomerClaimCode";
+    public static final String KEY_CUSTOMERORDER = "CustomerOrder";
 
     // database constants
     public static final String DATABASE_NAME = "WineRingDB";
@@ -258,6 +272,7 @@ public class Tools_Database {
     public static final String TABLE_USERCOLLECTIONS = "UserCollections";
     public static final String TABLE_APPLIANCES = "Appliances";
     public static final String TABLE_SEARCHES = "Searches";
+    public static final String TABLE_CUSTOMERS = "Customers";
 
     private int mOpenCounter;
     public static Tools_Database instance;
@@ -286,6 +301,7 @@ public class Tools_Database {
             db.execSQL("CREATE TABLE " + TABLE_APPLIANCES + " (" + KEY_APPLOCALID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " + KEY_APPID + " LONG UNIQUE, " + KEY_APPNAME + " TEXT, " + KEY_BOTTOMTEMP + " INTEGER, " + KEY_TOPTEMP + " INTEGER, " + KEY_MIDTEMP + " INTEGER, " + KEY_APPSAB + " INTEGER, " + KEY_APPHAID + " TEXT, " + KEY_APPUNIT + " TEXT, " + KEY_APPIMAGE + " TEXT);");
             db.execSQL("CREATE TABLE " + TABLE_USERCOLLECTIONS + " (" + KEY_UCOLLECTIONLOCALID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " + KEY_UCOLLECTIONID + " LONG UNIQUE, " + KEY_UCOLLECTIONRT + " TEXT, " + KEY_UCOLLECTIONVIEWER + " INTEGER, " + KEY_UCOLLECTIONPINNED + " INTEGER, " + KEY_UCOLLECTIONEDITOR + " INTEGER, " + KEY_UCOLLECTIONADMIN + " INTEGER, " + KEY_UCOLLECTIONCID + " LONG, " + KEY_UCOLLECTIONCA + " TEXT, " + KEY_UCOLLECTIONAT + " TEXT, " + KEY_UCOLLECTIONUA + " TEXT);");
             db.execSQL("CREATE TABLE " + TABLE_SEARCHES + " (" + KEY_SEARCHLOCALID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " + KEY_SEARCHTEXT + " TEXT UNIQUE, " +  KEY_SEARCHLAST + " TEXT, " + KEY_SEARCHCOUNT + " INTEGER);");
+            db.execSQL("CREATE TABLE " + TABLE_CUSTOMERS + " (" + KEY_CUSTOMERLOCALID + " INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " + KEY_CUSTOMERID + " LONG UNIQUE, " + KEY_CUSTOMERMEMAIL + " TEXT, " + KEY_CUSTOMERCC + " TEXT, " + KEY_CUSTOMERORDER + " INTEGER, " + KEY_CUSTOMERMUDN + " TEXT, " + KEY_CUSTOMERMUID + " TEXT, " + KEY_CUSTOMERMUN + " TEXT, " + KEY_CUSTOMERROLE + " TEXT, " + KEY_CUSTOMERUID + " LONG, " + KEY_CUSTOMERCHID + " LONG, " + KEY_CUSTOMERHP + " INTEGER, " + KEY_CUSTOMERAVA + " TEXT);");
         }
 
         @Override
@@ -294,7 +310,7 @@ public class Tools_Database {
             API_Singleton.getSharedInstance().clearCache();
             Map<String, ?> allEntries = Tools_Preferabli.getKeyStore().getAll();
             for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-                if (entry.getKey().startsWith("hasLoaded") || entry.getKey().startsWith("hasCalled") || entry.getKey().startsWith("collection_etags_") || entry.getKey().toLowerCase().contains("lastgrabbed")) {
+                if (entry.getKey().startsWith("hasLoaded") || entry.getKey().startsWith("lastCalled") || entry.getKey().startsWith("collection_etags_")) {
                     Tools_Preferabli.getKeyStore().edit().remove(entry.getKey()).apply();
                 }
             }
@@ -315,6 +331,7 @@ public class Tools_Database {
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_USERCOLLECTIONS);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_APPLIANCES);
             db.execSQL("DROP TABLE IF EXISTS " + TABLE_SEARCHES);
+            db.execSQL("DROP TABLE IF EXISTS " + TABLE_CUSTOMERS);
             onCreate(db);
         }
     }
@@ -371,6 +388,7 @@ public class Tools_Database {
         clearUserCollectionTable();
         clearApplianceTable();
         clearSearchesTable();
+        clearCustomerTable();
     }
 
 
@@ -474,6 +492,35 @@ public class Tools_Database {
         }
     }
 
+    public void updateCustomerTable(long channelId, Object_Customer customer) {
+        ContentValues cv = new ContentValues();
+        cv.put(KEY_CUSTOMERAVA, customer.getAvatarUrl());
+        cv.put(KEY_CUSTOMERID, customer.getId());
+        cv.put(KEY_CUSTOMERMEMAIL, customer.getEmail());
+        cv.put(KEY_CUSTOMERMUID, customer.getMerchantUserId());
+        cv.put(KEY_CUSTOMERMUN, customer.getMerchantUserName());
+        cv.put(KEY_CUSTOMERROLE, customer.getRole());
+        cv.put(KEY_CUSTOMERCHID, channelId);
+        cv.put(KEY_CUSTOMERHP, customer.isHas_profile());
+        cv.put(KEY_CUSTOMERMUDN, customer.getMerchantUserDisplayName());
+        cv.put(KEY_CUSTOMERCC, customer.getClaimCode());
+        cv.put(KEY_CUSTOMERORDER, customer.getOrder());
+
+        try {
+            getOurDatabase().insertOrThrow(TABLE_CUSTOMERS, null, cv);
+        } catch (SQLiteConstraintException e) {
+            try {
+                getOurDatabase().update(TABLE_CUSTOMERS, cv, KEY_CUSTOMERID + " = ?", new String[]{Long.toString(customer.getId())});
+            } catch (SQLiteConstraintException e1) {
+                Log.e(getClass().getSimpleName(), "Failed updating Customer!", e);
+            }
+        }
+    }
+
+    public void clearCustomerTable() {
+        getOurDatabase().delete(TABLE_CUSTOMERS, null, null);
+    }
+
     public void clearVariantTable() {
         getOurDatabase().delete(TABLE_VINTAGES, null, null);
     }
@@ -510,7 +557,7 @@ public class Tools_Database {
         updateTagTable(null, tag);
     }
 
-    public void updateTagTable(Object_Collection.Object_Version.Object_Group.Object_Ordering ordering, Object_Tag tag) {
+    public void updateTagTable(Object_Collection.Object_CollectionOrder ordering, Object_Tag tag) {
         ContentValues cv = new ContentValues();
         cv.put(KEY_TAGCA, tag.getCreatedAt());
         cv.put(KEY_TAGGEDINCID, tag.getTaggedInCollectionId());
@@ -625,16 +672,14 @@ public class Tools_Database {
         cv.put(KEY_COLLECTIONDESC, collection.getDescription());
         cv.put(KEY_COLLECTIONED, collection.getEndDate());
         cv.put(KEY_COLLECTIONID, collection.getId());
-        cv.put(KEY_COLLECTIONIMAGE, collection.getImage());
+        cv.put(KEY_COLLECTIONIMAGE, Tools_Preferabli.getGson().toJson(collection.getPrimaryImage()));
         cv.put(KEY_COLLECTIONNAME, collection.getName());
-        cv.put(KEY_COLLECTIONORDER, collection.getOrder());
-        cv.put(KEY_COLLECTIONAUTOWILI, collection.isAutoWili());
         cv.put(KEY_COLLECTIONPUBLISHED, collection.isPublished());
         cv.put(KEY_COLLECTIONSD, collection.getStartDate());
         cv.put(KEY_COLLECTIONTRAITS, Tools_Preferabli.getGson().toJson(collection.getTraits()));
         cv.put(KEY_COLLECTIONUA, collection.getUpdatedAt());
         cv.put(KEY_COLLECTIONVENUE, Tools_Preferabli.getGson().toJson(collection.getVenue()));
-        cv.put(KEY_COLLECTIONCHANNELNAME, collection.getChannelName());
+        cv.put(KEY_COLLECTIONCHANNELNAME, collection.getSortChannelName());
         cv.put(KEY_COLLECTIONBLIND, collection.isBlind());
         cv.put(KEY_COLLECTIONBADGE, collection.getBadgeMethod());
         cv.put(KEY_COLLECTIONCURRENCY, collection.getCurrency());
@@ -644,21 +689,14 @@ public class Tools_Database {
         cv.put(KEY_COLLECTIONDT, collection.isDisplayTime());
         cv.put(KEY_COLLECTIONDGH, collection.isDisplayGroupHeadings());
         cv.put(KEY_COLLECTIONTIMEZONE, collection.getTimezone());
-        cv.put(KEY_COLLECTIONHPO, collection.isHasPredictOrder());
-        cv.put(KEY_COLLECTIONWC, collection.getWineCount());
-        cv.put(KEY_COLLECTIONPINNED, collection.isIs_pinned());
-        cv.put(KEY_COLLECTIONBROWSE, collection.isIs_browsable());
+        cv.put(KEY_COLLECTIONHPO, collection.hasPredictOrder());
+        cv.put(KEY_COLLECTIONWC, collection.getProductCount());
+        cv.put(KEY_COLLECTIONBROWSE, collection.isBrowsable());
         cv.put(KEY_COLLECTIONARCHIVE, collection.isArchived());
 
         if (collection.getVersions() != null) {
-            for (Object_Collection.Object_Version version : collection.getVersions()) {
+            for (Object_Collection.Object_CollectionVersion version : collection.getVersions()) {
                 updateVersionTable(collection, version);
-            }
-        }
-
-        if (collection.getUserCollections() != null) {
-            for (Object_UserCollection userCollection : collection.getUserCollections()) {
-                updateUserCollectionTable(userCollection, false);
             }
         }
 
@@ -673,13 +711,13 @@ public class Tools_Database {
         }
     }
 
-    public void updateVersionTable(Object_Collection collection, Object_Collection.Object_Version version) {
+    public void updateVersionTable(Object_Collection collection, Object_Collection.Object_CollectionVersion version) {
         ContentValues cv = new ContentValues();
         cv.put(KEY_VERSIONID, version.getId());
         cv.put(KEY_VERSIONCID, collection.getId());
 
         if (version.getGroups() != null) {
-            for (Object_Collection.Object_Version.Object_Group group : version.getGroups()) {
+            for (Object_Collection.Object_CollectionGroup group : version.getGroups()) {
                 updateGroupTable(version, group);
             }
         }
@@ -695,7 +733,7 @@ public class Tools_Database {
         }
     }
 
-    public void updateGroupTable(Object_Collection.Object_Version version, Object_Collection.Object_Version.Object_Group group) {
+    public void updateGroupTable(Object_Collection.Object_CollectionVersion version, Object_Collection.Object_CollectionGroup group) {
         ContentValues cv = new ContentValues();
         cv.put(KEY_GROUPID, group.getId());
         cv.put(KEY_GROUPNAME, group.getName());
@@ -704,7 +742,7 @@ public class Tools_Database {
         cv.put(KEY_GROUPORDER, group.getOrder());
 
         if (group.getOrderings() != null) {
-            for (Object_Collection.Object_Version.Object_Group.Object_Ordering ordering : group.getOrderings()) {
+            for (Object_Collection.Object_CollectionOrder ordering : group.getOrderings()) {
                 updateOrderingTable(group.getId(), ordering);
             }
         }
@@ -720,7 +758,7 @@ public class Tools_Database {
         }
     }
 
-    public void updateTagTable(long customerId, Object_Collection.Object_Version.Object_Group.Object_Ordering ordering, Object_Tag tag) {
+    public void updateTagTable(long customerId, Object_Collection.Object_CollectionOrder ordering, Object_Tag tag) {
         ContentValues cv = new ContentValues();
         cv.put(KEY_TAGCA, tag.getCreatedAt());
         cv.put(KEY_TAGGEDINCID, tag.getTaggedInCollectionId());
@@ -758,13 +796,12 @@ public class Tools_Database {
         }
     }
 
-    public void updateOrderingTable(long groupId, Object_Collection.Object_Version.Object_Group.Object_Ordering ordering) {
+    public void updateOrderingTable(long groupId, Object_Collection.Object_CollectionOrder ordering) {
         ContentValues cv = new ContentValues();
         cv.put(KEY_ORDERINGID, ordering.getId());
-        cv.put(KEY_ORDERINGCVTID, ordering.getCollectionVariantTagId());
+        cv.put(KEY_ORDERINGCVTID, ordering.getTagId());
         cv.put(KEY_ORDERINGGID, groupId);
         cv.put(KEY_ORDERINGORDER, ordering.getOrder());
-        cv.put(KEY_ORDERINGDIRTY, ordering.isDirty());
 
         if (ordering.getTag() != null) {
             updateTagTable(ordering, ordering.getTag());
@@ -799,28 +836,27 @@ public class Tools_Database {
         return argsBuilder.toString();
     }
 
-    public void clearGroupOrderings(Object_Collection.Object_Version.Object_Group group) {
+    public void clearGroupOrderings(Object_Collection.Object_CollectionGroup group) {
         getOurDatabase().delete(TABLE_ORDERINGS, KEY_ORDERINGGID + " = ? AND " + KEY_ORDERINGDIRTY + " = ?", new String[]{Long.toString(group.getId()), "0"});
     }
 
     public void deleteCollection(Object_Collection collection) {
         getOurDatabase().delete(TABLE_COLLECTIONS, KEY_COLLECTIONID + " = ?", new String[]{Long.toString(collection.getId())});
 
-        for (Object_Collection.Object_Version version : collection.getVersions()) {
+        for (Object_Collection.Object_CollectionVersion version : collection.getVersions()) {
             getOurDatabase().delete(TABLE_VERSIONS, KEY_VERSIONID + " = ?", new String[]{Long.toString(version.getId())});
             getOurDatabase().delete(TABLE_GROUPS, KEY_GROUPVID + " = ?", new String[]{Long.toString(version.getId())});
         }
     }
 
-    public void updateOrderingTable(ArrayList<Object_Collection.Object_Version.Object_Group.Object_Ordering> orderings) {
+    public void updateOrderingTable(ArrayList<Object_Collection.Object_CollectionOrder> orderings) {
         getOurDatabase().beginTransaction();
-        for (Object_Collection.Object_Version.Object_Group.Object_Ordering ordering : orderings) {
+        for (Object_Collection.Object_CollectionOrder ordering : orderings) {
             ContentValues cv = new ContentValues();
             cv.put(KEY_ORDERINGID, ordering.getId());
-            cv.put(KEY_ORDERINGCVTID, ordering.getCollectionVariantTagId());
+            cv.put(KEY_ORDERINGCVTID, ordering.getTagId());
             cv.put(KEY_ORDERINGGID, ordering.getGroupId());
             cv.put(KEY_ORDERINGORDER, ordering.getOrder());
-            cv.put(KEY_ORDERINGDIRTY, ordering.isDirty());
             getOurDatabase().insertWithOnConflict(TABLE_ORDERINGS, null, cv, SQLiteDatabase.CONFLICT_REPLACE);
         }
         getOurDatabase().setTransactionSuccessful();
@@ -991,28 +1027,6 @@ public class Tools_Database {
         return tags;
     }
 
-    public Object_Product getWineWithOrderingId(long orderingId) {
-        Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_ORDERINGS + " INNER JOIN " + TABLE_TAGS + " ON " + KEY_ORDERINGCVTID + " = " + KEY_TAGID + " INNER JOIN " + TABLE_VINTAGES + " ON " + KEY_TAGVINTAGEID + " = " + KEY_VINTAGEID + " INNER JOIN " + TABLE_WINES + " ON " + KEY_VINTAGEWINEID + " = " + KEY_WINEID + " INNER JOIN " + TABLE_GROUPS + " ON " + KEY_ORDERINGGID + " = " + KEY_GROUPID + " WHERE " + KEY_ORDERINGID + " = ?", new String[]{Long.toString(orderingId)});
-
-        Object_Product product = null;
-        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
-            product = getWineFromCursor(c);
-            Object_Variant variant = getVariantFromCursor(c);
-            Object_Tag tag = getTagFromCursor(c);
-            Object_Collection.Object_Version.Object_Group.Object_Ordering ordering = getOrderingFromCursor(c);
-            Object_Collection.Object_Version.Object_Group group = getGroupFromCursor(c);
-            ordering.setTag(tag);
-            tag.setVariant(variant);
-            variant.addTag(tag);
-            variant.setProduct(product);
-            product.addVariant(variant);
-            product.setWineGroup(new Object_Product.WineGroup(group, ordering));
-        }
-        c.close();
-
-        return product;
-    }
-
     public void deleteOrdering(long ordering_id) {
         getOurDatabase().delete(TABLE_ORDERINGS, KEY_ORDERINGID + " = ?", new String[]{Long.toString(ordering_id)});
     }
@@ -1081,8 +1095,14 @@ public class Tools_Database {
         return products;
     }
 
-    public ArrayList<Object_Product> getCustomerTags(long customer_id) {
-        Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_TAGS + " INNER JOIN " + TABLE_VINTAGES + " ON " + KEY_TAGVINTAGEID + " = " + KEY_VINTAGEID + " INNER JOIN " + TABLE_WINES + " ON " + KEY_VINTAGEWINEID + " = " + KEY_WINEID + " WHERE " + KEY_TAGCUSTOMERID + " = ?", new String[]{Long.toString(customer_id)});
+    public ArrayList<Object_Product> getCustomerTags(long customer_id, String tag_type) {
+        Cursor c;
+        if (tag_type == null) {
+            c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_TAGS + " INNER JOIN " + TABLE_VINTAGES + " ON " + KEY_TAGVINTAGEID + " = " + KEY_VINTAGEID + " INNER JOIN " + TABLE_WINES + " ON " + KEY_VINTAGEWINEID + " = " + KEY_WINEID + " WHERE " + KEY_TAGCUSTOMERID + " = ?", new String[]{Long.toString(customer_id)});
+
+        } else {
+            c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_TAGS + " INNER JOIN " + TABLE_VINTAGES + " ON " + KEY_TAGVINTAGEID + " = " + KEY_VINTAGEID + " INNER JOIN " + TABLE_WINES + " ON " + KEY_VINTAGEWINEID + " = " + KEY_WINEID + " WHERE " + KEY_TAGCUSTOMERID + " = ? AND " + KEY_TAGTYPE + " = ?", new String[]{Long.toString(customer_id), tag_type});
+        }
 
         ArrayList<Object_Product> products = new ArrayList<>();
         HashMap<Long, Object_Product> wineHash = new HashMap<>();
@@ -1127,7 +1147,7 @@ public class Tools_Database {
         return products;
     }
 
-    public void deleteGroup(Object_Collection.Object_Version.Object_Group group) {
+    public void deleteGroup(Object_Collection.Object_CollectionGroup group) {
         getOurDatabase().delete(TABLE_GROUPS, KEY_GROUPID + " = ?", new String[]{Long.toString(group.getId())});
     }
 
@@ -1197,9 +1217,9 @@ public class Tools_Database {
 
 
         Object_Collection collection = null;
-        Object_Collection.Object_Version version = null;
-        HashMap<Long, Object_Collection.Object_Version.Object_Group> groupHash = new HashMap<>();
-        HashMap<Long, Object_Collection.Object_Version.Object_Group.Object_Ordering> orderingHash = new HashMap<>();
+        Object_Collection.Object_CollectionVersion version = null;
+        HashMap<Long, Object_Collection.Object_CollectionGroup> groupHash = new HashMap<>();
+        HashMap<Long, Object_Collection.Object_CollectionOrder> orderingHash = new HashMap<>();
         HashMap<Long, Object_Product> wineHash = new HashMap<>();
         HashMap<Long, Object_Variant> variantHash = new HashMap<>();
         HashMap<Long, Object_Tag> tagHash = new HashMap<>();
@@ -1213,7 +1233,7 @@ public class Tools_Database {
                 collection.addVersion(version);
             }
 
-            Object_Collection.Object_Version.Object_Group group;
+            Object_Collection.Object_CollectionGroup group;
             if (groupHash.containsKey(c.getLong(c.getColumnIndex(KEY_GROUPID)))) {
                 group = groupHash.get(c.getLong(c.getColumnIndex(KEY_GROUPID)));
             } else {
@@ -1222,7 +1242,7 @@ public class Tools_Database {
                 groupHash.put(group.getId(), group);
             }
 
-            Object_Collection.Object_Version.Object_Group.Object_Ordering ordering;
+            Object_Collection.Object_CollectionOrder ordering;
             if (c.getLong(c.getColumnIndex(KEY_ORDERINGID)) == 0 || c.getLong(c.getColumnIndex(KEY_TAGID)) == 0 || c.getLong(c.getColumnIndex(KEY_VINTAGEID)) == 0 || c.getLong(c.getColumnIndex(KEY_WINEID)) == 0)
                 continue;
             if (orderingHash.containsKey(c.getLong(c.getColumnIndex(KEY_ORDERINGID)))) {
@@ -1288,9 +1308,9 @@ public class Tools_Database {
         if (collection != null) {
             collection.setUserCollections(getUserCollections(collection.getId()));
 
-            Object_Collection.Object_Version.Object_Group.sortGroups(version.getGroups());
-            for (Object_Collection.Object_Version.Object_Group group : version.getGroups()) {
-                Object_Collection.Object_Version.Object_Group.Object_Ordering.sortOrders(group.getOrderings());
+            Object_Collection.Object_CollectionGroup.sortGroups(version.getGroups());
+            for (Object_Collection.Object_CollectionGroup group : version.getGroups()) {
+                Object_Collection.Object_CollectionOrder.sortOrders(group.getOrderings());
             }
         }
 
@@ -1302,8 +1322,8 @@ public class Tools_Database {
 
 
         Object_Collection collection = null;
-        Object_Collection.Object_Version version = null;
-        HashMap<Long, Object_Collection.Object_Version.Object_Group> groupHash = new HashMap<>();
+        Object_Collection.Object_CollectionVersion version = null;
+        HashMap<Long, Object_Collection.Object_CollectionGroup> groupHash = new HashMap<>();
 
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             if (collection == null) {
@@ -1314,7 +1334,7 @@ public class Tools_Database {
                 collection.addVersion(version);
             }
 
-            Object_Collection.Object_Version.Object_Group group;
+            Object_Collection.Object_CollectionGroup group;
             if (groupHash.containsKey(c.getLong(c.getColumnIndex(KEY_GROUPID)))) {
                 group = groupHash.get(c.getLong(c.getColumnIndex(KEY_GROUPID)));
             } else {
@@ -1358,15 +1378,15 @@ public class Tools_Database {
         return product;
     }
 
-    public Object_Collection.Object_Version.Object_Group getGroup(long group_id) {
+    public Object_Collection.Object_CollectionGroup getGroup(long group_id) {
         Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_GROUPS + " LEFT OUTER JOIN " + TABLE_ORDERINGS + " ON " + KEY_GROUPID + " = " + KEY_ORDERINGGID + " WHERE " + KEY_GROUPID + " = ?", new String[]{Long.toString(group_id)});
 
-        Object_Collection.Object_Version.Object_Group group = null;
+        Object_Collection.Object_CollectionGroup group = null;
         for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
             if (group == null) {
                 group = getGroupFromCursor(c);
             }
-            Object_Collection.Object_Version.Object_Group.Object_Ordering ordering = getOrderingFromCursor(c);
+            Object_Collection.Object_CollectionOrder ordering = getOrderingFromCursor(c);
             group.addOrdering(ordering);
 
         }
@@ -1386,82 +1406,6 @@ public class Tools_Database {
         c.close();
 
         return tag;
-    }
-
-    public ArrayList<Object_Product> getDirtyProductsWithOrderings() {
-        Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_ORDERINGS + " INNER JOIN " + TABLE_TAGS + " ON " + KEY_ORDERINGID + " = " + KEY_TAGORDERINGID + " INNER JOIN " + TABLE_VINTAGES + " ON " + KEY_TAGVINTAGEID + " = " + KEY_VINTAGEID + " INNER JOIN " + TABLE_WINES + " ON " + KEY_VINTAGEWINEID + " = " + KEY_WINEID + " WHERE " + KEY_ORDERINGDIRTY + " = ?", new String[]{"1"});
-
-        HashMap<Long, Object_Product> wineHash = new HashMap<>();
-        HashMap<Long, Object_Variant> variantHash = new HashMap<>();
-        HashMap<Long, Object_Tag> tagHash = new HashMap<>();
-        HashMap<Long, Object_Collection.Object_Version.Object_Group.Object_Ordering> orderingHash = new HashMap<>();
-
-        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
-            Object_Collection.Object_Version.Object_Group.Object_Ordering ordering;
-            if (c.getLong(c.getColumnIndex(KEY_ORDERINGID)) == 0 || c.getLong(c.getColumnIndex(KEY_TAGID)) == 0 || c.getLong(c.getColumnIndex(KEY_VINTAGEID)) == 0 || c.getLong(c.getColumnIndex(KEY_WINEID)) == 0)
-                continue;
-            if (orderingHash.containsKey(c.getLong(c.getColumnIndex(KEY_ORDERINGID)))) {
-                ordering = orderingHash.get(c.getLong(c.getColumnIndex(KEY_ORDERINGID)));
-            } else {
-                ordering = getOrderingFromCursor(c);
-                orderingHash.put(ordering.getId(), ordering);
-            }
-
-            Object_Tag tag;
-            if (tagHash.containsKey(c.getLong(c.getColumnIndex(KEY_TAGID)))) {
-                tag = tagHash.get(c.getLong(c.getColumnIndex(KEY_TAGID)));
-            } else {
-                tag = getTagFromCursor(c);
-                ordering.setTag(tag);
-                tag.setOrdering(ordering);
-                tagHash.put(tag.getId(), tag);
-            }
-
-            Object_Product product;
-            if (wineHash.containsKey(c.getLong(c.getColumnIndex(KEY_WINEID)))) {
-                product = wineHash.get(c.getLong(c.getColumnIndex(KEY_WINEID)));
-            } else {
-                product = getWineFromCursor(c);
-                product.setWineGroup(new Object_Product.WineGroup(new Object_Collection.Object_Version.Object_Group(), ordering));
-                wineHash.put(product.getId(), product);
-            }
-
-            Object_Variant variant;
-            if (variantHash.containsKey(c.getLong(c.getColumnIndex(KEY_VINTAGEID)))) {
-                variant = variantHash.get(c.getLong(c.getColumnIndex(KEY_VINTAGEID)));
-            } else {
-                variant = getVariantFromCursor(c);
-                product.addVariant(variant);
-                variant.setProduct(product);
-                variantHash.put(variant.getId(), variant);
-            }
-
-            variant.setProduct(product);
-            if (variant.getId() == tag.getVariantId()) {
-                variant.addTag(tag);
-                tag.setVariant(variant);
-            }
-        }
-        c.close();
-
-        // add all our personal tags
-        ArrayList<Object_Tag> tags = getPersonalTags();
-        for (Object_Tag tag : tags) {
-            for (Object_Variant variant : variantHash.values()) {
-                if (tag.getTagType() == Other_TagType.WISHLIST && tag.getProductId() == variant.getWineId()) {
-                    variant.addTag(tag);
-                    tag.setVariant(variant);
-                } else if (tag.getType().equalsIgnoreCase("skipped") && tag.getProductId() == variant.getWineId()) {
-                    variant.addTag(tag);
-                    tag.setVariant(variant);
-                } else if (variant.getId() == tag.getVariantId()) {
-                    variant.addTag(tag);
-                    tag.setVariant(variant);
-                }
-            }
-        }
-
-        return new ArrayList<>(wineHash.values());
     }
 
     public ArrayList<Object_Tag> getPersonalTags() {
@@ -1529,6 +1473,34 @@ public class Tools_Database {
         c.close();
 
         return styles;
+    }
+
+    public Object_Customer getCustomer(long customerId) {
+        Cursor c = getOurDatabase().rawQuery("SELECT * FROM " + TABLE_CUSTOMERS + " WHERE " + KEY_CUSTOMERID + " = ?", new String[]{Long.toString(customerId)});
+
+        Object_Customer customer = null;
+        for (c.moveToFirst(); !c.isAfterLast(); c.moveToNext()) {
+            customer = getCustomerFromCursor(c);
+        }
+        c.close();
+
+        return customer;
+    }
+
+    public Object_Customer getCustomerFromCursor(Cursor c) {
+        int iAV = c.getColumnIndex(KEY_CUSTOMERAVA);
+        int iId = c.getColumnIndex(KEY_CUSTOMERID);
+        int iEM = c.getColumnIndex(KEY_CUSTOMERMEMAIL);
+        int iMID = c.getColumnIndex(KEY_CUSTOMERMUID);
+        int iMUN = c.getColumnIndex(KEY_CUSTOMERMUN);
+        int iROL = c.getColumnIndex(KEY_CUSTOMERROLE);
+        int iUID = c.getColumnIndex(KEY_CUSTOMERUID);
+        int iHP = c.getColumnIndex(KEY_CUSTOMERHP);
+        int iMUDN = c.getColumnIndex(KEY_CUSTOMERMUDN);
+        int iCC = c.getColumnIndex(KEY_CUSTOMERCC);
+        int iCO = c.getColumnIndex(KEY_CUSTOMERORDER);
+
+        return new Object_Customer(c.getLong(iId), c.getString(iAV), c.getString(iEM), c.getString(iMID), c.getString(iMUN), c.getString(iROL), c.getInt(iHP) == 1, c.getString(iMUDN), c.getString(iCC), c.getInt(iCO));
     }
 
     public Object_ProfileStyle getStyleFromCursor(Cursor c) {
@@ -1675,27 +1647,27 @@ public class Tools_Database {
         return new Object_UserCollection(c.getLong(iID), c.getString(iCA), c.getString(iUA), c.getString(iAT), c.getLong(iCID), c.getInt(iAdmin) == 1, c.getInt(iEdit) == 1, c.getInt(iPin) == 1, c.getInt(iViewer) == 1, c.getString(iRT));
     }
 
-    public Object_Collection.Object_Version getVersionFromCursor(Cursor c) {
+    public Object_Collection.Object_CollectionVersion getVersionFromCursor(Cursor c) {
         int iId = c.getColumnIndex(KEY_VERSIONID);
-        return new Object_Collection.Object_Version(c.getLong(iId));
+        return new Object_Collection.Object_CollectionVersion(c.getLong(iId));
     }
 
-    public Object_Collection.Object_Version.Object_Group getGroupFromCursor(Cursor c) {
+    public Object_Collection.Object_CollectionGroup getGroupFromCursor(Cursor c) {
         int iId = c.getColumnIndex(KEY_GROUPID);
         int iName = c.getColumnIndex(KEY_GROUPNAME);
         int iOC = c.getColumnIndex(KEY_GROUPOC);
         int iOrder = c.getColumnIndex(KEY_GROUPORDER);
         int iVID = c.getColumnIndex(KEY_GROUPVID);
-        return new Object_Collection.Object_Version.Object_Group(c.getLong(iId), c.getString(iName), c.getInt(iOC), c.getInt(iOrder), c.getLong(iVID));
+        return new Object_Collection.Object_CollectionGroup(c.getLong(iId), c.getString(iName), c.getInt(iOC), c.getInt(iOrder), c.getLong(iVID));
     }
 
-    public Object_Collection.Object_Version.Object_Group.Object_Ordering getOrderingFromCursor(Cursor c) {
+    public Object_Collection.Object_CollectionOrder getOrderingFromCursor(Cursor c) {
         int iId = c.getColumnIndex(KEY_ORDERINGID);
         int iCVTGID = c.getColumnIndex(KEY_ORDERINGCVTID);
         int iOrder = c.getColumnIndex(KEY_ORDERINGORDER);
         int iOrderDirty = c.getColumnIndex(KEY_ORDERINGDIRTY);
         int iGroupId = c.getColumnIndex(KEY_ORDERINGGID);
-        return new Object_Collection.Object_Version.Object_Group.Object_Ordering(c.getLong(iId), c.getLong(iCVTGID), c.getInt(iOrder), c.getInt(iOrderDirty) == 1, c.getLong(iGroupId));
+        return new Object_Collection.Object_CollectionOrder(c.getLong(iId), c.getLong(iCVTGID), c.getInt(iOrder), c.getInt(iOrderDirty) == 1, c.getLong(iGroupId));
     }
 
 

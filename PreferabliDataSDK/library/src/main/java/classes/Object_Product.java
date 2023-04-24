@@ -8,17 +8,16 @@
 
 package classes;
 
-import android.net.Uri;
 import android.os.Parcel;
-import java.io.File;
+
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Set;
 
+/**
+ * Represents a product within the Preferabli SDK. A product may have one or more {@link Object_Variant}s stored as {@link Object_Product#variants}. To see how a product is mapped to your own object(s), see {@link Object_Variant#getMerchantLinks()}. To see a user's interaction with the product, see {@link Object_Variant#getTags()}.
+ */
 public class Object_Product extends Object_BaseObject {
 
     private ArrayList<Object_Variant> variants;
@@ -33,8 +32,6 @@ public class Object_Product extends Object_BaseObject {
     private String updated_at;
     private Object_Media primary_image;
     private Object_Media back_image;
-    private boolean dirty;
-    private boolean isChecked;
     private double brand_lat;
     private double brand_lon;
     private String category;
@@ -43,59 +40,16 @@ public class Object_Product extends Object_BaseObject {
 
     // we will generate this only one time.
     private transient String price;
-    private transient Other_RatingType ratingType;
-    private transient Object_Variant mostRecentVariant;
-    private transient Object_Tag mostRecentRating;
-    private transient Object_Tag wishlistTag;
-    private transient Object_Tag skippedTag;
-    private transient HashSet<Object_Tag> ratingsTags;
-    private transient HashSet<Object_Tag> collectionTags;
-    private transient HashSet<Object_Tag> personalCellarTags;
-    private transient HashSet<Object_Tag> purchaseTags;
-    private transient WineGroup wineGroup;
-    private transient int totalPosition;
-    private transient int positionInGroup;
-    private transient Object_Collection collection;
-    private transient Object_Tag mostRecentPurchase;
-    private transient String rateSourceLocation;
-    // need old id for matching up dirty products after label rec submission
-    private transient long oldIdForEqualityPurposes;
-    private transient Object_PreferenceData wili;
+    private transient Other_RatingLevel rating_level;
+    private transient Object_Variant most_recent_variant;
+    private transient Object_Tag most_recent_rating;
+    private transient Object_Tag wishlist_tag;
+    private transient HashSet<Object_Tag> rating_tags;
+    private transient HashSet<Object_Tag> cellar_tags;
+    private transient HashSet<Object_Tag> purchase_tags;
 
     public Object_Product() {
         super(-System.currentTimeMillis());
-    }
-
-    public Object_Product(boolean dirty) {
-        this();
-        this.dirty = dirty;
-    }
-
-    public Object_Product(Object_Collection.Object_Version.Object_Group group, Object_Collection.Object_Version.Object_Group.Object_Ordering ordering) {
-        this();
-        setWineGroup(new WineGroup(group, ordering));
-    }
-
-    public Object_Product(String name, String category, Object image, String rateSourceLocation) {
-        this();
-        this.name = name;
-        this.category = category;
-        this.addImage(image);
-        this.dirty = true;
-        this.show_year_dropdown = true;
-        this.rateSourceLocation = rateSourceLocation;
-    }
-
-    public Object_Product(String name, String brand, String region, String grape, String type, Object frontImage, Object backImage) {
-        this();
-        this.name = name;
-        this.grape = grape;
-        this.type = type;
-        this.brand = brand;
-        this.region = region;
-        this.dirty = true;
-        addImage(backImage, "back");
-        addImage(frontImage, "front");
     }
 
     public Object_Product(long id, String name, String grape, boolean decant, boolean show_year_dropdown, String type, String image, String backImage, String brand, String region, String created_at, String updated_at, boolean isDirty, double brand_lat, double brand_lon, String category, String rateSourceLocation, String subcategory, String hash) {
@@ -109,154 +63,53 @@ public class Object_Product extends Object_BaseObject {
         this.region = region;
         this.created_at = created_at;
         this.updated_at = updated_at;
-        this.dirty = isDirty;
         this.primary_image = Tools_Preferabli.convertJsonToObject(image, Object_Media.class);
         this.back_image = Tools_Preferabli.convertJsonToObject(backImage, Object_Media.class);
         this.brand_lat = brand_lat;
         this.brand_lon = brand_lon;
         this.category = category;
-        this.rateSourceLocation = rateSourceLocation;
         this.subcategory = subcategory;
         this.hash = hash;
-    }
-
-    public Object_Product(Object_Product product) {
-        // copy for duplicated products. leave out some things like wine group that shouldn't be copied.
-        super(product.getId());
-        this.name = product.getName();
-        this.grape = product.getGrape();
-        this.decant = product.isDecant();
-        this.show_year_dropdown = product.isNonVariant();
-        this.type = product.getType();
-        this.category = product.getCategory();
-        this.brand_lat = product.getBrand_lat();
-        this.brand_lon = product.getBrand_lon();
-        this.back_image = product.getBackImage();
-        this.brand = product.getBrand();
-        this.brand_lat = product.getBrand_lat();
-        this.brand_lon = product.getBrand_lon();
-        this.region = product.getRegion();
-        this.created_at = product.getCreatedAt();
-        this.updated_at = product.getUpdatedAt();
-        this.primary_image = product.getPrimaryImage();
-        this.price = product.getPrice();
-        this.dirty = product.isDirty();
-        this.variants = product.getVariants();
-        this.collection = product.getCollection();
-        this.hash = product.getHash();
-        this.subcategory = product.getSubcategory();
-        this.rateSourceLocation = product.getRateSourceLocation();
     }
 
     public String getHash() {
         return hash;
     }
 
-    public void setBrand(String brand) {
-        this.brand = brand;
-    }
-
-    public void setRegion(String region) {
-        this.region = region;
-    }
-
-    public void setGrape(String grape) {
-        this.grape = grape;
-    }
-
-    public int getTotalPosition() {
-        return totalPosition;
-    }
-
-    public void setTotalPosition(int totalPosition) {
-        this.totalPosition = totalPosition;
-    }
-
-    public void setChecked(boolean checked) {
-        isChecked = checked;
-    }
-
-    public boolean isChecked() {
-        return isChecked;
-    }
-
-    public boolean isDirty() {
-        return dirty;
-    }
-
-    public boolean isWineDirtyOrChildren() {
-        return dirty || getId() < 0 || (getWineGroup() != null && getOrdering().isDirty());
-    }
-
+    /**
+     * The type of a product (e.g., Red). Only for wines.
+     *
+     * @return product type.
+     */
     public Other_ProductType getProductType() {
-        Other_ProductType productType = Other_ProductType.getProductTypeFromString(getType());
+        Other_ProductType productType = Other_ProductType.getProductTypeFromString(type);
         return productType;
     }
 
+    /**
+     * The category of a product.
+     *
+     * @return product category.
+     */
     public Other_ProductCategory getProductCategory() {
-        return Other_ProductCategory.getProductCategoryFromString(getCategory());
+        return Other_ProductCategory.getProductCategoryFromString(category);
     }
 
-    public boolean isOnlyWineDirty() {
-        return dirty || getId() < 0;
-    }
-
-    public void setDirty(boolean dirty) {
-        this.dirty = dirty;
-    }
-
-    public int getPositionInGroup() {
-        return positionInGroup;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCollection(Object_Collection collection) {
-        this.collection = collection;
-    }
-
-    public Object_Collection getCollection() {
-        return collection;
-    }
-
-    public void setPositionInGroup(int positionInGroup) {
-        this.positionInGroup = positionInGroup;
-    }
-
-    public void getTags() {
-        ratingsTags = new HashSet<>();
-        collectionTags = new HashSet<>();
-        purchaseTags = new HashSet<>();
+    private void getTags() {
+        rating_tags = new HashSet<>();
+        cellar_tags = new HashSet<>();
+        purchase_tags = new HashSet<>();
         for (Object_Variant variant : getVariants()) {
             for (Object_Tag tag : variant.getTags()) {
-                if (tag.isRating()) ratingsTags.add(tag);
-                else if (tag.isWishlist()) wishlistTag = tag;
-                else if (tag.isCollection()) collectionTags.add(tag);
-                else if (tag.isSkipped()) skippedTag = tag;
-                else if (tag.isPurchase()) purchaseTags.add(tag);
+                if (tag.isRating()) rating_tags.add(tag);
+                else if (tag.isWishlist()) wishlist_tag = tag;
+                else if (tag.isCollection()) cellar_tags.add(tag);
+                else if (tag.isPurchase()) purchase_tags.add(tag);
             }
         }
     }
 
-    public Object_Tag getTagWithId(long id) {
-        for (Object_Variant variant : getVariants()) {
-            for (Object_Tag tag : variant.getTags()) {
-                if (tag.getId() == id) {
-                    return tag;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public String getRateSourceLocation() {
-        return rateSourceLocation;
-    }
-
-    public boolean isShow_year_dropdown() {
+    public boolean isShowYearDropdown() {
         return show_year_dropdown;
     }
 
@@ -264,209 +117,46 @@ public class Object_Product extends Object_BaseObject {
         return back_image;
     }
 
-    public double getBrand_lat() {
+    public double getBrandLat() {
         return brand_lat;
     }
 
-    public double getBrand_lon() {
+    public double getBrandLon() {
         return brand_lon;
-    }
-
-    public void setOldIdForEqualityPurposes(long oldIdForEqualityPurposes) {
-        this.oldIdForEqualityPurposes = oldIdForEqualityPurposes;
-    }
-
-    public long getOldIdForEqualityPurposes() {
-        return oldIdForEqualityPurposes;
-    }
-
-    public void addImage(Object object) {
-        addImage(0, object);
-    }
-
-    public void addImage(Object object, String position) {
-        addImage(0, object, position);
-    }
-
-    public void addImage(long id, Object object) {
-        addImage(id, object, "front");
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void addImage(long id, Object object, String position) {
-        if (object != null) {
-            Object_Media image;
-            if (object instanceof Object_Media) image = (Object_Media) object;
-            else if (object instanceof String) image = new Object_Media(id, (String) object, position);
-            else if (object instanceof Uri) image = new Object_Media(id, (object).toString(), position);
-            else if (object instanceof File)
-                image = new Object_Media(id, ((File) object).getAbsolutePath(), position);
-            else return;
-            if (position.equalsIgnoreCase("front")) {
-                primary_image = image;
-            } else {
-                back_image = image;
-            }
-        }
-    }
-
-    public static ArrayList<Object_Product> sortProducts(ArrayList<Object_Product> products) {
-        Collections.sort(products, new GroupComparator(true));
-        return products;
-    }
-
-    public static class WineComparator implements Comparator<Object_Product> {
-        public boolean ascending;
-
-        public boolean isAscending() {
-            return ascending;
-        }
-
-        public void setAscending(boolean ascending) {
-            this.ascending = ascending;
-        }
-
-        @Override
-        public int compare(Object_Product product, Object_Product t1) {
-            return 0;
-        }
-    }
-
-    public static class GroupComparator extends WineComparator {
-
-        public GroupComparator(boolean ascending) {
-            this.ascending = ascending;
-        }
-
-        @Override
-        public int compare(Object_Product product1, Object_Product product2) {
-            if (product1 == null && product2 == null) {
-                return 0;
-            } else if (product1 == null) {
-                return 1;
-            } else if (product2 == null) {
-                return -1;
-            } else if (ascending) {
-                if (product1.getWineGroup().getGroup().getOrder() == product2.getWineGroup().getGroup().getOrder())
-                    return ((Integer) product1.getWineGroup().getOrdering().getOrder()).compareTo(product2.getWineGroup().getOrdering().getOrder());
-
-                return ((Integer) product1.getWineGroup().getGroup().getOrder()).compareTo(product2.getWineGroup().getGroup().getOrder());
-            } else {
-                if (product2.getWineGroup().getGroup().getOrder() == product1.getWineGroup().getGroup().getOrder())
-                    return ((Integer) product2.getWineGroup().getOrdering().getOrder()).compareTo(product1.getWineGroup().getOrdering().getOrder());
-
-                return ((Integer) product2.getWineGroup().getGroup().getOrder()).compareTo(product1.getWineGroup().getGroup().getOrder());
-            }
-        }
     }
 
     public boolean isOnWishlist() {
         return getWishlistTag() != null;
     }
 
-    public void setBackImage(Object_Media back_image) {
-        this.back_image = back_image;
+    /**
+     * All of the product tags of type {@link Other_TagType#RATING} for the current user.
+     *
+     * @return an array of tags.
+     */
+    public HashSet<Object_Tag> getRatingTags() {
+        if (rating_tags == null) getTags();
+        return rating_tags;
     }
 
-    public HashSet<Object_Tag> getTimelineTags() {
-        HashSet<Object_Tag> timelineTags = new HashSet<>();
-        HashSet<Object_Tag> ratingsTags = getRatingsTags();
-        timelineTags.addAll(ratingsTags);
-        HashSet<Object_Tag> purchaseTags = getPurchaseTags();
-        timelineTags.addAll(purchaseTags);
-        Object_Tag wishlistTag = getWishlistTag();
-        if (wishlistTag != null) {
-            timelineTags.add(wishlistTag);
-        }
-        HashSet<Object_Tag> personalCellarTags = getPersonalCellarTags();
-        timelineTags.addAll(personalCellarTags);
-        return timelineTags;
+    /**
+     * All of the product tags of type {@link Other_TagType#CELLAR} for the current user.
+     *
+     * @return an array of tags.
+     */
+    public HashSet<Object_Tag> getCellarTags() {
+        if (cellar_tags == null) getTags();
+        return cellar_tags;
     }
 
-    public HashSet<Object_Tag> getRatingsTags() {
-        if (ratingsTags == null) getTags();
-        return ratingsTags;
-    }
-
-    public boolean isRatedInCollection(long collectionId, long variantId) {
-        for (Object_Tag tag : getRatingsTags()) {
-            if (tag.getVariantId() == variantId && tag.getTaggedInCollectionId() == collectionId) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public HashSet<Object_Tag>  getPersonalCellarTags() {
-        Set<String> collectionIds = Tools_Preferabli.getKeyStore().getStringSet("cellarIds", new HashSet<>());
-        if (personalCellarTags == null){
-            HashSet<Object_Tag> collectionTags = getCollectionTags();
-            personalCellarTags = new HashSet<>();
-            for (Object_Tag tag : collectionTags) {
-                if (collectionIds.contains(Long.toString(tag.getCollectionId()))) {
-                    personalCellarTags.add(tag);
-                }
-            }
-        }
-
-        return personalCellarTags;
-    }
-
-    public HashSet<Object_Tag> getCollectionTags() {
-        if (collectionTags == null) getTags();
-        return collectionTags;
-    }
-
-
+    /**
+     * All of the product tags of type {@link Other_TagType#PURCHASE} for the current user.
+     *
+     * @return an array of tags.
+     */
     public HashSet<Object_Tag> getPurchaseTags() {
-        if (purchaseTags == null) getTags();
-        return purchaseTags;
-    }
-
-    public boolean hasBeenPurchasedAtMerchant(long channelId) {
-        HashSet<Object_Tag> purchaseTags = getPurchaseTags();
-        for (Object_Tag tag : purchaseTags) {
-            if (tag.getChannelId() == channelId) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    public void setWineGroup(WineGroup wineGroup) {
-        this.wineGroup = wineGroup;
-    }
-
-    public WineGroup getWineGroup() {
-        return wineGroup;
-    }
-
-    public Object_Collection.Object_Version.Object_Group getGroup() {
-        return getWineGroup().getGroup();
-    }
-
-    public Object_Collection.Object_Version.Object_Group.Object_Ordering getOrdering() {
-        if (getWineGroup() == null) {
-            return null;
-        }
-        return getWineGroup().getOrdering();
-    }
-
-    public boolean hasBeenRated() {
-        return getMostRecentRating() != null;
+        if (purchase_tags == null) getTags();
+        return purchase_tags;
     }
 
     public void addVariant(Object_Variant variant) {
@@ -475,50 +165,35 @@ public class Object_Product extends Object_BaseObject {
         variants.add(variant);
     }
 
-    public void addVariants(ArrayList<Object_Variant> variants) {
-        clearTransients();
-        if (this.variants == null) this.variants = new ArrayList<>();
-        this.variants.addAll(variants);
+    private void clearTransients() {
+        rating_tags = null;
+        cellar_tags = null;
+        purchase_tags = null;
+        most_recent_variant = null;
+        most_recent_rating = null;
+        rating_level = null;
     }
 
-    public void clearTransients() {
-        ratingsTags = null;
-        collectionTags = null;
-        purchaseTags = null;
-        mostRecentVariant = null;
-        mostRecentRating = null;
-        mostRecentPurchase = null;
-        ratingType = null;
-        personalCellarTags = null;
-    }
-
-    public String getImage() {
+    /**
+     * Get the product's image.
+     *
+     * @param width   returns an image with the specified width in pixels.
+     * @param height  returns an image with the specified height in pixels.
+     * @param quality returns an image with the specified quality. Scales from 0 - 100.
+     * @return the URL of the requested image.
+     */
+    public String getImage(int width, int height, int quality) {
         if (primary_image != null && !Tools_Preferabli.isNullOrWhitespace(primary_image.getPath()) && !primary_image.getPath().contains("placeholder"))
-            return primary_image.getPath();
-        else if (getMostRecentVariant().getPrimaryImagePath() != null && !getMostRecentVariant().getPrimaryImagePath().contains("placeholder")) {
-            return getMostRecentVariant().getPrimaryImagePath();
+            return Tools_Preferabli.getImageUrl(primary_image, width, height, quality);
+        else if (getMostRecentVariant().getPrimaryImage() != null && !getMostRecentVariant().getPrimaryImage().getPath().contains("placeholder")) {
+            return getMostRecentVariant().getImage(width, height, quality);
         }
-
-        return null;
-    }
-
-    public String getPrimaryImagePath() {
-        if (primary_image != null)
-            return primary_image.getPath();
 
         return null;
     }
 
     public Object_Media getPrimaryImage() {
         return primary_image;
-    }
-
-    public String getShareLink() {
-        if (getMostRecentRating() != null && getMostRecentRating().getSharing() != null && getMostRecentRating().getSharing().size() > 0) {
-            return getMostRecentRating().getSharing().get(0).getUrl();
-        }
-
-        return null;
     }
 
     public String getUpdatedAt() {
@@ -532,6 +207,12 @@ public class Object_Product extends Object_BaseObject {
         return variants;
     }
 
+    /**
+     * Get a {@link Object_Variant} of a product by its id.
+     *
+     * @param id a variant id.
+     * @return the corresponding variant. Returns null if this product does not contain the variant.
+     */
     public Object_Variant getVariantWithId(long id) {
         for (Object_Variant variant : getVariants()) {
             if (variant.getId() == id) {
@@ -542,6 +223,12 @@ public class Object_Product extends Object_BaseObject {
         return null;
     }
 
+    /**
+     * Get a {@link Object_Variant} of a product by its year.
+     *
+     * @param year a variant year.
+     * @return the corresponding variant. Returns null if this product does not contain the variant.
+     */
     public Object_Variant getVariantWithYear(int year) {
         for (Object_Variant variant : variants) {
             if (variant.getYear() == year) {
@@ -564,28 +251,19 @@ public class Object_Product extends Object_BaseObject {
         return created_at;
     }
 
-    public String getGrape() {
-        if (Tools_Preferabli.isNullOrWhitespace(grape) || grape.toLowerCase().contains("identifying"))
-            return "";
-        return grape;
-    }
-
-    public String getGrapeForDB() {
-        return grape;
-    }
-
     public String getName() {
         return name;
-    }
-
-    public String getType() {
-        return type;
     }
 
     public String getBrand() {
         return brand;
     }
 
+    /**
+     * Identifies if a product is still being curated.
+     *
+     * @return true if the product has not been curated.
+     */
     public boolean isBeingIdentified() {
         if (Tools_Preferabli.isNullOrWhitespace(getBrand())) {
             return true;
@@ -594,15 +272,25 @@ public class Object_Product extends Object_BaseObject {
     }
 
     public String getRegion() {
-        if (Tools_Preferabli.isNullOrWhitespace(region) || region.toLowerCase().contains("entered"))
-            return "";
         return region;
     }
 
-    public String getRegionForDB() {
-        return region;
+    public String getGrape() {
+        return grape;
     }
 
+    /**
+     * Gets the price range of the most recent {@link Object_Variant}.
+     * <p></p>
+     * Prices represent Retail | Restaurant
+     * $ = Less than $12 | < $30
+     * $$ = $12 to $19.99 | $30 - $45
+     * $$$ = $20 to $49.99 | $45 - $110
+     * $$$$ = $50 to $74.99 | $110 - $160
+     * $$$$$ = $75 and up | > $160
+     *
+     * @return price range represented by dollar signs in a string.
+     */
     public String getPrice() {
         if (price == null) {
             if (getMostRecentVariant() != null) {
@@ -613,7 +301,7 @@ public class Object_Product extends Object_BaseObject {
         return price;
     }
 
-    public static String getPriceFromSigns(int numDollarSigns) {
+    static String getPriceFromSigns(int numDollarSigns) {
         String dollarSigns = "";
         for (int i = 0; i < numDollarSigns; i++)
             dollarSigns = dollarSigns + "$";
@@ -624,211 +312,73 @@ public class Object_Product extends Object_BaseObject {
         return subcategory;
     }
 
+    /**
+     * The most recent {@link Object_Variant} for a product.
+     *
+     * @return a product variant.
+     */
     public Object_Variant getMostRecentVariant() {
-        if (mostRecentVariant == null) {
+        if (most_recent_variant == null) {
             int mostRecentYear = -2;
             for (Object_Variant variant : getVariants()) {
                 if (variant.getYear() > mostRecentYear && variant.getId() > 0L) {
                     mostRecentYear = variant.getYear();
-                    mostRecentVariant = variant;
+                    most_recent_variant = variant;
                 }
             }
 
-            if (mostRecentVariant == null) {
-                mostRecentVariant = new Object_Variant(getId(), -1);
+            if (most_recent_variant == null) {
+                most_recent_variant = new Object_Variant(getId(), -1);
             }
         }
 
 
-        return mostRecentVariant;
+        return most_recent_variant;
     }
 
-    void setLatestVariantNumDollarSigns(int num_dollar_signs) {
-        getMostRecentVariant().setNumDollarSigns(num_dollar_signs);
-    }
-
-    public Object_Variant getVariantForUpload() {
-        if (getVariants().size() > 0) {
-            return getVariants().get(0);
-        }
-
-        return new Object_Variant(getId(), -1);
-    }
-
+    /**
+     * The most recent product tag of type {@link Other_TagType#RATING} for the current user.
+     *
+     * @return a tag.
+     */
     public Object_Tag getMostRecentRating() {
-        if (mostRecentRating == null) {
+        if (most_recent_rating == null) {
             Date date = new Date(0);
-            for (Object_Tag tag : getRatingsTags()) {
+            for (Object_Tag tag : getRatingTags()) {
                 Date compareToDate = Tools_Preferabli.convertAPITimeStampToDate(tag.getCreatedAt());
                 if (compareToDate.after(date)) {
                     date = compareToDate;
-                    mostRecentRating = tag;
+                    most_recent_rating = tag;
                 }
             }
         }
 
-        return mostRecentRating;
+        return most_recent_rating;
     }
 
+    /**
+     * The first instance within the product of tag type {@link Other_TagType#WISHLIST} for the current user.
+     *
+     * @return a tag.
+     */
     public Object_Tag getWishlistTag() {
-        if (wishlistTag == null && ratingsTags == null) getTags();
-        return wishlistTag;
+        if (wishlist_tag == null && rating_tags == null) getTags();
+        return wishlist_tag;
     }
 
-    public Object_Tag getCollectionTag() {
-//        return null;
-        if (getWineGroup() == null || getWineGroup().getOrdering() == null || getWineGroup().getOrdering().getTag() == null) {
-            return null;
-        }
-
-//            // this way is slower. only do this if we don't have the tag saved in the ordering for whatever reason (one is due to sort by preference)
-//            if (collectionTags == null && ratingsTags == null) getTags();
-//            return collectionTags.iterator().hasNext() ? collectionTags.iterator().next() : new Tag();
-//        }
-        return getWineGroup().getOrdering().getTag();
-    }
-
-    public Object_Tag getSkippedTag() {
-        if (skippedTag == null && ratingsTags == null) getTags();
-        return skippedTag;
-    }
-
-    public long getCollectionId() {
-        if (getCollectionTag() == null) return 0;
-        return getCollectionTag().getCollectionId();
-    }
-
-    public void updateTag(Object_Tag tag) {
-        removeTag(tag);
-        for (Object_Variant variant : getVariants()) {
-            if (variant.getId() == tag.getVariantId()) {
-                variant.updateTag(tag);
-                return;
-            }
-        }
-
-        addVariant(new Object_Variant(tag));
-    }
-
-
-    public void nullifyTemporaryValues() {
-        ratingType = null;
-        ratingsTags = null;
-        price = null;
-        mostRecentVariant = null;
-        mostRecentRating = null;
-        wishlistTag = null;
-    }
-
-    public void removeTag(Object_Tag tag) {
-        nullifyTemporaryValues();
-
-        for (Object_Variant variant : getVariants())
-            variant.removeTag(tag);
-    }
-
-    public void removeVariant(Object_Variant variant) {
-        variants.remove(variant);
-    }
-
-    public Other_RatingType getRatingType() {
-        if (getMostRecentRating() == null) return Other_RatingType.NONE;
-        else if (ratingType == null) {
+    /**
+     * The {@link Other_RatingLevel} of the most recent rating of a specific product for the current user.
+     *
+     * @return rating level.
+     */
+    public Other_RatingLevel getRatingLevel() {
+        if (getMostRecentRating() == null) return Other_RatingLevel.NONE;
+        else if (rating_level == null) {
             Object_Tag tag = getMostRecentRating();
-            ratingType = Other_RatingType.getRatingTypeBasedOffTagValue(tag.getValue());
+            rating_level = Other_RatingLevel.getRatingLevelBasedOffTagValue(tag.getValue());
         }
 
-        return ratingType;
-    }
-
-    public Date getMyLastRatingDate() {
-        if (getMostRecentRating() != null) return getMostRecentRating().getDate();
-        return new Date(0);
-    }
-
-    public Date getWishlistDate() {
-        if (getWishlistTag() != null) return getWishlistTag().getDate();
-        return new Date(0);
-    }
-
-    public Date getMyMostRecentPurchaseDate() {
-        if (getMyMostRecentPurchase() != null) return getMyMostRecentPurchase().getPurchasedAtDate();
-        return new Date(0);
-    }
-
-    public Date getMostRecentJournalEntry() {
-        Date myLastRatingDate = getMyLastRatingDate();
-        Date wishlistDate = getWishlistDate();
-        Date mostRecentPurchase = getMyMostRecentPurchaseDate();
-
-        if (myLastRatingDate.after(wishlistDate)) {
-            if (mostRecentPurchase.after(myLastRatingDate)) {
-                return mostRecentPurchase;
-            } else {
-                return myLastRatingDate;
-            }
-        } else {
-            if (mostRecentPurchase.after(wishlistDate)) {
-                return mostRecentPurchase;
-            } else {
-                return wishlistDate;
-            }
-        }
-    }
-
-    public Object_Tag getMostRecentJournalTag() {
-        Date myLastRatingDate = getMyLastRatingDate();
-        Date wishlistDate = getWishlistDate();
-        Date mostRecentPurchase = getMyMostRecentPurchaseDate();
-
-        if (myLastRatingDate.after(wishlistDate)) {
-            if (mostRecentPurchase.after(myLastRatingDate)) {
-                return getMyMostRecentPurchase();
-            } else {
-                return getMostRecentRating();
-            }
-        } else {
-            if (mostRecentPurchase.after(wishlistDate)) {
-                return getMyMostRecentPurchase();
-            } else {
-                return getWishlistTag();
-            }
-        }
-    }
-
-    public Object_Tag getMyMostRecentPurchase() {
-        if (mostRecentPurchase == null) {
-            ArrayList<Object_Tag> purchaseTags = new ArrayList<>(getPurchaseTags());
-            Date mostRecentPurchase = new Date(0);
-            for (Object_Tag tag : purchaseTags) {
-                Date purchasedAt = tag.getPurchasedAtDate();
-                if (purchasedAt != null) {
-                    if (purchasedAt.after(mostRecentPurchase)) {
-                        mostRecentPurchase = purchasedAt;
-                        this.mostRecentPurchase = tag;
-                    }
-                }
-            }
-        }
-
-        return mostRecentPurchase;
-    }
-
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || (!o.getClass().isAssignableFrom(getClass()) && !getClass().isAssignableFrom(o.getClass()))) return false;
-
-        Object_Product product = (Object_Product) o;
-
-        if (getOrdering() != null && product.getOrdering() != null)
-            return getOrdering().getId() == product.getOrdering().getId();
-
-        // need old id for matching up dirty products after label rec submission
-        if ((oldIdForEqualityPurposes != 0 || product.oldIdForEqualityPurposes != 0) && (product.getId() == oldIdForEqualityPurposes || getId() == product.oldIdForEqualityPurposes))
-            return true;
-        return super.equals(o);
+        return rating_level;
     }
 
     @Override
@@ -845,54 +395,19 @@ public class Object_Product extends Object_BaseObject {
                 continue;
             else if (getGrape() != null && getGrape().toLowerCase().contains(term))
                 continue;
-            else if (getType() != null && getType().toLowerCase().contains(term))
-                continue;
-            else if (getType() != null && getType().equalsIgnoreCase("rosé") && term.equalsIgnoreCase("rose"))
-                continue;
-            else if (getWineGroup() != null && getWineGroup().getGroup().getName().toLowerCase().contains(term))
-                continue;
-            else if (getRatingsTags() != null) {
-                for (Object_Tag tag : getRatingsTags()) {
+            else if (getRatingTags() != null) {
+                for (Object_Tag tag : getRatingTags()) {
                     if (tag.getComment() != null && tag.getComment().toLowerCase().contains(term))
                         continue innerloop;
                     else if (tag.getLocation() != null && tag.getLocation().toLowerCase().contains(term))
                         continue innerloop;
                 }
                 return false;
-            } else return false;
+            }
+
+            return false;
         }
         return true;
-    }
-
-    public static class WineGroup {
-        private Object_Collection.Object_Version.Object_Group group;
-        private Object_Collection.Object_Version.Object_Group.Object_Ordering ordering;
-
-        public WineGroup(Object_Collection.Object_Version.Object_Group group, Object_Collection.Object_Version.Object_Group.Object_Ordering ordering) {
-            this.group = group;
-            this.ordering = ordering;
-        }
-
-        public Object_Collection.Object_Version.Object_Group.Object_Ordering getOrdering() {
-            return ordering;
-        }
-
-        public void setOrdering(Object_Collection.Object_Version.Object_Group.Object_Ordering ordering) {
-            this.ordering = ordering;
-        }
-
-        public Object_Collection.Object_Version.Object_Group getGroup() {
-            return group;
-        }
-
-        public void setGroup(Object_Collection.Object_Version.Object_Group group) {
-            this.group = group;
-        }
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
     }
 
     @Override
@@ -909,10 +424,6 @@ public class Object_Product extends Object_BaseObject {
         dest.writeString(this.created_at);
         dest.writeString(this.updated_at);
         dest.writeParcelable(this.primary_image, flags);
-        dest.writeInt(this.positionInGroup);
-        dest.writeInt(this.totalPosition);
-        dest.writeParcelable(this.collection, flags);
-        dest.writeByte(this.dirty ? (byte) 1 : (byte) 0);
         dest.writeDouble(brand_lat);
         dest.writeDouble(brand_lon);
         dest.writeString(category);
@@ -932,17 +443,37 @@ public class Object_Product extends Object_BaseObject {
         this.created_at = in.readString();
         this.updated_at = in.readString();
         this.primary_image = in.readParcelable(Object_Media.class.getClassLoader());
-        this.positionInGroup = in.readInt();
-        this.totalPosition = in.readInt();
-        this.collection = in.readParcelable(Object_Collection.class.getClassLoader());
-        this.dirty = in.readByte() != 0;
         this.brand_lat = in.readDouble();
         this.brand_lon = in.readDouble();
         this.category = in.readString();
         this.subcategory = in.readString();
     }
 
-    public void setRateSourceLocation(String rateSourceLocation) {
-        this.rateSourceLocation = rateSourceLocation;
+    /**
+     * See {@link Preferabli#whereToBuy(long, Other_FulfillSort, Boolean, Boolean, API_ResultHandler)}.
+     */
+    public void whereToBuy(Other_FulfillSort fulfill_sort, Boolean append_nonconforming_results, Boolean lock_to_integration, API_ResultHandler<Object_WhereToBuy> handler) {
+        getMostRecentVariant().whereToBuy(fulfill_sort, append_nonconforming_results, lock_to_integration, handler);
+    }
+
+    /**
+     * See {@link Preferabli#rateProduct(long, int, Other_RatingLevel, String, String, Double, Integer, Integer, API_ResultHandler)}.
+     */
+    public void rate(Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+        getMostRecentVariant().rate(rating, location, notes, price, quantity, format_ml, handler);
+    }
+
+    /**
+     * See {@link Preferabli#lttt(long, Integer, Long, Boolean, API_ResultHandler)}.
+     */
+    public void lttt(Long collection_id, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        getMostRecentVariant().lttt(collection_id, include_merchant_links, handler);
+    }
+
+    /**
+     * See {@link Preferabli#getPreferabliScore(long, Integer, API_ResultHandler)}.
+     */
+    public void getPreferabliScore(API_ResultHandler<Object_PreferenceData> handler) {
+        getMostRecentVariant().getPreferabliScore(handler);
     }
 }

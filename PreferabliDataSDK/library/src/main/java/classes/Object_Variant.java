@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
 
+/**
+ * A Variant is a particular representation of a {@link Object_Variant}. For example, a specific vintage of a particular wine.
+ */
 public class Object_Variant extends Object_BaseObject {
 
     public static int CURRENT_VARIANT_YEAR = -1;
@@ -35,23 +38,16 @@ public class Object_Variant extends Object_BaseObject {
     private Object_Media primary_image;
 
     private transient Object_Product product;
-    private transient Other_RatingType rating_type;
+    private transient Other_RatingLevel rating_level;
     private transient Object_Tag most_recent_rating;
     private transient HashSet<Object_Tag> ratings_tags;
     private transient ArrayList<Object_MerchantProductLink> merchant_links;
     private transient Object_PreferenceData preference_data;
 
-    public void clearTransients() {
+    void clearTransients() {
         ratings_tags = null;
         most_recent_rating = null;
-        rating_type = null;
-    }
-
-    public Object_Variant(Object_Tag tag) {
-        super(-System.currentTimeMillis());
-        this.year = 0;
-        this.product_id = tag.getProductId();
-        addTag(tag);
+        rating_level = null;
     }
 
     public Object_Variant(long id, long product_id) {
@@ -75,23 +71,33 @@ public class Object_Variant extends Object_BaseObject {
         this.created_at = created_at;
         this.updated_at = updated_at;
         this.product_id = product_id;
-        this.addImage(Tools_Preferabli.convertJsonToObject(image, Object_Media.class));
+        this.primary_image = Tools_Preferabli.convertJsonToObject(image, Object_Media.class);
     }
 
-    public Other_RatingType getRating_type() {
-        if (getMost_recent_rating() == null) return Other_RatingType.NONE;
-        else if (rating_type == null) {
-            Object_Tag tag = getMost_recent_rating();
-            rating_type = Other_RatingType.getRatingTypeBasedOffTagValue(tag.getValue());
+    /**
+     * The {@link Other_RatingLevel} of the most recent rating of a specific variant for the current user.
+     *
+     * @return rating level.
+     */
+    public Other_RatingLevel getRatingLevel() {
+        if (getMostRecentRating() == null) return Other_RatingLevel.NONE;
+        else if (rating_level == null) {
+            Object_Tag tag = getMostRecentRating();
+            rating_level = Other_RatingLevel.getRatingLevelBasedOffTagValue(tag.getValue());
         }
 
-        return rating_type;
+        return rating_level;
     }
 
-    public Object_Tag getMost_recent_rating() {
+    /**
+     * The most recent variant tag of type {@link Other_TagType#RATING} for the current user.
+     *
+     * @return a tag.
+     */
+    public Object_Tag getMostRecentRating() {
         if (most_recent_rating == null) {
             Date date = new Date(0);
-            for (Object_Tag tag : getRatings_tags()) {
+            for (Object_Tag tag : getRatingTags()) {
                 Date compareToDate = Tools_Preferabli.convertAPITimeStampToDate(tag.getCreatedAt());
                 if (compareToDate.after(date)) {
                     date = compareToDate;
@@ -103,7 +109,12 @@ public class Object_Variant extends Object_BaseObject {
         return most_recent_rating;
     }
 
-    public HashSet<Object_Tag> getRatings_tags() {
+    /**
+     * All of the variant tags of type {@link Other_TagType#RATING} for the current user.
+     *
+     * @return an array of tags.
+     */
+    public HashSet<Object_Tag> getRatingTags() {
         if (ratings_tags == null) getTags();
         return ratings_tags;
     }
@@ -112,12 +123,12 @@ public class Object_Variant extends Object_BaseObject {
         return product;
     }
 
-    public void setProduct(Object_Product product) {
-        this.product = product;
-    }
-
     public Object_Media getPrimaryImage() {
         return primary_image;
+    }
+
+    public ArrayList<Object_MerchantProductLink> getMerchantLinks() {
+        return merchant_links;
     }
 
     public void addTag(Object_Tag tag) {
@@ -126,25 +137,12 @@ public class Object_Variant extends Object_BaseObject {
         tags.add(tag);
     }
 
-    public void setMerchantLinks(ArrayList<Object_MerchantProductLink> merchant_links) {
+    void setMerchantLinks(ArrayList<Object_MerchantProductLink> merchant_links) {
         this.merchant_links = merchant_links;
     }
 
-    public void updateTag(Object_Tag tag) {
-        int index = getTags().indexOf(tag);
-        if (index != -1) {
-            getTags().remove(index);
-        }
-        addTag(tag);
-    }
 
-    public void addTags(ArrayList<Object_Tag> tags) {
-        clearTransients();
-        if (this.tags == null) this.tags = new ArrayList<>();
-        this.tags.addAll(tags);
-    }
-
-    public void setPreferenceData(Object_PreferenceData preference_data) {
+    void setPreferenceData(Object_PreferenceData preference_data) {
         this.preference_data = preference_data;
     }
 
@@ -152,79 +150,30 @@ public class Object_Variant extends Object_BaseObject {
         return preference_data;
     }
 
-    public String getImage() {
+    /**
+     * Get the variant's image.
+     *
+     * @param width   returns an image with the specified width in pixels.
+     * @param height  returns an image with the specified height in pixels.
+     * @param quality returns an image with the specified quality. Scales from 0 - 100.
+     * @return the URL of the requested image.
+     */
+    public String getImage(int width, int height, int quality) {
         if (primary_image != null && !Tools_Preferabli.isNullOrWhitespace(primary_image.getPath()) && !primary_image.getPath().contains("placeholder"))
-            return primary_image.getPath();
-        else if (getProduct() != null && getProduct().getPrimaryImagePath() != null && !getProduct().getPrimaryImagePath().contains("placeholder")) {
-            return getProduct().getPrimaryImagePath();
+            return Tools_Preferabli.getImageUrl(primary_image, width, height, quality);
+        else if (getProduct() != null && getProduct().getPrimaryImage() != null && !getProduct().getPrimaryImage().getPath().contains("placeholder")) {
+            return getProduct().getImage(width, height, quality);
         }
-        return null;
-    }
-
-    public String getPrimaryImagePath() {
-        if (primary_image != null)
-            return primary_image.getPath();
 
         return null;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
-    }
-
-    void setNumDollarSigns(int num_dollar_signs) {
-        this.num_dollar_signs = num_dollar_signs;
-    }
-
-    public long getImageId() {
-        if (primary_image != null) return primary_image.getId();
-        return 0;
-    }
-
-    public void addImage(Object object) {
-        if (image_ids == null) image_ids = new HashSet<>();
-        if (object != null) {
-            Object_Media image;
-            if (object instanceof Object_Media) image = (Object_Media) object;
-            else if (object instanceof String) image = new Object_Media((String) object);
-            else if (object instanceof Uri) image = new Object_Media((object).toString());
-            else if (object instanceof File) image = new Object_Media(((File) object).getAbsolutePath());
-            else return;
-            image_ids.add(image.getId());
-            primary_image_id = image.getId();
-            primary_image = image;
-        }
-    }
-
-    public void clearImages() {
-        if (image_ids == null) image_ids = new HashSet<>();
-        image_ids.clear();
-        primary_image_id = 0;
-        primary_image = null;
-    }
-
-    public HashSet<Long> getImageIds() {
-        return image_ids;
-    }
-
-    public void removeTag(Object_Tag tag) {
-        if (tags != null) tags.remove(tag);
-    }
-
-    public long getWineId() {
+    public long getProductId() {
         return product_id;
-    }
-
-    public void setWineId(long product_id) {
-        this.product_id = product_id;
     }
 
     public int getYear() {
         return year;
-    }
-
-    public void setYear(int year) {
-        this.year = year;
     }
 
     public boolean isFresh() {
@@ -301,9 +250,41 @@ public class Object_Variant extends Object_BaseObject {
 
     public static final Creator<Object_Variant> CREATOR = new Creator<Object_Variant>() {
         @Override
-        public Object_Variant createFromParcel(Parcel source) {return new Object_Variant(source);}
+        public Object_Variant createFromParcel(Parcel source) {
+            return new Object_Variant(source);
+        }
 
         @Override
-        public Object_Variant[] newArray(int size) {return new Object_Variant[size];}
+        public Object_Variant[] newArray(int size) {
+            return new Object_Variant[size];
+        }
     };
+
+    /**
+     * See {@link Preferabli#whereToBuy(long, Other_FulfillSort, Boolean, Boolean, API_ResultHandler)}.
+     */
+    public void whereToBuy(Other_FulfillSort fulfill_sort, Boolean append_nonconforming_results, Boolean lock_to_integration, API_ResultHandler<Object_WhereToBuy> handler) {
+        Preferabli.main().whereToBuy(product_id, fulfill_sort, append_nonconforming_results, lock_to_integration, handler);
+    }
+
+    /**
+     * See {@link Preferabli#rateProduct(long, int, Other_RatingLevel, String, String, Double, Integer, Integer, API_ResultHandler)}.
+     */
+    public void rate(Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+        Preferabli.main().rateProduct(product_id, year, rating, location, notes, price, quantity, format_ml, handler);
+    }
+
+    /**
+     * See {@link Preferabli#lttt(long, Integer, Long, Boolean, API_ResultHandler)}.
+     */
+    public void lttt(Long collection_id, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+        Preferabli.main().lttt(product_id, year, collection_id, include_merchant_links, handler);
+    }
+
+    /**
+     * See {@link Preferabli#getPreferabliScore(long, Integer, API_ResultHandler)}.
+     */
+    public void getPreferabliScore(API_ResultHandler<Object_PreferenceData> handler) {
+        Preferabli.main().getPreferabliScore(product_id, year, handler);
+    }
 }

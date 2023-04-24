@@ -8,14 +8,18 @@
 
 package classes;
 
-import android.os.Parcel;
-import android.os.Parcelable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+/**
+ * A Guided Rec questionnaire. Returned by {@link Preferabli#getGuidedRec(long, API_ResultHandler)}.
+ */
 public class Object_GuidedRec extends Object_BaseObject {
 
+    /**
+     * The default wine questionnaire.
+     */
     public static long WINE_DEFAULT = 1;
 
     private String name;
@@ -29,7 +33,7 @@ public class Object_GuidedRec extends Object_BaseObject {
         return questions;
     }
 
-    public int getMax_results_per_type() {
+    public int getMaxResultsPerType() {
         return max_results_per_type;
     }
 
@@ -41,6 +45,9 @@ public class Object_GuidedRec extends Object_BaseObject {
         questions.add(question);
     }
 
+    /**
+     * A question within a {@link Object_GuidedRec} questionnaire.
+     */
     public static class Object_GuidedRecQuestion extends Object_BaseObject {
         private int number;
         private String type;
@@ -48,10 +55,6 @@ public class Object_GuidedRec extends Object_BaseObject {
         private int minimum_selected;
         private int maximum_selected;
         private String text;
-
-        public Object_GuidedRecQuestion() {
-            super();
-        }
 
         public Object_GuidedRecQuestion(int number, String type, ArrayList<Object_GuidedRecChoice> choices, int minimum_selected, int maximum_selected, String text) {
             this.number = number;
@@ -66,10 +69,6 @@ public class Object_GuidedRec extends Object_BaseObject {
             return choices;
         }
 
-        public void setChoices(ArrayList<Object_GuidedRecChoice> choices) {
-            this.choices = choices;
-        }
-
         public String getType() {
             return type;
         }
@@ -78,50 +77,25 @@ public class Object_GuidedRec extends Object_BaseObject {
             return text;
         }
 
-        public int getMinimum_selected() {
+        public int getMinimumSelected() {
             return minimum_selected;
         }
 
-        public int getMaximum_selected() {
+        public int getMaximumSelected() {
             return maximum_selected;
         }
     }
 
+    /**
+     * A choice within a {@link Object_GuidedRecQuestion}. Pass an array of these to get results from {@link Preferabli#getGuidedRecResults(long, ArrayList, Integer, Integer, Long, Boolean, API_ResultHandler)}.
+     */
     public static class Object_GuidedRecChoice extends Object_BaseObject {
         private int number;
         private ArrayList<Long> requires_choice_ids;
         private String text;
-        private boolean selected;
         private boolean selectable;
 
-        @Override
-        public void writeToParcel(Parcel dest, int flags) {
-            super.writeToParcel(dest, flags);
-        }
-
-        protected Object_GuidedRecChoice(Parcel in) {
-            super(in);
-        }
-
-
-        public static final Parcelable.Creator<Object_GuidedRecChoice> CREATOR = new Parcelable.Creator<Object_GuidedRecChoice>() {
-            @Override
-            public Object_GuidedRecChoice createFromParcel(Parcel source) {
-                return new Object_GuidedRecChoice(source);
-            }
-
-            @Override
-            public Object_GuidedRecChoice[] newArray(int size) {
-                return new Object_GuidedRecChoice[size];
-            }
-        };
-
-        public Object_GuidedRecChoice(int number, String text) {
-            this.number = number;
-            this.text = text;
-        }
-
-        public ArrayList getRequires_choice_ids() {
+        public ArrayList getRequiresChoiceIds() {
             if (requires_choice_ids == null) {
                 requires_choice_ids = new ArrayList();
             }
@@ -136,24 +110,17 @@ public class Object_GuidedRec extends Object_BaseObject {
             return text;
         }
 
-        public boolean isSelected() {
-            return selected;
-        }
 
         public boolean isSelectable() {
             return selectable;
         }
 
-        public void setSelected(boolean selected) {
-            this.selected = selected;
+        public static ArrayList<Object_GuidedRecChoice> sortGuidedRecChoices(ArrayList<Object_GuidedRecChoice> guided_rec_choices) {
+            Collections.sort(guided_rec_choices, new GuidedRecChoiceComparator());
+            return guided_rec_choices;
         }
 
-        public static ArrayList<Object_GuidedRecChoice> sortQuizChoices(ArrayList<Object_GuidedRecChoice> quizChoices) {
-            Collections.sort(quizChoices, new QuizChoiceComparator());
-            return quizChoices;
-        }
-
-        public static class QuizChoiceComparator implements Comparator<Object_GuidedRecChoice> {
+        public static class GuidedRecChoiceComparator implements Comparator<Object_GuidedRecChoice> {
 
             @Override
             public int compare(Object_GuidedRecChoice quizChoice1, Object_GuidedRecChoice quizChoice2) {

@@ -10,10 +10,10 @@ package classes;
 
 import android.os.Parcel;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 
+/**
+ * The profile style object identifies a specific {@link Object_Style} as included in a user's {@link Object_Profile}. A profile style represents a unique representation of a Style to a particular user.
+ */
 public class Object_ProfileStyle extends Object_BaseObject {
     private boolean refine;
     private boolean conflict;
@@ -24,10 +24,9 @@ public class Object_ProfileStyle extends Object_BaseObject {
     private Object_Style style;
     private int rating;
     private String keywords;
-    private int strength;
     private long style_id;
 
-    public Object_ProfileStyle(long id, boolean refine, boolean conflict, int order_recommend, int order_profile, String keywords, String name, String description, String type, int rating, String foods, String image, String product_category, String location, int strength, String created_at) {
+    public Object_ProfileStyle(long id, boolean refine, boolean conflict, int order_recommend, int order_profile, String keywords, String name, String description, String type, int rating, String foods, String image, String product_category, String location, String created_at) {
         this.refine = refine;
         this.conflict = conflict;
         this.order_recommend = order_recommend;
@@ -35,34 +34,12 @@ public class Object_ProfileStyle extends Object_BaseObject {
         this.keywords = keywords;
         this.style = new Object_Style(id, name, type, description, foods, image, product_category, location);
         this.rating = rating;
-        this.strength = strength;
         this.style_id = id;
         this.created_at = created_at;
     }
 
-    public Object_ProfileStyle(Object_ProfileStyle objectProfileStyle) {
-        this.refine = objectProfileStyle.isRefine();
-        this.conflict = objectProfileStyle.isConflict();
-        this.order_recommend = objectProfileStyle.getOrderRecommend();
-        this.order_profile = objectProfileStyle.getOrderProfile();
-        this.created_at = objectProfileStyle.getCreatedAt();
-        this.updated_at = objectProfileStyle.getUpdatedAt();
-        this.style = objectProfileStyle.getStyle();
-        this.rating = objectProfileStyle.getRating();
-        this.keywords = objectProfileStyle.getKeywords();
-        this.style_id = objectProfileStyle.getStyle_id();
-    }
-
-    public Object_ProfileStyle(Object_Style style) {
-        setStyle(style);
-    }
-
-    public long getStyle_id() {
+    public long getStyleId() {
         return style_id;
-    }
-
-    public long getId() {
-        return getStyle_id();
     }
 
     public int getRating() {
@@ -73,16 +50,16 @@ public class Object_ProfileStyle extends Object_BaseObject {
         return style.getImage();
     }
 
-    public Other_RatingType getRatingType() {
-        return Other_RatingType.getRatingTypeBasedOffTagValue(Integer.toString(rating));
+    /**
+     * The {@link Other_RatingLevel} of a specific profile style.
+     * @return the rating level.
+     */
+    public Other_RatingLevel getRatingLevel() {
+        return Other_RatingLevel.getRatingLevelBasedOffTagValue(Integer.toString(rating));
     }
 
     public void setStyle(Object_Style style) {
         this.style = style;
-    }
-
-    public int getStrength() {
-        return strength;
     }
 
     public String getKeywords() {
@@ -128,45 +105,6 @@ public class Object_ProfileStyle extends Object_BaseObject {
         return style;
     }
 
-    public Object_ProfileStyle() {
-    }
-
-    public static ArrayList<Object_ProfileStyle> sortRecommendableStyles(ArrayList<Object_ProfileStyle> objectProfileStyles) {
-        Collections.sort(objectProfileStyles, new PreferenceStyleComparator(false, false, true));
-        return objectProfileStyles;
-    }
-
-    public static ArrayList<Object_ProfileStyle> sortPreferenceStyles(ArrayList<Object_ProfileStyle> objectProfileStyles) {
-        Collections.sort(objectProfileStyles, new PreferenceStyleComparator(true, false, false));
-        return objectProfileStyles;
-    }
-
-
-    public static ArrayList<Object_ProfileStyle> sortPreferenceStylesAlpha(ArrayList<Object_ProfileStyle> objectProfileStyles) {
-        Collections.sort(objectProfileStyles, new PreferenceStyleAlphaComparator());
-        return objectProfileStyles;
-    }
-
-    public static ArrayList<Object_ProfileStyle> sortPreferenceStylesDate(ArrayList<Object_ProfileStyle> objectProfileStyles) {
-        Collections.sort(objectProfileStyles, new PreferenceStyleDateComparator());
-        return objectProfileStyles;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Object_ProfileStyle style = (Object_ProfileStyle) o;
-
-        return getStyle_id() == style.getStyle_id();
-    }
-
-    @Override
-    public int hashCode() {
-        return (int) (getStyle_id() ^ (getStyle_id() >>> 32));
-    }
-
     @Override
     public boolean filter(Serializable serializable) {
         String constraint = ((String) serializable).toLowerCase();
@@ -176,89 +114,26 @@ public class Object_ProfileStyle extends Object_BaseObject {
                 continue;
             else if (getKeywords() != null && getKeywords().toLowerCase().contains(term))
                 continue;
-            else return false;
+
+            return false;
         }
         return true;
     }
 
-    public static class PreferenceStyleDateComparator implements Comparator<Object_ProfileStyle> {
-        @Override
-        public int compare(Object_ProfileStyle ps1, Object_ProfileStyle ps2) {
-            if (ps1 == null && ps2 == null) {
-                return 0;
-            } else if (ps1 == null) {
-                return 1;
-            } else if (ps2 == null) {
-                return -1;
-            }
-
-            return ps2.getCreatedAt().compareTo(ps1.getCreatedAt());
-        }
-    }
-
-    public static class PreferenceStyleAlphaComparator implements Comparator<Object_ProfileStyle> {
-        @Override
-        public int compare(Object_ProfileStyle ps1, Object_ProfileStyle ps2) {
-            if (ps1 == null && ps2 == null) {
-                return 0;
-            } else if (ps1 == null) {
-                return 1;
-            } else if (ps2 == null) {
-                return -1;
-            }
-
-            return Tools_Preferabli.alphaSortIgnoreThe(ps1.getName(), ps2.getName());
-        }
-    }
-
-    public static class PreferenceStyleComparator implements Comparator<Object_ProfileStyle> {
-
-        private boolean ratingMatters;
-        private boolean wineTypeMatters;
-        private boolean orderRecommend;
-
-        public PreferenceStyleComparator(boolean ratingMatters, boolean wineTypeMatters, boolean orderRecommend) {
-            this.ratingMatters = ratingMatters;
-            this.wineTypeMatters = wineTypeMatters;
-            this.orderRecommend = orderRecommend;
-        }
-
-        @Override
-        public int compare(Object_ProfileStyle ps1, Object_ProfileStyle ps2) {
-            if (ps1 == null && ps2 == null) {
-                return 0;
-            } else if (ps1 == null) {
-                return 1;
-            } else if (ps2 == null) {
-                return -1;
-            } else if (ratingMatters) {
-                if (ps1.getRatingType() != ps2.getRatingType())
-                    return ps1.getRatingType().compareTo(ps2.getRatingType());
-            }
-
-            if (orderRecommend) {
-                if (ps1.getOrderRecommend() != ps2.getOrderRecommend()) {
-                    return ((Integer) ps1.getOrderRecommend()).compareTo(ps2.getOrderRecommend());
-                }
-            } else if (ps1.getOrderProfile() != ps2.getOrderProfile()) {
-                return ((Integer) ps1.getOrderProfile()).compareTo(ps2.getOrderProfile());
-            }
-
-            return Tools_Preferabli.alphaSortIgnoreThe(ps1.getName(), ps2.getName());
-        }
-    }
-
+    /**
+     * Is a profile style unappealing?
+     * @return true if unappealing.
+     */
     public boolean isUnappealing() {
-        return getRatingType() == Other_RatingType.DISLIKE || getRatingType() == Other_RatingType.SOSO;
+        return getRatingLevel() == Other_RatingLevel.DISLIKE || getRatingLevel() == Other_RatingLevel.SOSO;
     }
 
+    /**
+     * Is a profile style appealing?
+     * @return true if appealing.
+     */
     public boolean isAppealing() {
-        return getRatingType() == Other_RatingType.LOVE || getRatingType() == Other_RatingType.LIKE;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
+        return getRatingLevel() == Other_RatingLevel.LOVE || getRatingLevel() == Other_RatingLevel.LIKE;
     }
 
     @Override
@@ -273,7 +148,6 @@ public class Object_ProfileStyle extends Object_BaseObject {
         dest.writeParcelable(this.style, flags);
         dest.writeInt(this.rating);
         dest.writeString(this.keywords);
-        dest.writeInt(this.strength);
         dest.writeLong(this.style_id);
     }
 
@@ -288,7 +162,6 @@ public class Object_ProfileStyle extends Object_BaseObject {
         this.style = in.readParcelable(Object_Style.class.getClassLoader());
         this.rating = in.readInt();
         this.keywords = in.readString();
-        this.strength = in.readInt();
         this.style_id = in.readLong();
     }
 

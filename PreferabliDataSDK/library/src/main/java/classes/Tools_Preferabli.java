@@ -442,4 +442,43 @@ class Tools_Preferabli {
     static boolean isForceRefresh(Boolean force_refresh) {
         return force_refresh != null && force_refresh;
     }
+
+    static String getImageUrl(Object_Media image, int width, int height, int quality) {
+        if (image == null) {
+            return null;
+        }
+
+        return getImageUrl(image.getPath(), width, height, quality);
+    }
+
+    static String getImageUrl(String image, int width, int height, int quality) {
+        if (image.contains("placeholder")) {
+            return image;
+        } else if (image.contains("winering.com") || image.contains("preferabli.com")) {
+            return image;
+        } else if (image.contains("s3.amazonaws.com/winering-production")) {
+            int index = image.lastIndexOf("/");
+            if (image.contains("/avatars")) {
+                image = "avatars" + image.substring(index);
+            } else {
+                image = image.substring(index);
+            }
+        } else {
+            return image;
+        }
+
+        String cloudfrontAppId = "android_sdk/fit-in/";
+
+        String sizeString;
+        if (width > 0 && height > 0) {
+            sizeString = width + "x" + height + "/";
+        } else {
+            sizeString = "";
+        }
+
+        String qualityString = "filters:quality(" + quality + ")/";
+        String pngString = image.contains("png") ? "filters:format(png)/" : "";
+
+        return "https://dxlu3le4zp2pd.cloudfront.net/wineringlabel/" + cloudfrontAppId + sizeString + qualityString + pngString + image;
+    }
 }
