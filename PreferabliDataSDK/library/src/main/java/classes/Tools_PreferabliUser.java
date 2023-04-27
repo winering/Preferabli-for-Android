@@ -19,6 +19,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import retrofit2.Response;
 
+/**
+ * Contains methods that help load {@link Object_PreferabliUser} data.
+ */
 class Tools_PreferabliUser {
 
     private static Tools_PreferabliUser userCollectionsTools;
@@ -95,7 +98,7 @@ class Tools_PreferabliUser {
                     Tools_Database.getInstance().openDatabase();
 
                     for (Object_UserCollection userCollection : userCollections) {
-                        Tools_Database.getInstance().updateUserCollectionTable(userCollection, true);
+                        Tools_Database.getInstance().updateUserCollectionTable(userCollection);
                     }
 
                     Tools_Database.getInstance().closeDatabase();

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/wtb"
+        android:title="Where To Buy" />
+
+    <item android:id="@+id/wishlist"
+        android:title="Toggle Wishlist" />
+
+    <item android:id="@+id/rate"
+        android:title="Rate" />
+
+    <item android:id="@+id/lttt"
+        android:title="LTTT" />
+
+    <item android:id="@+id/score"
+        android:title="Get Preferabli Score" />
+</menu>

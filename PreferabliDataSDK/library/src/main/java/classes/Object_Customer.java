@@ -52,6 +52,10 @@ public class Object_Customer extends Object_BaseObject {
         return Tools_Preferabli.getImageUrl(avatar_url, width, height, quality);
     }
 
+    String getAvatarUrl() {
+        return avatar_url;
+    }
+
     public String getMerchantUserDisplayName() {
         return merchant_user_display_name;
     }

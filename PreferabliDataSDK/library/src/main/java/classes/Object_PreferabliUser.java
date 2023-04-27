@@ -11,7 +11,7 @@ package classes;
 import android.os.Parcel;
 
 /**
- * A logged in Preferabli user.
+ * A logged in Preferabli user. Most SDK installations will never use this.
  */
 public class Object_PreferabliUser extends Object_BaseObject {
 
@@ -62,6 +62,10 @@ public class Object_PreferabliUser extends Object_BaseObject {
 
     public boolean isLocked() {
         return account_level != 2;
+    }
+
+    public Object_Media getAvatar() {
+        return avatar;
     }
 
     public boolean hasWhereToBuy() {

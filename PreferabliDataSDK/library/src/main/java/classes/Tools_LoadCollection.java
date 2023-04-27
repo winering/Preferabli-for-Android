@@ -17,24 +17,23 @@ import java.util.concurrent.Semaphore;
 
 import retrofit2.Response;
 
-public class Tools_LoadCollection {
+/**
+ * Contains methods that help load {@link Object_Collection}s.
+ */
+class Tools_LoadCollection {
 
     private static Tools_LoadCollection loadCollectionTools;
 
-    public Tools_LoadCollection() {
-        // nada
-    }
-
-    public static Tools_LoadCollection getInstance() {
+    static Tools_LoadCollection getInstance() {
         if (loadCollectionTools == null) loadCollectionTools = new Tools_LoadCollection();
         return loadCollectionTools;
     }
 
-    public void clearData() {
+    void clearData() {
         loadCollectionTools = null;
     }
 
-    public Object_Collection getCollection(boolean force_refresh, long collectionId) throws IOException, API_PreferabliException {
+     Object_Collection getCollection(boolean force_refresh, long collectionId) throws IOException, API_PreferabliException {
         Tools_Database.getInstance().openDatabase();
         Object_Collection collection = Tools_Database.getInstance().getCollection(collectionId);
         Tools_Database.getInstance().closeDatabase();
@@ -55,7 +54,7 @@ public class Tools_LoadCollection {
         return collection;
     }
 
-    public void loadCollectionViaTags(int priority, boolean force_refresh, long collection_id) throws Exception {
+    void loadCollectionViaTags(int priority, boolean force_refresh, long collection_id) throws Exception {
         if (force_refresh || !Tools_Preferabli.getKeyStore().getBoolean("hasLoaded" + collection_id, false)) {
             Tools_LoadCollection.getInstance().getTagsAndProducts(collection_id, priority, force_refresh);
         } else if (Tools_Preferabli.hasMinutesPassed(5, Tools_Preferabli.getKeyStore().getLong("lastCalled" + collection_id, 0))) {
@@ -135,7 +134,7 @@ public class Tools_LoadCollection {
         Tools_Preferabli.getKeyStore().edit().putBoolean("hasLoaded" + collectionId, true).apply();
     }
 
-    public void loadCollectionViaOrderings(long collectionId, int priority) throws InterruptedException, API_PreferabliException {
+    void loadCollectionViaOrderings(long collectionId, int priority) throws InterruptedException, API_PreferabliException {
         Tools_Database.getInstance().openDatabase();
         Object_Collection collection = Tools_Database.getInstance().getCollection(collectionId);
         Tools_Database.getInstance().closeDatabase();
@@ -200,7 +199,7 @@ public class Tools_LoadCollection {
         Tools_Preferabli.getKeyStore().edit().putBoolean("hasLoaded" + collectionId, true).apply();
     }
 
-    public ArrayList<Object_Collection.Object_CollectionOrder> getGroupItems(Object_Collection collection, Object_Collection.Object_CollectionVersion version, Object_Collection.Object_CollectionGroup group, int limit, int offset, int failCount) throws API_PreferabliException {
+    private ArrayList<Object_Collection.Object_CollectionOrder> getGroupItems(Object_Collection collection, Object_Collection.Object_CollectionVersion version, Object_Collection.Object_CollectionGroup group, int limit, int offset, int failCount) throws API_PreferabliException {
         try {
             if (Thread.interrupted()) return new ArrayList<>();
             Response<ArrayList<Object_Collection.Object_CollectionOrder>> orderingResponse = API_Singleton.getInstanceService().getOrderings(collection.getId(), version.getId(), group.getId(), limit, offset).execute();
@@ -276,29 +275,21 @@ public class Tools_LoadCollection {
         }
     }
 
-    public ArrayList<Object_Product> getCachedProducts(Object_Collection collection, boolean manage) {
+    ArrayList<Object_Product> getCachedProducts(Object_Collection collection, boolean manage) {
         ArrayList<Object_Product> cachedProducts = new ArrayList<>();
         ArrayList<Object_Collection.Object_CollectionGroup> groups = collection.getFirstVersion().getGroups();
-        int totalPosition = 1;
         for (Object_Collection.Object_CollectionGroup group : groups) {
-            int positionInGroup = 1;
             ArrayList<Object_Collection.Object_CollectionOrder> sortedOrders = group.getOrderings();
             if (sortedOrders.size() == 0 && manage) {
                 Object_Product product = new Object_Product();
-                product.setPositionInGroup(positionInGroup);
-                product.setTotalPosition(totalPosition);
                 cachedProducts.add(product);
             } else {
                 for (Object_Collection.Object_CollectionOrder ordering : sortedOrders) {
                     Object_Tag tag = ordering.getTag();
                     Object_Variant variant = tag.getVariant();
-                    Object_Product product = new Object_Product(variant.getProduct());
-                    product.setPositionInGroup(positionInGroup);
-                    product.setTotalPosition(totalPosition);
+                    Object_Product product = variant.getProduct();
                     variant.setProduct(product);
                     cachedProducts.add(product);
-                    positionInGroup++;
-                    totalPosition++;
                 }
             }
         }

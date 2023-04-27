@@ -1,6 +1,7 @@
 package com.ringit.sdk.demo;
 
 import android.content.Context;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,11 +15,11 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
 
     private List<String> mData = new ArrayList<>();
     private LayoutInflater mInflater;
-    private LongClickListener mClickListener;
+    private ShouldWeShowListener shouldWeShowListener;
 
-    RecyclerViewAdapter(Context context, LongClickListener listener) {
+    RecyclerViewAdapter(Context context, ShouldWeShowListener listener) {
         this.mInflater = LayoutInflater.from(context);
-        this.mClickListener = listener;
+        this.shouldWeShowListener = listener;
     }
 
     @Override
@@ -38,19 +39,25 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         return mData.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnLongClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnCreateContextMenuListener {
         TextView textView;
 
         ViewHolder(View itemView) {
             super(itemView);
             textView = itemView.findViewById(R.id.textView);
-            itemView.setOnLongClickListener(this);
+            itemView.setOnCreateContextMenuListener(this);
         }
 
         @Override
-        public boolean onLongClick(View view) {
-            if (mClickListener != null) mClickListener.onItemLongClick(view, getAbsoluteAdapterPosition());
-            return false;
+        public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo contextMenuInfo) {
+            if (shouldWeShowListener.shouldWeShow(getBindingAdapterPosition())) {
+                menu.setHeaderTitle("Select Product Action");
+                menu.add(getBindingAdapterPosition(), R.id.wtb, 0, "Where To Buy");//groupId, itemId, order, title
+                menu.add(getBindingAdapterPosition(), R.id.wishlist, 0, "Toggle Wishlist");
+                menu.add(getBindingAdapterPosition(), R.id.rate, 0, "Rate");
+                menu.add(getBindingAdapterPosition(), R.id.lttt, 0, "LTTT");
+                menu.add(getBindingAdapterPosition(), R.id.score, 0, "Get Preferabli Score");
+            }
         }
     }
 
@@ -59,7 +66,7 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
         notifyDataSetChanged();
     }
 
-    public interface LongClickListener {
-        void onItemLongClick(View view, int position);
+    public interface ShouldWeShowListener {
+        boolean shouldWeShow(int position);
     }
 }

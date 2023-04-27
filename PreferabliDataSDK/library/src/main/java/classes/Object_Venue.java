@@ -10,11 +10,17 @@ package classes;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+
+import com.google.gson.annotations.SerializedName;
+
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
+/**
+ * A venue represents the details for a specific location. If returned as part of {@link Preferabli#whereToBuy(long, Other_FulfillSort, Boolean, Boolean, API_ResultHandler)}, will contain an array of {@link Object_MerchantProductLink}s as {@link Object_Venue#links}.
+ */
 public class Object_Venue extends Object_BaseObject {
     private String name;
     private String display_name;
@@ -30,9 +36,8 @@ public class Object_Venue extends Object_BaseObject {
     private String url;
     private String created_at;
     private String updated_at;
-    private ArrayList<Object_MerchantProductLink> lookups;
     private String notes;
-    private ArrayList<DeliveryMethod> active_delivery_methods;
+    private ArrayList<Object_DeliveryMethod> active_delivery_methods;
     private String email_address;
     private String url_facebook;
     private String url_instagram;
@@ -43,16 +48,17 @@ public class Object_Venue extends Object_BaseObject {
     private ArrayList<Object_VenueHour> hours;
     private boolean is_virtual;
     private ArrayList<Object_Media> images;
+    @SerializedName("lookups")
+    private ArrayList<Object_MerchantProductLink> links;
 
     private transient int distanceInMiles = -1;
-    private transient ArrayList<Object_MerchantProductLink> lookupContainers;
 
     @Override
     public boolean filter(Serializable serializable) {
         return filter(serializable, true);
     }
 
-    public boolean filter(Serializable serializable, boolean filterLookups) {
+    public boolean filter(Serializable serializable, boolean filter_links) {
         String constraint = ((String) serializable).toLowerCase();
         String[] terms = constraint.split("\\s+");
         innerloop:
@@ -73,31 +79,17 @@ public class Object_Venue extends Object_BaseObject {
                 continue;
             } else if (getUrl() != null && getUrl().toLowerCase().contains(term)) {
                 continue;
-            } else if (getLookups() != null && filterLookups) {
-                for (Object_MerchantProductLink lookup : getLookups()) {
+            } else if (getLinks() != null && filter_links) {
+                for (Object_MerchantProductLink lookup : getLinks()) {
                     if (lookup.filter(serializable, false))
                         continue innerloop;
                 }
                 return false;
-            } else return false;
+            }
+
+            return false;
         }
         return true;
-    }
-
-    public String getUrl_facebook() {
-        return url_facebook;
-    }
-
-    public String getUrl_instagram() {
-        return url_instagram;
-    }
-
-    public String getUrl_twitter() {
-        return url_twitter;
-    }
-
-    public String getUrl_youtube() {
-        return url_youtube;
     }
 
     public String getYoutubeLink() {
@@ -120,11 +112,11 @@ public class Object_Venue extends Object_BaseObject {
         return notes;
     }
 
-
-    public void setHours(ArrayList<Object_VenueHour> hours) {
-        this.hours = hours;
-    }
-
+    /**
+     * Get a formatted return of the address for a specific venue.
+     * @param oneLine pass true if you want the address returned in one line. False returns the address in a multiline format.
+     * @return the venue's full formatted address.
+     */
     public String getFormattedAddress(boolean oneLine) {
         String newLine = "\n";
         if (oneLine) {
@@ -137,71 +129,67 @@ public class Object_Venue extends Object_BaseObject {
         return firstTwo + third + fourth;
     }
 
-    public ArrayList<DeliveryMethod> getActive_delivery_methods() {
+    public ArrayList<Object_DeliveryMethod> getActiveDeliveryMethods() {
         if (active_delivery_methods == null) {
             active_delivery_methods = new ArrayList<>();
         }
         return active_delivery_methods;
     }
 
-    public void removeImage(Object_Media media) {
-        images.remove(media);
-    }
-
-    public ArrayList<Object_VenueHour> getVenueHours() {
+    public ArrayList<Object_VenueHour> getHours() {
         if (hours == null) {
             hours = new ArrayList<>();
         }
         return hours;
     }
 
-    public boolean getIsClosed(String weekday) {
-        for (Object_VenueHour hour : getVenueHours()) {
-            if (hour.getWeekday().equalsIgnoreCase(weekday)) {
-                return hour.isIs_closed();
+    public boolean getIsClosed(Other_Weekday weekday) {
+        for (Object_VenueHour hour : getHours()) {
+            if (hour.getWeekday().equals(weekday)) {
+                return hour.isClosed();
             }
         }
 
         return false;
     }
 
-    public String getOpenTime(String weekday) {
-        for (Object_VenueHour hour : getVenueHours()) {
-            if (hour.getWeekday().equalsIgnoreCase(weekday)) {
-                return hour.getOpen_time();
+    public String getOpenTime(Other_Weekday weekday) {
+        for (Object_VenueHour hour : getHours()) {
+            if (hour.getWeekday().equals(weekday)) {
+                return hour.getOpenTime();
             }
         }
 
         return "";
     }
 
-    public String getCloseTime(String weekday) {
-        for (Object_VenueHour hour : getVenueHours()) {
-            if (hour.getWeekday().equalsIgnoreCase(weekday)) {
-                return hour.getClose_time();
+    public String getCloseTime(Other_Weekday weekday) {
+        for (Object_VenueHour hour : getHours()) {
+            if (hour.getWeekday().equals(weekday)) {
+                return hour.getCloseTime();
             }
         }
 
         return "";
     }
 
-    public ArrayList<Object_MerchantProductLink> getLookups() {
-        if (lookups == null) {
-            lookups = new ArrayList<>();
+    public ArrayList<Object_MerchantProductLink> getLinks() {
+        if (links == null) {
+            links = new ArrayList<>();
         }
 
-        return lookups;
+        return links;
     }
 
-    public long getPrimary_inventory_id() {
+    public long getPrimaryInventoryId() {
         return primary_inventory_id;
     }
 
-    public long getFeatured_collection_id() {
+    public long getFeaturedCollectionId() {
         return featured_collection_id;
     }
 
-    public static class VenueComparator implements Comparator<Object_Venue> {
+    private static class VenueComparator implements Comparator<Object_Venue> {
 
         double lat1;
         double lon1;
@@ -229,11 +217,24 @@ public class Object_Venue extends Object_BaseObject {
         }
     }
 
-    public static ArrayList<Object_Venue> sortVenues(double lat1, double lon1, ArrayList<Object_Venue> venues) {
+    /**
+     * Sort an array of venues by their distance from the user.
+     * @param lat1 user's latitude as a double.
+     * @param lon1 user's longitude as a double.
+     * @param venues an array of venues to be sorted.
+     * @return a sorted array of venues.
+     */
+    public static ArrayList<Object_Venue> sortVenuesByDistance(double lat1, double lon1, ArrayList<Object_Venue> venues) {
         Collections.sort(venues, new Object_Venue.VenueComparator(lat1, lon1));
         return venues;
     }
 
+    /**
+     * Get your distance in miles to the venue.
+     * @param lat1 user's latitude as a double.
+     * @param lon1 user's longitude as a double.
+     * @return user's distance to the venue in miles.
+     */
     public int getDistanceInMiles(double lat1, double lon1) {
         if (distanceInMiles == -1) {
             distanceInMiles = Tools_Preferabli.calculateDistanceInMiles(lat1, lon1, lat, lon);
@@ -242,9 +243,13 @@ public class Object_Venue extends Object_BaseObject {
         return distanceInMiles;
     }
 
+    /**
+     * Does the venue offer local delivery?
+     * @return true if the venue can deliver locally to the user.
+     */
     public boolean hasLocalDelivery() {
-        for (DeliveryMethod method : getActive_delivery_methods()) {
-            if (method.getShipping_type().equalsIgnoreCase("local_delivery")) {
+        for (Object_DeliveryMethod method : getActiveDeliveryMethods()) {
+            if (method.getShippingType().equals(Other_ShippingType.LOCAL_DELIVERY)) {
                 return true;
             }
         }
@@ -252,9 +257,13 @@ public class Object_Venue extends Object_BaseObject {
         return false;
     }
 
+    /**
+     * Does the venue offer local pickup?
+     * @return true if the user can pickup at the venue.
+     */
     public boolean hasPickup() {
-        for (DeliveryMethod method : getActive_delivery_methods()) {
-            if (method.getShipping_type().equalsIgnoreCase("pickup")) {
+        for (Object_DeliveryMethod method : getActiveDeliveryMethods()) {
+            if (method.getShippingType().equals(Other_ShippingType.PICKUP)) {
                 return true;
             }
         }
@@ -262,9 +271,13 @@ public class Object_Venue extends Object_BaseObject {
         return false;
     }
 
+    /**
+     * Does the venue offer shipping
+     * @return true if the venue can ship to the user.
+     */
     public boolean hasShipping() {
-        for (DeliveryMethod method : getActive_delivery_methods()) {
-            if (method.getShipping_type().equalsIgnoreCase("standard_shipping")) {
+        for (Object_DeliveryMethod method : getActiveDeliveryMethods()) {
+            if (method.getShippingType().equals(Other_ShippingType.SHIPPING)) {
                 return true;
             }
         }
@@ -272,26 +285,38 @@ public class Object_Venue extends Object_BaseObject {
         return false;
     }
 
+    /**
+     * Get the venue's shipping speed.
+     * @return the venue's notes about shipping speed.
+     */
     public String getShippingSpeedNote() {
-        for (DeliveryMethod method : getActive_delivery_methods()) {
-            if (method.getShipping_type().equalsIgnoreCase("standard_shipping")) {
-                return method.getShipping_speed_note();
+        for (Object_DeliveryMethod method : getActiveDeliveryMethods()) {
+            if (method.getShippingType().equals(Other_ShippingType.SHIPPING)) {
+                return method.getShippingSpeedNote();
             }
         }
 
         return "";
     }
 
+    /**
+     * Get the venue's shipping cost.
+     * @return the venue's notes about its shipping cost.
+     */
     public String getShippingCostNote() {
-        for (DeliveryMethod method : getActive_delivery_methods()) {
-            if (method.getShipping_type().equalsIgnoreCase("standard_shipping")) {
-                return method.getShipping_cost_note();
+        for (Object_DeliveryMethod method : getActiveDeliveryMethods()) {
+            if (method.getShippingType().equals(Other_ShippingType.SHIPPING)) {
+                return method.getShippingCostNote();
             }
         }
 
         return "";
     }
 
+    /**
+     * Get the venue's city and state.
+     * @return city, state, city and state, or a blank string depending on the information available.
+     */
     public String getCityState() {
         if (Tools_Preferabli.isNullOrWhitespace(city + state)) {
             return "";
@@ -340,7 +365,7 @@ public class Object_Venue extends Object_BaseObject {
         return lat;
     }
 
-    public boolean isIs_virtual() {
+    public boolean isVirtual() {
         return is_virtual;
     }
 
@@ -351,7 +376,7 @@ public class Object_Venue extends Object_BaseObject {
         return images;
     }
 
-    public String getEmail_address() {
+    public String getEmailAddress() {
         return email_address;
     }
 
@@ -376,11 +401,6 @@ public class Object_Venue extends Object_BaseObject {
     }
 
     @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
     public void writeToParcel(Parcel dest, int flags) {
         super.writeToParcel(dest, flags);
         dest.writeString(this.name);
@@ -397,7 +417,7 @@ public class Object_Venue extends Object_BaseObject {
         dest.writeString(this.url);
         dest.writeString(this.created_at);
         dest.writeString(this.updated_at);
-        dest.writeTypedList(this.lookups);
+        dest.writeTypedList(this.links);
         dest.writeString(this.notes);
         dest.writeTypedList(this.active_delivery_methods);
         dest.writeString(this.email_address);
@@ -410,9 +430,6 @@ public class Object_Venue extends Object_BaseObject {
         dest.writeString(this.url_instagram);
         dest.writeString(this.url_twitter);
         dest.writeString(this.url_youtube);
-    }
-
-    public Object_Venue() {
     }
 
     protected Object_Venue(Parcel in) {
@@ -431,9 +448,9 @@ public class Object_Venue extends Object_BaseObject {
         this.url = in.readString();
         this.created_at = in.readString();
         this.updated_at = in.readString();
-        this.lookups = in.createTypedArrayList(Object_MerchantProductLink.CREATOR);
+        this.links = in.createTypedArrayList(Object_MerchantProductLink.CREATOR);
         this.notes = in.readString();
-        this.active_delivery_methods = in.createTypedArrayList(DeliveryMethod.CREATOR);
+        this.active_delivery_methods = in.createTypedArrayList(Object_DeliveryMethod.CREATOR);
         this.email_address = in.readString();
         this.primary_inventory_id = in.readLong();
         this.featured_collection_id = in.readLong();
@@ -458,79 +475,41 @@ public class Object_Venue extends Object_BaseObject {
         }
     };
 
-    public static class DeliveryMethod implements Parcelable {
+    public static class Object_DeliveryMethod extends Object_BaseObject {
         private String shipping_type;
         private String state_abbreviation;
         private String state_display_name;
         private String country;
         private String shipping_cost_note;
         private String shipping_speed_note;
-        private long id;
 
-        public String getShipping_type() {
-            return shipping_type;
+        public Other_ShippingType getShippingType() {
+            return Other_ShippingType.getShippingTypeBasedOffDatabaseName(shipping_type);
         }
 
-        public void setShipping_type(String shipping_type) {
-            this.shipping_type = shipping_type;
-        }
-
-        public String getState_abbreviation() {
+        public String getStateAbbreviation() {
             return state_abbreviation;
         }
 
-        public void setState_abbreviation(String state_abbreviation) {
-            this.state_abbreviation = state_abbreviation;
-        }
-
-        public String getState_display_name() {
+        public String getStateDisplayName() {
             return state_display_name;
-        }
-
-        public void setState_display_name(String state_display_name) {
-            this.state_display_name = state_display_name;
         }
 
         public String getCountry() {
             return country;
         }
 
-        public void setCountry(String country) {
-            this.country = country;
-        }
-
-        public String getShipping_cost_note() {
+        public String getShippingCostNote() {
             return shipping_cost_note;
         }
 
-        public void setShipping_cost_note(String shipping_cost_note) {
-            this.shipping_cost_note = shipping_cost_note;
-        }
-
-        public String getShipping_speed_note() {
+        public String getShippingSpeedNote() {
             return shipping_speed_note;
-        }
-
-        public void setShipping_speed_note(String shipping_speed_note) {
-            this.shipping_speed_note = shipping_speed_note;
-        }
-
-        public long getId() {
-            return id;
-        }
-
-        public void setId(long id) {
-            this.id = id;
-        }
-
-        @Override
-        public int describeContents() {
-            return 0;
         }
 
         @Override
         public void writeToParcel(Parcel dest, int flags) {
-            dest.writeLong(this.id);
+            super.writeToParcel(dest, flags);
             dest.writeString(this.shipping_type);
             dest.writeString(this.state_abbreviation);
             dest.writeString(this.state_display_name);
@@ -539,11 +518,8 @@ public class Object_Venue extends Object_BaseObject {
             dest.writeString(this.shipping_speed_note);
         }
 
-        public DeliveryMethod() {
-        }
-
-        protected DeliveryMethod(Parcel in) {
-            this.id = in.readLong();
+        protected Object_DeliveryMethod(Parcel in) {
+            super(in);
             this.shipping_type = in.readString();
             this.state_abbreviation = in.readString();
             this.state_display_name = in.readString();
@@ -552,17 +528,182 @@ public class Object_Venue extends Object_BaseObject {
             this.shipping_speed_note = in.readString();
         }
 
-        public static final Parcelable.Creator<DeliveryMethod> CREATOR = new Parcelable.Creator<DeliveryMethod>() {
+        public static final Parcelable.Creator<Object_DeliveryMethod> CREATOR = new Parcelable.Creator<Object_DeliveryMethod>() {
             @Override
-            public DeliveryMethod createFromParcel(Parcel source) {
-                return new DeliveryMethod(source);
+            public Object_DeliveryMethod createFromParcel(Parcel source) {
+                return new Object_DeliveryMethod(source);
             }
 
             @Override
-            public DeliveryMethod[] newArray(int size) {
-                return new DeliveryMethod[size];
+            public Object_DeliveryMethod[] newArray(int size) {
+                return new Object_DeliveryMethod[size];
             }
         };
 
+    }
+
+    /**
+     * Represents a {@link Object_Venue}s open and close times for a given day. Each day of the week has separate corresponding values.
+     */
+    public static class Object_VenueHour extends Object_BaseObject {
+        private String weekday;
+        private String open_time;
+        private String close_time;
+        private boolean is_closed;
+
+        public Object_VenueHour(long id, String weekday, String open_time, String close_time, boolean is_closed) {
+            super(id);
+            this.weekday = weekday;
+            this.open_time = open_time;
+            this.close_time = close_time;
+            this.is_closed = is_closed;
+        }
+
+        public Other_Weekday getWeekday() {
+            return Other_Weekday.getWeekdayFromString(weekday);
+        }
+
+        public String getOpenTime() {
+            if (open_time == null) {
+                return "";
+            }
+            return open_time;
+        }
+
+        public String getCloseTime() {
+            if (close_time == null) {
+                return "";
+            }
+            return close_time;
+        }
+
+        public boolean isClosed() {
+            return is_closed;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+            super.writeToParcel(dest, flags);
+            dest.writeString(this.weekday);
+            dest.writeString(this.open_time);
+            dest.writeString(this.close_time);
+            dest.writeByte(this.is_closed ? (byte) 1 : (byte) 0);
+        }
+
+        protected Object_VenueHour(Parcel in) {
+            super(in);
+            this.weekday = in.readString();
+            this.open_time = in.readString();
+            this.close_time = in.readString();
+            this.is_closed = in.readByte() != 0;
+        }
+
+        public static final Creator<Object_VenueHour> CREATOR = new Creator<Object_VenueHour>() {
+            @Override
+            public Object_VenueHour createFromParcel(Parcel source) {
+                return new Object_VenueHour(source);
+            }
+
+            @Override
+            public Object_VenueHour[] newArray(int size) {
+                return new Object_VenueHour[size];
+            }
+        };
+    }
+
+    /**
+     * Represents a fulfillment method for a {@link Object_Venue}. Contained within {@link Object_DeliveryMethod}.
+     */
+    public enum Other_ShippingType {
+        SHIPPING,
+        LOCAL_DELIVERY,
+        PICKUP;
+
+        public static Other_ShippingType getShippingTypeBasedOffDatabaseName(String type) {
+            if (type != null) switch (type) {
+                case "standard_shipping":
+                    return Other_ShippingType.SHIPPING;
+                case "local_delivery":
+                    return Other_ShippingType.LOCAL_DELIVERY;
+                case "pickup":
+                    return Other_ShippingType.PICKUP;
+            }
+
+            return null;
+        }
+
+        public String getDatabaseName() {
+            switch (this) {
+                case SHIPPING:
+                    return "standard_shipping";
+                case LOCAL_DELIVERY:
+                    return "local_delivery";
+                case PICKUP:
+                    return "pickup";
+            }
+
+            return null;
+        }
+
+    }
+
+    /**
+     * Represents a day of the week for use within {@link Object_VenueHour}.
+     */
+    public enum Other_Weekday {
+        MONDAY,
+        TUESDAY,
+        WEDNESDAY,
+        THURSDAY,
+        FRIDAY,
+        SATURDAY,
+        SUNDAY,
+        NONE;
+
+        public static Other_Weekday getWeekdayFromString(String weekday) {
+            if (weekday != null) switch (weekday) {
+                case "monday":
+                    return MONDAY;
+                case "tuesday":
+                    return TUESDAY;
+                case "wednesday":
+                    return WEDNESDAY;
+                case "thursday":
+                    return THURSDAY;
+                case "friday":
+                    return FRIDAY;
+                case "saturday":
+                    return SATURDAY;
+                case "sunday":
+                    return SUNDAY;
+                default:
+                    return NONE;
+            }
+
+            return NONE;
+        }
+
+        public String getStringFromWeekday() {
+            switch (this) {
+                case MONDAY:
+                    return "monday";
+                case TUESDAY:
+                    return "tuesday";
+                case WEDNESDAY:
+                    return "wednesday";
+                case THURSDAY:
+                    return "thursday";
+                case FRIDAY:
+                    return "friday";
+                case SATURDAY:
+                    return "saturday";
+                case SUNDAY:
+                    return "sunday";
+                case NONE:
+                    return "none";
+            }
+
+            return "none";
+        }
     }
 }

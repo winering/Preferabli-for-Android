@@ -10,6 +10,9 @@ package classes;
 
 import java.util.ArrayList;
 
+/**
+ * Container object returned by {@link Preferabli#getRecs(Object_Product.Other_ProductCategory, Object_Product.Other_ProductType, Long, Integer, Integer, ArrayList, ArrayList, Boolean, API_ResultHandler)}.
+ */
 public class Object_Recommendation {
     private ArrayList<Object_Product> products;
     private String message;

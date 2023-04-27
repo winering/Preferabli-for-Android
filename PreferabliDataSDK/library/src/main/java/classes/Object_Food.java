@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 /**
- * You can use foods to get pairings within {@link Preferabli#getRecs(Other_ProductCategory, Other_ProductType, Long, Integer, Integer, ArrayList, ArrayList, Boolean, API_ResultHandler)}.
+ * You can use foods to get pairings within {@link Preferabli#getRecs(Object_Product.Other_ProductCategory, Object_Product.Other_ProductType, Long, Integer, Integer, ArrayList, ArrayList, Boolean, API_ResultHandler)}.
  */
 public class Object_Food extends Object_BaseObject {
     private String name;

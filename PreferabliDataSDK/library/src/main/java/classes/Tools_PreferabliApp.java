@@ -38,11 +38,11 @@ class Tools_PreferabliApp extends Application {
         Tools_Preferabli.addSDKProperties();
     }
 
-    public static Context getAppContext() {
+    static Context getAppContext() {
         return mAppContext;
     }
 
-    public static void setAppContext(Context context) {
+    static void setAppContext(Context context) {
         mAppContext = context;
     }
 
@@ -54,11 +54,11 @@ class Tools_PreferabliApp extends Application {
         }
     }
 
-    public static MixpanelAPI getMixpanel() {
+    static MixpanelAPI getMixpanel() {
         return mixpanel;
     }
 
-    public static void setupMixpanel(String client_interface, long integration_id) {
+    static void setupMixpanel(String client_interface, long integration_id) {
         try {
             JSONObject superprops = new JSONObject();
             superprops.put("CLIENT_INTERFACE", client_interface);
@@ -71,7 +71,7 @@ class Tools_PreferabliApp extends Application {
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
-    public void postAnalytics(JSONObject props) {
+    void postAnalytics(JSONObject props) {
         try {
             String type = props.getString("analyticsType");
             props.remove("analyticsType");

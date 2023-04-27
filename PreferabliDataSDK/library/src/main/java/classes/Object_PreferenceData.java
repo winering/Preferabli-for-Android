@@ -57,6 +57,20 @@ public class Object_PreferenceData {
 
     @Override
     public String toString() {
-        return title + " - " + details;
+        String first = "";
+
+        if (formatted_predict_rating != null) {
+            first = formatted_predict_rating + " - ";
+        }
+
+        return first + title + " - " + details;
+    }
+
+    /**
+     * Get a fully written out response to whether or not a user like's a product.
+     * @return a formatted response as a string.
+     */
+    public String getMessage() {
+        return this.toString();
     }
 }

@@ -10,7 +10,11 @@ package classes;
 
 import java.util.ArrayList;
 
+/**
+ * Container object returned by {@link Preferabli#whereToBuy(long, Other_FulfillSort, Boolean, Boolean, API_ResultHandler)}. This object will include an array of either {@link Object_MerchantProductLink}s (if sorted by price) or {@link Object_Venue}s (if sorted by distance).
+ */
 public class Object_WhereToBuy {
+
     private ArrayList<Object_MerchantProductLink> links;
     private ArrayList<Object_Venue> venues;
 

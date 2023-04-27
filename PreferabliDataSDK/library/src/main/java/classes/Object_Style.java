@@ -14,6 +14,9 @@ import com.google.gson.reflect.TypeToken;
 
 import java.util.ArrayList;
 
+/**
+ * Styles express how product characteristics synthesize in the context of human perception and define the nature of consumer taste preferences. These are not unique for each customer, which are represented as {@link Object_ProfileStyle}.
+ */
 public class Object_Style extends Object_BaseObject {
     private String name;
     private String type;
@@ -39,31 +42,28 @@ public class Object_Style extends Object_BaseObject {
         }.getType());
     }
 
-    public Object_Style(long id, String name, String primary_image_url) {
-        super(id);
-        this.name = name;
-        this.primary_image_url = primary_image_url;
-    }
 
-    public String getProduct_category() {
-        return product_category;
+    /**
+     * The product category of a style.
+     *
+     * @return product category.
+     */
+    public Object_Product.Other_ProductCategory getProductCategory() {
+        return Object_Product.Other_ProductCategory.getProductCategoryFromString(product_category);
     }
 
     public String getName() {
         return name;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public Other_ProductType getProductType() {
-        Other_ProductType productType = Other_ProductType.getProductTypeFromString(getType());
+    /**
+     * The product type of a style (e.g., Red). Only for wines.
+     *
+     * @return product type.
+     */
+    public Object_Product.Other_ProductType getProductType() {
+        Object_Product.Other_ProductType productType = Object_Product.Other_ProductType.getProductTypeFromString(type);
         return productType;
-    }
-
-    public Other_ProductType getProductCategory() {
-        return Other_ProductType.getProductTypeFromString(getProduct_category());
     }
 
     public String getDescription() {
@@ -86,8 +86,16 @@ public class Object_Style extends Object_BaseObject {
         return primary_image_url;
     }
 
-    @Override
-    public int describeContents() { return 0; }
+    /**
+     * Get the style image.
+     * @param width returns an image with the specified width in pixels.
+     * @param height returns an image with the specified height in pixels.
+     * @param quality returns an image with the specified quality. Scales from 0 - 100.
+     * @return the URL of the requested image.
+     */
+    public String getImage(int width, int height, int quality) {
+        return Tools_Preferabli.getImageUrl(primary_image_url, width, height, quality);
+    }
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
@@ -103,8 +111,6 @@ public class Object_Style extends Object_BaseObject {
         dest.writeString(this.product_category);
         dest.writeTypedList(this.locations);
     }
-
-    public Object_Style() {}
 
     protected Object_Style(Parcel in) {
         super(in);

@@ -8,7 +8,10 @@
 
 package classes;
 
-public class Object_SessionData extends Object_BaseObject {
+/**
+ * Internal class used to record sessions.
+ */
+class Object_SessionData extends Object_BaseObject {
     private long user_id;
     private long customer_id;
     private String token_access;
@@ -18,35 +21,35 @@ public class Object_SessionData extends Object_BaseObject {
     private String updated_at;
     private String intercom_hmac;
 
-    public long getUserId() {
+    long getUserId() {
         return user_id;
     }
 
-    public String getAccessToken() {
+    String getAccessToken() {
         return token_access;
     }
 
-    public String getRefreshToken() {
+    String getRefreshToken() {
         return token_refresh;
     }
 
-    public String getExpiresAt() {
+    String getExpiresAt() {
         return expires_at;
     }
 
-    public String getCreatedAt() {
+    String getCreatedAt() {
         return created_at;
     }
 
-    public String getUpdatedAt() {
+    String getUpdatedAt() {
         return updated_at;
     }
 
-    public String getIntercomHmac() {
+    String getIntercomHmac() {
         return intercom_hmac;
     }
 
-    public long getCustomerId() {
+    long getCustomerId() {
         return customer_id;
     }
 }

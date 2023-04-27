@@ -8,10 +8,8 @@
 
 package classes;
 
-import android.net.Uri;
 import android.os.Parcel;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -38,16 +36,21 @@ public class Object_Variant extends Object_BaseObject {
     private Object_Media primary_image;
 
     private transient Object_Product product;
-    private transient Other_RatingLevel rating_level;
+    private transient Object_Tag.Other_RatingLevel rating_level;
     private transient Object_Tag most_recent_rating;
-    private transient HashSet<Object_Tag> ratings_tags;
+    private transient HashSet<Object_Tag> rating_tags;
     private transient ArrayList<Object_MerchantProductLink> merchant_links;
     private transient Object_PreferenceData preference_data;
+    private transient Object_Tag wishlist_tag;
+    private transient HashSet<Object_Tag> cellar_tags;
+    private transient HashSet<Object_Tag> purchase_tags;
 
     void clearTransients() {
-        ratings_tags = null;
+        rating_tags = null;
         most_recent_rating = null;
         rating_level = null;
+        cellar_tags = null;
+        purchase_tags = null;
     }
 
     public Object_Variant(long id, long product_id) {
@@ -75,22 +78,22 @@ public class Object_Variant extends Object_BaseObject {
     }
 
     /**
-     * The {@link Other_RatingLevel} of the most recent rating of a specific variant for the current user.
+     * The {@link Object_Tag.Other_RatingLevel} of the most recent rating of a specific variant for the current user.
      *
      * @return rating level.
      */
-    public Other_RatingLevel getRatingLevel() {
-        if (getMostRecentRating() == null) return Other_RatingLevel.NONE;
+    public Object_Tag.Other_RatingLevel getRatingLevel() {
+        if (getMostRecentRating() == null) return Object_Tag.Other_RatingLevel.NONE;
         else if (rating_level == null) {
             Object_Tag tag = getMostRecentRating();
-            rating_level = Other_RatingLevel.getRatingLevelBasedOffTagValue(tag.getValue());
+            rating_level = Object_Tag.Other_RatingLevel.getRatingLevelBasedOffTagValue(tag.getValue());
         }
 
         return rating_level;
     }
 
     /**
-     * The most recent variant tag of type {@link Other_TagType#RATING} for the current user.
+     * The most recent variant tag of type {@link Object_Tag.Other_TagType#RATING} for the current user.
      *
      * @return a tag.
      */
@@ -110,13 +113,17 @@ public class Object_Variant extends Object_BaseObject {
     }
 
     /**
-     * All of the variant tags of type {@link Other_TagType#RATING} for the current user.
+     * All of the variant tags of type {@link Object_Tag.Other_TagType#RATING} for the current user.
      *
      * @return an array of tags.
      */
     public HashSet<Object_Tag> getRatingTags() {
-        if (ratings_tags == null) getTags();
-        return ratings_tags;
+        if (rating_tags == null) getTags();
+        return rating_tags;
+    }
+
+    void setProduct(Object_Product product) {
+        this.product = product;
     }
 
     public Object_Product getProduct() {
@@ -184,6 +191,14 @@ public class Object_Variant extends Object_BaseObject {
         return recommendable;
     }
 
+    void setNumDollarSigns(int num_dollar_signs) {
+        this.num_dollar_signs = num_dollar_signs;
+    }
+
+    public void setPrice(double price) {
+        this.price = price;
+    }
+
     public double getPrice() {
         return price;
     }
@@ -197,12 +212,32 @@ public class Object_Variant extends Object_BaseObject {
             tags = new ArrayList<Object_Tag>();
         }
 
-        ratings_tags = new HashSet<>();
+        rating_tags = new HashSet<>();
+        cellar_tags = new HashSet<>();
+        purchase_tags = new HashSet<>();
+
         for (Object_Tag tag : tags) {
-            if (tag.isRating()) ratings_tags.add(tag);
+            if (tag.getTagType() == Object_Tag.Other_TagType.RATING) rating_tags.add(tag);
+            else if (tag.getTagType() == Object_Tag.Other_TagType.WISHLIST) wishlist_tag = tag;
+            else if (tag.getTagType() == Object_Tag.Other_TagType.CELLAR) cellar_tags.add(tag);
+            else if (tag.getTagType() == Object_Tag.Other_TagType.PURCHASE) purchase_tags.add(tag);
         }
 
         return tags;
+    }
+
+    /**
+     * The first instance within the product of tag type {@link Object_Tag.Other_TagType#WISHLIST} for the current user.
+     *
+     * @return a tag.
+     */
+    public Object_Tag getWishlistTag() {
+        if (wishlist_tag == null && rating_tags == null) getTags();
+        return wishlist_tag;
+    }
+
+    public boolean isOnWishlist() {
+        return getWishlistTag() != null;
     }
 
     public String getCreatedAt() {
@@ -268,10 +303,22 @@ public class Object_Variant extends Object_BaseObject {
     }
 
     /**
-     * See {@link Preferabli#rateProduct(long, int, Other_RatingLevel, String, String, Double, Integer, Integer, API_ResultHandler)}.
+     * See {@link Preferabli#rateProduct(long, int, Object_Tag.Other_RatingLevel, String, String, Double, Integer, Integer, API_ResultHandler)}.
      */
-    public void rate(Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+    public void rate(Object_Tag.Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
         Preferabli.main().rateProduct(product_id, year, rating, location, notes, price, quantity, format_ml, handler);
+    }
+
+
+    /**
+     * See {@link Preferabli#wishlistProduct(long, int, String, String, Double, Integer, Integer, API_ResultHandler)}.
+     */
+    public void toggleWishlist(API_ResultHandler<Object_Product> handler) {
+        if (isOnWishlist()) {
+            Preferabli.main().deleteTag(getId(), handler);
+        } else {
+            Preferabli.main().wishlistProduct(product_id, getYear(), null, null, null, null, null, handler);
+        }
     }
 
     /**

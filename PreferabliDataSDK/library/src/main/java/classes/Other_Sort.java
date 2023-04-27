@@ -8,6 +8,9 @@
 
 package classes;
 
+/**
+ * Used for sorting everything from products to collections.
+ */
 public class Other_Sort {
 
     private SortType type;
@@ -34,6 +37,9 @@ public class Other_Sort {
         return type;
     }
 
+    /**
+     * The type of sort to be applied.
+     */
     public enum SortType {
         PRICE,
         DATE,

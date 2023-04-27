@@ -69,6 +69,10 @@ public class Object_Collection extends Object_BaseObject {
         return Other_CollectionType.getCollectionTypeBasedOffCollection(this);
     }
 
+    Object_Media getPrimaryImage() {
+        return primary_image;
+    }
+
     public boolean isArchived() {
         return archived;
     }
@@ -737,5 +741,27 @@ public class Object_Collection extends Object_BaseObject {
             @Override
             public Object_CollectionTrait[] newArray(int size) {return new Object_CollectionTrait[size];}
         };
+    }
+
+    /**
+     * The type of a {@link Object_Collection}.
+     */
+    public enum Other_CollectionType {
+        EVENT,
+        INVENTORY,
+        CELLAR,
+        OTHER;
+
+        public static Other_CollectionType getCollectionTypeBasedOffCollection(Object_Collection collection) {
+            if (collection.isMyCellar()) {
+                return CELLAR;
+            } else if (collection.isEvent()) {
+                return EVENT;
+            } else if (collection.isInventory()) {
+                return INVENTORY;
+            }
+
+            return OTHER;
+        }
     }
 }

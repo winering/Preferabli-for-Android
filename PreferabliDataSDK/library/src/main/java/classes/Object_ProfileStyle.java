@@ -51,11 +51,11 @@ public class Object_ProfileStyle extends Object_BaseObject {
     }
 
     /**
-     * The {@link Other_RatingLevel} of a specific profile style.
+     * The {@link Object_Tag.Other_RatingLevel} of a specific profile style.
      * @return the rating level.
      */
-    public Other_RatingLevel getRatingLevel() {
-        return Other_RatingLevel.getRatingLevelBasedOffTagValue(Integer.toString(rating));
+    public Object_Tag.Other_RatingLevel getRatingLevel() {
+        return Object_Tag.Other_RatingLevel.getRatingLevelBasedOffTagValue(Integer.toString(rating));
     }
 
     public void setStyle(Object_Style style) {
@@ -70,7 +70,7 @@ public class Object_ProfileStyle extends Object_BaseObject {
         return order_profile;
     }
 
-    public Other_ProductType getProductType() {
+    public Object_Product.Other_ProductType getProductType() {
         return style.getProductType();
     }
 
@@ -125,7 +125,7 @@ public class Object_ProfileStyle extends Object_BaseObject {
      * @return true if unappealing.
      */
     public boolean isUnappealing() {
-        return getRatingLevel() == Other_RatingLevel.DISLIKE || getRatingLevel() == Other_RatingLevel.SOSO;
+        return getRatingLevel() == Object_Tag.Other_RatingLevel.DISLIKE || getRatingLevel() == Object_Tag.Other_RatingLevel.SOSO;
     }
 
     /**
@@ -133,7 +133,7 @@ public class Object_ProfileStyle extends Object_BaseObject {
      * @return true if appealing.
      */
     public boolean isAppealing() {
-        return getRatingLevel() == Other_RatingLevel.LOVE || getRatingLevel() == Other_RatingLevel.LIKE;
+        return getRatingLevel() == Object_Tag.Other_RatingLevel.LOVE || getRatingLevel() == Object_Tag.Other_RatingLevel.LIKE;
     }
 
     @Override

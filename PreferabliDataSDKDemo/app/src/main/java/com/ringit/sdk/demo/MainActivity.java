@@ -5,6 +5,9 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
@@ -33,20 +36,18 @@ import classes.API_ResultHandler;
 import classes.Object_Customer;
 import classes.Object_Food;
 import classes.Object_GuidedRec;
-import classes.Object_LabelRecResult;
 import classes.Object_LabelRecResults;
 import classes.Object_PreferabliUser;
+import classes.Object_PreferenceData;
 import classes.Object_Product;
 import classes.Object_Profile;
 import classes.Object_Recommendation;
+import classes.Object_Tag;
 import classes.Object_Variant;
 import classes.Object_WhereToBuy;
-import classes.Other_ProductCategory;
-import classes.Other_ProductType;
-import classes.Other_RatingType;
 import classes.Preferabli;
 
-public class MainActivity extends Activity implements RecyclerViewAdapter.LongClickListener, AdapterView.OnItemSelectedListener {
+public class MainActivity extends Activity implements RecyclerViewAdapter.ShouldWeShowListener, AdapterView.OnItemSelectedListener {
 
     private ImageView preferabliLogo;
     private TextView second;
@@ -88,6 +89,7 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
         authenticatedActions.setOnItemSelectedListener(this);
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        registerForContextMenu(recyclerView);
         adapter = new RecyclerViewAdapter(this, this);
         recyclerView.setAdapter(adapter);
 
@@ -114,9 +116,8 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
             password.setVisibility(customer ? View.GONE : View.VISIBLE);
             email.setHint(customer ? "Customer ID (Email or Phone)" : "Preferabli User Email");
             submit.setText("SUBMIT");
-            second.setText("To unlock additional actions, link a customer or login an existing Preferabli user...");
-            customerButton.setText(customer ? "Link a Customer" : "Preferabli User Login");
-            customerButton.setVisibility(View.VISIBLE);
+            second.setText("To unlock additional actions, link a customer...");
+            customerButton.setVisibility(View.GONE);
             authenticatedActions.setVisibility(View.GONE);
         }
     }
@@ -224,7 +225,7 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
         Preferabli.main().labelRecognition(getExampleAsFile(), true, new API_ResultHandler<Object_LabelRecResults>() {
             @Override
             public void onSuccess(Object_LabelRecResults results) {
-                ArrayList<Object_LabelRecResult> data = results.getResults();
+                ArrayList<Object_LabelRecResults.Object_LabelRecResult> data = results.getResults();
                 products = new ArrayList<>(data.stream().map(x -> x.getProduct()).collect(Collectors.toList()));
                 items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
                 adapter.updateData(items);
@@ -337,7 +338,7 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
     public void getRecs() {
         showLoadingView();
 
-        Preferabli.main().getRecs(Other_ProductCategory.WINE, Other_ProductType.RED, Preferabli.PRIMARY_INVENTORY_ID, null, null, null, null, null, new API_ResultHandler<Object_Recommendation>() {
+        Preferabli.main().getRecs(Object_Product.Other_ProductCategory.WINE, Object_Product.Other_ProductType.RED, Preferabli.PRIMARY_INVENTORY_ID, null, null, null, null, null, new API_ResultHandler<Object_Recommendation>() {
             @Override
             public void onSuccess(Object_Recommendation data) {
                 products = data.getProducts();
@@ -442,7 +443,7 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
     public void rateProduct() {
         showLoadingView();
 
-        Preferabli.main().rateProduct(11263, Object_Variant.CURRENT_VARIANT_YEAR, Other_RatingType.SOSO, null, null, null, null, null, new API_ResultHandler<Object_Product>() {
+        Preferabli.main().rateProduct(11263, Object_Variant.CURRENT_VARIANT_YEAR, Object_Tag.Other_RatingLevel.SOSO, null, null, null, null, null, new API_ResultHandler<Object_Product>() {
             @Override
             public void onSuccess(Object_Product data) {
                 products.clear();
@@ -535,11 +536,6 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
     }
 
     @Override
-    public void onItemLongClick(View view, int position) {
-
-    }
-
-    @Override
     public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
         if (adapterView == authenticatedActions) {
             if (i == 1) {
@@ -577,5 +573,113 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.LongCl
     @Override
     public void onNothingSelected(AdapterView<?> adapterView) {
         // do nothing
+    }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+        int position = item.getGroupId();
+        Object_Product product = products.get(position);
+
+        switch (item.getItemId()) {
+            case R.id.wtb:
+                showLoadingView();
+                product.whereToBuy(null, null, null, new API_ResultHandler<Object_WhereToBuy>() {
+                    @Override
+                    public void onSuccess(Object_WhereToBuy data) {
+                        products.clear();
+                        if (data.getLinks().size() > 0) {
+                            items = new ArrayList<>(data.getLinks().stream().map(x -> x.getProductName()).collect(Collectors.toList()));
+                        } else {
+                            items = new ArrayList<>(data.getVenues().stream().map(x -> x.getName()).collect(Collectors.toList()));
+                        }
+                        adapter.updateData(items);
+                        hideLoadingView();
+                        handleViews();
+                    }
+
+                    @Override
+                    public void onFailure(API_PreferabliException e) {
+                        hideLoadingView();
+                        showSnackbar(e.getMessage());
+                    }
+                });
+
+                return true;
+            case R.id.wishlist:
+                // nada
+
+                return true;
+            case R.id.rate:
+                showLoadingView();
+                product.rate(Object_Tag.Other_RatingLevel.SOSO, null, null, null, null, null, new API_ResultHandler<Object_Product>() {
+                    @Override
+                    public void onSuccess(Object_Product data) {
+                        products.clear();
+                        products.add(data);
+                        items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                        adapter.updateData(items);
+                        hideLoadingView();
+                        handleViews();
+                    }
+
+                    @Override
+                    public void onFailure(API_PreferabliException e) {
+                        hideLoadingView();
+                        showSnackbar(e.getMessage());
+                    }
+                });
+                return true;
+            case R.id.lttt:
+                showLoadingView();
+                product.lttt(null, null, new API_ResultHandler<ArrayList<Object_Product>>() {
+                    @Override
+                    public void onSuccess(ArrayList<Object_Product> data) {
+                        products = data;
+                        items = new ArrayList<>(products.stream().map(x -> x.getName()).collect(Collectors.toList()));
+                        adapter.updateData(items);
+                        hideLoadingView();
+                        handleViews();
+                    }
+
+                    @Override
+                    public void onFailure(API_PreferabliException e) {
+                        hideLoadingView();
+                        showSnackbar(e.getMessage());
+                    }
+                });
+                return true;
+            case R.id.score:
+                showLoadingView();
+                product.getPreferabliScore(new API_ResultHandler<Object_PreferenceData>() {
+                    @Override
+                    public void onSuccess(Object_PreferenceData data) {
+                        products.clear();
+                        items = new ArrayList<>();
+                        items.add(data.toString());
+
+                        adapter.updateData(items);
+                        hideLoadingView();
+                        handleViews();
+                    }
+
+                    @Override
+                    public void onFailure(API_PreferabliException e) {
+                        hideLoadingView();
+                        showSnackbar(e.getMessage());
+                    }
+                });
+                return true;
+            default:
+                return super.onContextItemSelected(item);
+        }
+    }
+
+    @Override
+    public boolean shouldWeShow(int position) {
+        if (products.size() > 0 && products.size() > position) {
+            return true;
+        }
+        return false;
     }
 }

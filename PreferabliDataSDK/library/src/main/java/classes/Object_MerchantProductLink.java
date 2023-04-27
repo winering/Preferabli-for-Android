@@ -10,7 +10,6 @@ package classes;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.preference.PreferenceDataStore;
 
 import java.io.Serializable;
 import java.text.DecimalFormat;
@@ -237,9 +236,9 @@ public class Object_MerchantProductLink extends Object_BaseObject {
     }
 
     /**
-     * See {@link Preferabli#rateProduct(long, int, Other_RatingLevel, String, String, Double, Integer, Integer, API_ResultHandler)}.
+     * See {@link Preferabli#rateProduct(long, int, Object_Tag.Other_RatingLevel, String, String, Double, Integer, Integer, API_ResultHandler)}.
      */
-    public void rate(Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+    public void rate(Object_Tag.Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
         if (product_id != null) {
             if (variant_year == null) {
                 variant_year = Object_Variant.CURRENT_VARIANT_YEAR;

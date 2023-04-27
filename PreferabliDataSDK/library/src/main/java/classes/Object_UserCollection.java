@@ -11,7 +11,12 @@ package classes;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-public class Object_UserCollection extends Object_BaseObject {
+import java.util.Collection;
+
+/**
+ * Internal class used for connecting collections to users.
+ */
+class Object_UserCollection extends Object_BaseObject {
     private String created_at;
     private String updated_at;
     private String archived_at;
@@ -23,7 +28,7 @@ public class Object_UserCollection extends Object_BaseObject {
     private String relationship_type;
     private Object_Collection collection;
 
-    public Object_UserCollection(long id, String created_at, String updated_at, String archived_at, long collection_id, boolean is_admin, boolean is_editor, boolean is_pinned, boolean is_viewer, String relationship_type) {
+    Object_UserCollection(long id, String created_at, String updated_at, String archived_at, long collection_id, boolean is_admin, boolean is_editor, boolean is_pinned, boolean is_viewer, String relationship_type) {
         super(id);
         this.created_at = created_at;
         this.updated_at = updated_at;
@@ -36,65 +41,41 @@ public class Object_UserCollection extends Object_BaseObject {
         this.relationship_type = relationship_type;
     }
 
-    public void setCollection(Object_Collection collection) {
-        this.collection = collection;
-    }
-
-    public String getCreated_at() {
+    String getCreatedAt() {
         return created_at;
     }
 
-    public String getUpdated_at() {
+    String getUpdatedAt() {
         return updated_at;
     }
 
-    public String getArchived_at() {
+    String getArchivedAt() {
         return archived_at;
     }
 
-    public long getCollectionId() {
+    long getCollectionId() {
         return collection_id;
     }
 
-    public boolean isIs_admin() {
+    boolean isAdmin() {
         return is_admin;
     }
 
-    public boolean isIs_editor() {
+    boolean isEditor() {
         return is_editor;
     }
 
-    public boolean isIs_pinned() {
+    boolean isPinned() {
         return is_pinned;
     }
 
-    public boolean isIs_viewer() {
+    boolean isViewer() {
         return is_viewer;
     }
 
-    public void setIs_admin(boolean is_admin) {
-        this.is_admin = is_admin;
-    }
 
-    public void setIs_editor(boolean is_editor) {
-        this.is_editor = is_editor;
-    }
-
-    public void setIs_viewer(boolean is_viewer) {
-        this.is_viewer = is_viewer;
-    }
-
-    public String getRelationship_type() {
+    public String getRelationshipType() {
         return relationship_type;
-    }
-
-    public Object_Collection getCollection() {
-        return collection;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
     }
 
     @Override
@@ -111,9 +92,6 @@ public class Object_UserCollection extends Object_BaseObject {
         dest.writeString(this.relationship_type);
     }
 
-    public Object_UserCollection() {
-    }
-
     protected Object_UserCollection(Parcel in) {
         super(in);
         this.created_at = in.readString();
@@ -125,6 +103,14 @@ public class Object_UserCollection extends Object_BaseObject {
         this.is_pinned = in.readByte() != 0;
         this.is_viewer = in.readByte() != 0;
         this.relationship_type = in.readString();
+    }
+
+    Object_Collection getCollection() {
+        return collection;
+    }
+
+    void setCollection(Object_Collection collection) {
+        this.collection = collection;
     }
 
     public static final Parcelable.Creator<Object_UserCollection> CREATOR = new Parcelable.Creator<Object_UserCollection>() {

@@ -348,12 +348,12 @@ public class Preferabli {
      *
      * @param query                  your search query.
      * @param lock_to_integration    pass true if you only want to draw results from your integration. Defaults to true.
-     * @param product_categories     pass any {@link Other_ProductCategory} that you would like the results to conform to. Pass null for all results.
-     * @param product_types          pass any {@link Other_ProductType} that you would like the results to conform to. Pass null for all results.
+     * @param product_categories     pass any {@link Object_Product.Other_ProductCategory} that you would like the results to conform to. Pass null for all results.
+     * @param product_types          pass any {@link Object_Product.Other_ProductType} that you would like the results to conform to. Pass null for all results.
      * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
      * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
-    public void searchProducts(String query, Boolean lock_to_integration, ArrayList<Other_ProductCategory> product_categories, ArrayList<Other_ProductType> product_types, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+    public void searchProducts(String query, Boolean lock_to_integration, ArrayList<Object_Product.Other_ProductCategory> product_categories, ArrayList<Object_Product.Other_ProductType> product_types, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
         Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
             try {
                 canWeContinue(false);
@@ -397,7 +397,11 @@ public class Preferabli {
                         Object_Product product_from_api = Tools_Preferabli.convertJsonToObject(item.toString(), Object_Product.class);
                         Tools_Database.getInstance().updateProductTable(product_from_api);
                         Object_Product product_from_db = Tools_Database.getInstance().getProductWithId(product_from_api.getId());
-                        product_from_db.setLatestVariantNumDollarSigns(item.getAsJsonObject().get("latest_variant_num_dollar_signs").getAsInt());
+                        if (product_from_db.getMostRecentVariant() == null) {
+                            Object_Variant variant = new Object_Variant(product_from_db.getId(), Object_Variant.CURRENT_VARIANT_YEAR);
+                            variant.setNumDollarSigns(item.getAsJsonObject().get("latest_variant_num_dollar_signs").getAsInt());
+                            product_from_db.addVariant(variant);
+                        }
                         products_to_return.add(product_from_db);
                     }
                 } else {
@@ -421,7 +425,7 @@ public class Preferabli {
                         product_from_api.addVariant(variant);
 
                         Tools_Database.getInstance().updateProductTable(product_from_api);
-                        Object_Product product_from_db = new Object_Product(Tools_Database.getInstance().getProductWithId(product_from_api.getId()));
+                        Object_Product product_from_db = Tools_Database.getInstance().getProductWithId(product_from_api.getId());
                         products_to_return.add(product_from_db);
                     }
                 }
@@ -840,7 +844,7 @@ public class Preferabli {
     }
 
     /**
-     * Get the Preference Profile of the customer / user. Customer / user must be logged in to run this call.
+     * Get the Preference Profile of the customer. Customer must be logged in to run this call.
      *
      * @param force_refresh pass true if you want to force a refresh from the API and wait for the results to return. Otherwise, the call will load locally if available and run a background refresh only if one has not been initiated in the past 5 minutes. Defaults to false.
      * @param handler       returns {@link Object_Profile} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
@@ -906,13 +910,13 @@ public class Preferabli {
         HashMap<Long, Object_ProfileStyle> styleMap = new HashMap<>();
         for (Object_ProfileStyle objectProfileStyle : profile.getProfileStyles()) {
             if (Tools_Preferabli.isForceRefresh(force_refresh)) {
-                style_ids.add(objectProfileStyle.getStyle_id());
-                styleMap.put(objectProfileStyle.getStyle_id(), objectProfileStyle);
+                style_ids.add(objectProfileStyle.getStyleId());
+                styleMap.put(objectProfileStyle.getStyleId(), objectProfileStyle);
             } else {
                 Object_ProfileStyle objectProfileStyleFromDB = Tools_Database.getInstance().getStyleById(objectProfileStyle.getId());
                 if (objectProfileStyleFromDB == null || objectProfileStyleFromDB.getStyle() == null) {
-                    style_ids.add(objectProfileStyle.getStyle_id());
-                    styleMap.put(objectProfileStyle.getStyle_id(), objectProfileStyle);
+                    style_ids.add(objectProfileStyle.getStyleId());
+                    styleMap.put(objectProfileStyle.getStyleId(), objectProfileStyle);
                 }
             }
         }
@@ -1270,11 +1274,11 @@ public class Preferabli {
     }
 
     /**
-     * Rate a {@link Object_Product}. Creates a {@link Object_Tag} of type {@link Other_TagType#RATING} which is returned within the relevant product {@link Object_Variant}. Customer / user must be logged in to run this call.
+     * Rate a {@link Object_Product}. Creates a {@link Object_Tag} of type {@link Object_Tag.Other_TagType#RATING} which is returned within the relevant product {@link Object_Variant}. Customer must be logged in to run this call.
      *
      * @param product_id id of the starting {@link Object_Product}. Only pass a Preferabli product id. If necessary, call {@link Preferabli#getPreferabliProductId(String, String, API_ResultHandler)} to convert your product id into a Preferabli product id.
      * @param year       year of the {@link Object_Variant} that you want to rate. Can use {@link Object_Variant#CURRENT_VARIANT_YEAR} if you want to rate the latest variant, or {@link Object_Variant#NON_VARIANT} if the product is not vintaged.
-     * @param rating     pass one of {@link Other_RatingLevel#LOVE}, {@link Other_RatingLevel#LIKE}, {@link Other_RatingLevel#SOSO}, {@link Other_RatingLevel#DISLIKE}.
+     * @param rating     pass one of {@link Object_Tag.Other_RatingLevel#LOVE}, {@link Object_Tag.Other_RatingLevel#LIKE}, {@link Object_Tag.Other_RatingLevel#SOSO}, {@link Object_Tag.Other_RatingLevel#DISLIKE}.
      * @param location   location where the rating occurred. Defaults to null.
      * @param notes      any notes to go along with the rating. Defaults to null.
      * @param price      price of the product rated. Defaults to null.
@@ -1282,15 +1286,15 @@ public class Preferabli {
      * @param format_ml  size of the product rated. Defaults to null.
      * @param handler    returns {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
-    public void rateProduct(long product_id, int year, Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+    public void rateProduct(long product_id, int year, Object_Tag.Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
         Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
-            createTagActual(product_id, year, Tools_Preferabli.getKeyStore().getLong("ratings_id", 0), rating.getValue(), Other_TagType.RATING, location, notes, price, quantity, format_ml, handler);
+            createTagActual(product_id, year, Tools_Preferabli.getKeyStore().getLong("ratings_id", 0), rating.getValue(), Object_Tag.Other_TagType.RATING, location, notes, price, quantity, format_ml, handler);
             Tools_Preferabli.createAnalyticsPost("rate_product");
         });
     }
 
     /**
-     * Wishlist a {@link Object_Product}. Creates a {@link Object_Tag} of type {@link Other_TagType#WISHLIST} which is returned within the relevant product {@link Object_Variant}. Customer / user must be logged in to run this call.
+     * Wishlist a {@link Object_Product}. Creates a {@link Object_Tag} of type {@link Object_Tag.Other_TagType#WISHLIST} which is returned within the relevant product {@link Object_Variant}. Customer must be logged in to run this call.
      *
      * @param product_id id of the starting {@link Object_Product}. Only pass a Preferabli product id. If necessary, call {@link Preferabli#getPreferabliProductId(String, String, API_ResultHandler)} to convert your product id into a Preferabli product id.
      * @param year       year of the {@link Object_Variant} that you want to wishlist. Can use {@link Object_Variant#CURRENT_VARIANT_YEAR} if you want to wishlist the latest variant, or {@link Object_Variant#NON_VARIANT} if the product is not vintaged.
@@ -1303,12 +1307,12 @@ public class Preferabli {
      */
     public void wishlistProduct(long product_id, int year, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
         Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
-            createTagActual(product_id, year, Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0), null, Other_TagType.WISHLIST, location, notes, price, quantity, format_ml, handler);
+            createTagActual(product_id, year, Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0), null, Object_Tag.Other_TagType.WISHLIST, location, notes, price, quantity, format_ml, handler);
             Tools_Preferabli.createAnalyticsPost("wishlist_product");
         });
     }
 
-    private void createTagActual(long product_id, int year, long collection_id, String value, Other_TagType tag_type, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+    private void createTagActual(long product_id, int year, long collection_id, String value, Object_Tag.Other_TagType tag_type, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
         try {
             canWeContinue(true);
 
@@ -1325,7 +1329,7 @@ public class Preferabli {
             dictionary.addProperty("collection_id", collection_id);
 
             Response<Object_Tag> tagResponse;
-            if (tag_type == Other_TagType.CELLAR) {
+            if (tag_type == Object_Tag.Other_TagType.CELLAR) {
                 tagResponse = api.createCollectionTag(collection_id, dictionary).execute();
             } else if (Preferabli.isPreferabliUserLoggedIn()) {
                 tagResponse = api.createTag(Tools_Preferabli.getPreferabliUserId(), dictionary).execute();
@@ -1388,9 +1392,9 @@ public class Preferabli {
      * Edit an existing {@link Object_Tag}.
      *
      * @param tag_id    id of the {@link Object_Tag} that needs to be edited.
-     * @param tag_type  type of the {@link Object_Tag} you wish to edit. This value is not editable. Can be either {@link Other_TagType#RATING}, {@link Other_TagType#CELLAR}, {@link Other_TagType#PURCHASE}, or {@link Other_TagType#WISHLIST}.
+     * @param tag_type  type of the {@link Object_Tag} you wish to edit. This value is not editable. Can be either {@link Object_Tag.Other_TagType#RATING}, {@link Object_Tag.Other_TagType#CELLAR}, {@link Object_Tag.Other_TagType#PURCHASE}, or {@link Object_Tag.Other_TagType#WISHLIST}.
      * @param year      year of the {@link Object_Variant}. Can use {@link Object_Variant#CURRENT_VARIANT_YEAR} if you want the latest variant, or {@link Object_Variant#NON_VARIANT} if the product is not vintaged.
-     * @param rating    pass one of {@link Other_RatingLevel#LOVE}, {@link Other_RatingLevel#LIKE}, {@link Other_RatingLevel#SOSO}, {@link Other_RatingLevel#DISLIKE}. Pass {@link Other_RatingLevel#NONE} is not a rating. Defaults to {@link Other_RatingLevel#NONE}.
+     * @param rating    pass one of {@link Object_Tag.Other_RatingLevel#LOVE}, {@link Object_Tag.Other_RatingLevel#LIKE}, {@link Object_Tag.Other_RatingLevel#SOSO}, {@link Object_Tag.Other_RatingLevel#DISLIKE}. Pass {@link Object_Tag.Other_RatingLevel#NONE} is not a rating. Defaults to {@link Object_Tag.Other_RatingLevel#NONE}.
      * @param location  location of the tag. Defaults to null.
      * @param notes     any notes to go along with the tag. Defaults to null.
      * @param price     price of the product tagged. Defaults to null.
@@ -1398,7 +1402,7 @@ public class Preferabli {
      * @param format_ml size of the product tagged in milliliters. Defaults to null.
      * @param handler   returns {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
-    public void editTag(long tag_id, Other_TagType tag_type, int year, Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+    public void editTag(long tag_id, Object_Tag.Other_TagType tag_type, int year, Object_Tag.Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
         Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
             try {
                 canWeContinue(true);
@@ -1416,9 +1420,9 @@ public class Preferabli {
                 Response<Object_Tag> tagResponse;
                 if (isPreferabliUserLoggedIn()) {
                     long collection_id;
-                    if (tag_type == Other_TagType.RATING) {
+                    if (tag_type == Object_Tag.Other_TagType.RATING) {
                         collection_id = Tools_Preferabli.getKeyStore().getLong("ratings_id", 0);
-                    } else if (tag_type == Other_TagType.WISHLIST) {
+                    } else if (tag_type == Object_Tag.Other_TagType.WISHLIST) {
                         collection_id = Tools_Preferabli.getKeyStore().getLong("wishlist_id", 0);
                     } else {
                         return;
@@ -1524,17 +1528,17 @@ public class Preferabli {
 
     /**
      * Get a personalized, preference based recommendation for a customer / Preferabli user.
-     * @param product_category pass a {@link Other_ProductCategory} that you would like the results to conform to.
-     * @param product_type pass a {@link Other_ProductType} that you would like the results to conform to. Pass {@link Other_ProductType#OTHER} if {@link Other_ProductCategory} is not set  to {@link Other_ProductCategory#WINE}. If {@link Other_ProductCategory#WINE} is passed, a type of wine must be passed here.
+     * @param product_category pass a {@link Object_Product.Other_ProductCategory} that you would like the results to conform to.
+     * @param product_type pass a {@link Object_Product.Other_ProductType} that you would like the results to conform to. Pass {@link Object_Product.Other_ProductType#OTHER} if {@link Object_Product.Other_ProductCategory} is not set  to {@link Object_Product.Other_ProductCategory#WINE}. If {@link Object_Product.Other_ProductCategory#WINE} is passed, a type of wine must be passed here.
      * @param collection_id the id of a specific {@link Object_Collection} that you want to draw results from. Pass {@link Preferabli#PRIMARY_INVENTORY_ID} for results from your primary collection. Pass null for results from anywhere.
      * @param price_min pass if you want to lock results to a minimum price. Defaults to null.
      * @param price_max pass if you want to lock results to a maximum price. Defaults to null.
      * @param style_ids an array of {@link Object_Style} ids that you want to constrain results to. Get available styles from {@link Preferabli#getProfile(Boolean, API_ResultHandler)}. Defaults to null.
-     * @param food_ids an array of {@link Object_Food} ids that should pair with the recommendation. Get available foods from {@link Preferabli#getFoods(Boolean, API_ResultHandler)}. Defaults to null.
+     * @param food_ids an array of {@link Object_Food} ids that should pair with the recommendation. Get available foods from {@link Preferabli#getFoods(API_ResultHandler)}. Defaults to null.
      * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
      * @param handler returns {@link Object_Recommendation} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
-    public void getRecs(Other_ProductCategory product_category, Other_ProductType product_type, Long collection_id, Integer price_min, Integer price_max, ArrayList<Long> style_ids, ArrayList<Long> food_ids, Boolean include_merchant_links, API_ResultHandler<Object_Recommendation> handler) {
+    public void getRecs(Object_Product.Other_ProductCategory product_category, Object_Product.Other_ProductType product_type, Long collection_id, Integer price_min, Integer price_max, ArrayList<Long> style_ids, ArrayList<Long> food_ids, Boolean include_merchant_links, API_ResultHandler<Object_Recommendation> handler) {
         Tools_Preferabli.startNewWorkThread(PRIORITY_HIGH, () -> {
             try {
                 canWeContinue(true);
@@ -1558,7 +1562,7 @@ public class Preferabli {
 
                 JsonObject typeObject = new JsonObject();
                 JsonArray types = new JsonArray();
-                types.add(product_type != Other_ProductType.OTHER ? product_type.getName() : product_category.getName());
+                types.add(product_type != Object_Product.Other_ProductType.OTHER ? product_type.getName() : product_category.getName());
                 typeObject.addProperty("type", "types");
                 typeObject.add("values", types);
                 constraints.add(typeObject);
@@ -1705,7 +1709,7 @@ public class Preferabli {
     }
 
     /**
-     * Get a list of foods to choose from to be used in {@link Preferabli#getRecs(Other_ProductCategory, Other_ProductType, Long, Integer, Integer, ArrayList, ArrayList, Boolean, API_ResultHandler)}.
+     * Get a list of foods to choose from to be used in {@link Preferabli#getRecs(Object_Product.Other_ProductCategory, Object_Product.Other_ProductType, Long, Integer, Integer, ArrayList, ArrayList, Boolean, API_ResultHandler)}.
      *
      * @param handler       returns an array of {@link Object_Food} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */

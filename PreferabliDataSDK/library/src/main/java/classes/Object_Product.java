@@ -40,7 +40,7 @@ public class Object_Product extends Object_BaseObject {
 
     // we will generate this only one time.
     private transient String price;
-    private transient Other_RatingLevel rating_level;
+    private transient Object_Tag.Other_RatingLevel rating_level;
     private transient Object_Variant most_recent_variant;
     private transient Object_Tag most_recent_rating;
     private transient Object_Tag wishlist_tag;
@@ -72,6 +72,18 @@ public class Object_Product extends Object_BaseObject {
         this.hash = hash;
     }
 
+    void setName(String name) {
+        this.name = name;
+    }
+
+    void setType(String type) {
+        this.type = type;
+    }
+
+    void setCategory(String category) {
+        this.category = category;
+    }
+
     public String getHash() {
         return hash;
     }
@@ -101,10 +113,10 @@ public class Object_Product extends Object_BaseObject {
         purchase_tags = new HashSet<>();
         for (Object_Variant variant : getVariants()) {
             for (Object_Tag tag : variant.getTags()) {
-                if (tag.isRating()) rating_tags.add(tag);
-                else if (tag.isWishlist()) wishlist_tag = tag;
-                else if (tag.isCollection()) cellar_tags.add(tag);
-                else if (tag.isPurchase()) purchase_tags.add(tag);
+                if (tag.getTagType() == Object_Tag.Other_TagType.RATING) rating_tags.add(tag);
+                else if (tag.getTagType() == Object_Tag.Other_TagType.WISHLIST) wishlist_tag = tag;
+                else if (tag.getTagType() == Object_Tag.Other_TagType.CELLAR) cellar_tags.add(tag);
+                else if (tag.getTagType() == Object_Tag.Other_TagType.PURCHASE) purchase_tags.add(tag);
             }
         }
     }
@@ -130,7 +142,7 @@ public class Object_Product extends Object_BaseObject {
     }
 
     /**
-     * All of the product tags of type {@link Other_TagType#RATING} for the current user.
+     * All of the product tags of type {@link Object_Tag.Other_TagType#RATING} for the current user.
      *
      * @return an array of tags.
      */
@@ -140,7 +152,7 @@ public class Object_Product extends Object_BaseObject {
     }
 
     /**
-     * All of the product tags of type {@link Other_TagType#CELLAR} for the current user.
+     * All of the product tags of type {@link Object_Tag.Other_TagType#CELLAR} for the current user.
      *
      * @return an array of tags.
      */
@@ -150,7 +162,7 @@ public class Object_Product extends Object_BaseObject {
     }
 
     /**
-     * All of the product tags of type {@link Other_TagType#PURCHASE} for the current user.
+     * All of the product tags of type {@link Object_Tag.Other_TagType#PURCHASE} for the current user.
      *
      * @return an array of tags.
      */
@@ -328,7 +340,7 @@ public class Object_Product extends Object_BaseObject {
             }
 
             if (most_recent_variant == null) {
-                most_recent_variant = new Object_Variant(getId(), -1);
+                most_recent_variant = new Object_Variant(getId(), Object_Variant.CURRENT_VARIANT_YEAR);
             }
         }
 
@@ -337,7 +349,7 @@ public class Object_Product extends Object_BaseObject {
     }
 
     /**
-     * The most recent product tag of type {@link Other_TagType#RATING} for the current user.
+     * The most recent product tag of type {@link Object_Tag.Other_TagType#RATING} for the current user.
      *
      * @return a tag.
      */
@@ -357,7 +369,7 @@ public class Object_Product extends Object_BaseObject {
     }
 
     /**
-     * The first instance within the product of tag type {@link Other_TagType#WISHLIST} for the current user.
+     * The first instance within the product of tag type {@link Object_Tag.Other_TagType#WISHLIST} for the current user.
      *
      * @return a tag.
      */
@@ -367,15 +379,15 @@ public class Object_Product extends Object_BaseObject {
     }
 
     /**
-     * The {@link Other_RatingLevel} of the most recent rating of a specific product for the current user.
+     * The {@link Object_Tag.Other_RatingLevel} of the most recent rating of a specific product for the current user.
      *
      * @return rating level.
      */
-    public Other_RatingLevel getRatingLevel() {
-        if (getMostRecentRating() == null) return Other_RatingLevel.NONE;
+    public Object_Tag.Other_RatingLevel getRatingLevel() {
+        if (getMostRecentRating() == null) return Object_Tag.Other_RatingLevel.NONE;
         else if (rating_level == null) {
             Object_Tag tag = getMostRecentRating();
-            rating_level = Other_RatingLevel.getRatingLevelBasedOffTagValue(tag.getValue());
+            rating_level = Object_Tag.Other_RatingLevel.getRatingLevelBasedOffTagValue(tag.getValue());
         }
 
         return rating_level;
@@ -457,10 +469,24 @@ public class Object_Product extends Object_BaseObject {
     }
 
     /**
-     * See {@link Preferabli#rateProduct(long, int, Other_RatingLevel, String, String, Double, Integer, Integer, API_ResultHandler)}.
+     * See {@link Preferabli#rateProduct(long, int, Object_Tag.Other_RatingLevel, String, String, Double, Integer, Integer, API_ResultHandler)}.
      */
-    public void rate(Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
+    public void rate(Object_Tag.Other_RatingLevel rating, String location, String notes, Double price, Integer quantity, Integer format_ml, API_ResultHandler<Object_Product> handler) {
         getMostRecentVariant().rate(rating, location, notes, price, quantity, format_ml, handler);
+    }
+
+    /**
+     * See {@link Preferabli#wishlistProduct(long, int, String, String, Double, Integer, Integer, API_ResultHandler)}.
+     */
+    public void toggleWishlist(API_ResultHandler<Object_Product> handler) {
+        Object_Tag tag = getWishlistTag();
+        Object_Variant variant = getMostRecentVariant();
+
+        if (tag != null) {
+            variant = tag.getVariant();
+        }
+
+        variant.toggleWishlist(handler);
     }
 
     /**
@@ -475,5 +501,82 @@ public class Object_Product extends Object_BaseObject {
      */
     public void getPreferabliScore(API_ResultHandler<Object_PreferenceData> handler) {
         getMostRecentVariant().getPreferabliScore(handler);
+    }
+
+    /**
+     * The recognized type of a {@link Object_Product}. At this time, non-wine products use the type {@link Other_ProductType#OTHER}.
+     */
+    public enum Other_ProductType {
+        RED("red"),
+        WHITE("white"),
+        ROSE("rosé"),
+        SPARKLING("sparkling"),
+        FORTIFIED("fortified"),
+        OTHER("other");
+
+        private String name;
+
+        Other_ProductType(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public static Other_ProductType getProductTypeFromString(String wineType) {
+            if (Tools_Preferabli.isNullOrWhitespace(wineType)) {
+                return OTHER;
+            } else if (wineType.equalsIgnoreCase("red")) {
+                return RED;
+            } else if (wineType.equalsIgnoreCase("white")) {
+                return WHITE;
+            } else if (wineType.equalsIgnoreCase("rosé")) {
+                return ROSE;
+            } else if (wineType.equalsIgnoreCase("fortified")) {
+                return FORTIFIED;
+            } else if (wineType.equalsIgnoreCase("sparkling")) {
+                return SPARKLING;
+            }
+
+            return OTHER;
+        }
+    }
+
+    /**
+     * The category of a {@link Object_Product}.
+     */
+    public enum Other_ProductCategory {
+        WHISKEY("whiskey"),
+        MEZCAL("tequila"),
+        BEER("beer"),
+        WINE("wine"),
+        NONE("");
+
+        private String name;
+
+        Other_ProductCategory(String name) {
+            this.name = name;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public static Other_ProductCategory getProductCategoryFromString(String category) {
+            if (Tools_Preferabli.isNullOrWhitespace(category)) {
+                return NONE;
+            } else if (category.equalsIgnoreCase("whiskey")) {
+                return WHISKEY;
+            } else if (category.equalsIgnoreCase("tequila")) {
+                return MEZCAL;
+            } else if (category.equalsIgnoreCase("beer")) {
+                return BEER;
+            } else if (category.equalsIgnoreCase("wine")) {
+                return WINE;
+            }
+
+            return NONE;
+        }
     }
 }

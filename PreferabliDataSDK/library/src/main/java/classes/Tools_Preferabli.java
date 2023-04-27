@@ -243,7 +243,7 @@ class Tools_Preferabli {
         SharedPreferences.Editor editor = Tools_Preferabli.getKeyStore().edit();
         editor.putLong("user_id", user.getId());
         editor.putString("display_name", user.getDisplayName());
-        editor.putString("avatar", user.getAvatar());
+        editor.putString("avatar", user.getAvatar().getPath());
         editor.putString("firstName", user.getFirstName());
         editor.putString("lastName", user.getLastName());
         editor.putString("country", user.getCountry());
@@ -254,9 +254,9 @@ class Tools_Preferabli {
         editor.putString("zipCode", user.getZipCode());
         editor.putBoolean("subscribed", user.isSubscribed());
         editor.putBoolean("isTeamRingIT", user.isTeamRingIT());
-        editor.putString("intercom_hmac", user.getIntercom_hmac());
-        editor.putLong("ratings_id", user.getRating_collection_id());
-        editor.putLong("wishlist_id", user.getWishlist_collection_id());
+        editor.putString("intercom_hmac", user.getIntercomHmac());
+        editor.putLong("ratings_id", user.getRatingCollectionId());
+        editor.putLong("wishlist_id", user.getWishlistCollectionId());
         editor.apply();
     }
 
@@ -303,7 +303,6 @@ class Tools_Preferabli {
         Tools_Preferabli.getKeyStore().edit().clear().apply();
         Tools_PreferabliUser.getInstance().clearData();
         Tools_LoadCollection.getInstance().clearData();
-        Tools_Preferences.getInstance().clearData();
 
         Tools_Preferabli.getKeyStore().edit().putLong("INTEGRATION_ID", integration_id).apply();
         Tools_Preferabli.getKeyStore().edit().putString("CLIENT_INTERFACE", client_interface).apply();

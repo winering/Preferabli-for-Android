@@ -8,6 +8,9 @@
 
 package classes;
 
+/**
+ * Used to sort within {@link Preferabli#whereToBuy(long, Other_FulfillSort, Boolean, Boolean, API_ResultHandler)}.
+ */
 public class Other_FulfillSort extends Other_Sort {
 
     private boolean shipping;
@@ -15,6 +18,9 @@ public class Other_FulfillSort extends Other_Sort {
     private boolean pickup;
     private int variant_year;
     private int distance_miles;
+    /**
+     * If sorting by distance, location MUST be present!
+     */
     private Object_Location location;
 
     public Other_FulfillSort(SortType type) {
@@ -70,7 +76,7 @@ public class Other_FulfillSort extends Other_Sort {
         return variant_year;
     }
 
-    public void setVariant_year(int variant_year) {
+    public void setVariantYear(int variant_year) {
         this.variant_year = variant_year;
     }
 
