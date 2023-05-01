@@ -160,6 +160,7 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.Should
                     showSnackbar(e.getMessage());
                 }
             });
+
         } else {
             Preferabli.main().loginPreferabliUser(email.getText().toString(), password.getText().toString(), new API_ResultHandler<Object_PreferabliUser>() {
                 @Override
@@ -651,7 +652,7 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.Should
                 return true;
             case R.id.score:
                 showLoadingView();
-                product.getPreferabliScore(new API_ResultHandler<Object_PreferenceData>() {
+                product.getPreferabliScore(null, new API_ResultHandler<Object_PreferenceData>() {
                     @Override
                     public void onSuccess(Object_PreferenceData data) {
                         products.clear();

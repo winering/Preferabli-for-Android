@@ -16,7 +16,11 @@ import java.util.Date;
 import java.util.HashSet;
 
 /**
- * Represents a product within the Preferabli SDK. A product may have one or more {@link Object_Variant}s stored as {@link Object_Product#variants}. To see how a product is mapped to your own object(s), see {@link Object_Variant#getMerchantLinks()}. To see a user's interaction with the product, see {@link Object_Variant#getTags()}.
+ * Represents a product (e.g., wines, beers, spirits) within the Preferabli SDK. A product may have one or more {@link Object_Variant}s stored as {@link Object_Product#variants}. A variant can have one or more {@link Object_Tag}s which are used to associate a product with a user's interaction (e.g., rating) or with a particular {@link Object_Collection}.
+ *
+ * With respect to a {@link Object_Customer}, a product return may also include {@link Object_PreferenceData} which identifies the customer's affinity for the product. See {@link Object_Variant#getPreferabliScore(Boolean, API_ResultHandler)}.
+ *
+ * To see how a product is mapped to your own object(s), see {@link Object_Variant#getMerchantLinks()}. To see a user's interaction with the product, see {@link Object_Variant#getTags()}.
  */
 public class Object_Product extends Object_BaseObject {
 
@@ -499,8 +503,8 @@ public class Object_Product extends Object_BaseObject {
     /**
      * See {@link Preferabli#getPreferabliScore(long, Integer, API_ResultHandler)}.
      */
-    public void getPreferabliScore(API_ResultHandler<Object_PreferenceData> handler) {
-        getMostRecentVariant().getPreferabliScore(handler);
+    public void getPreferabliScore(Boolean force_refresh, API_ResultHandler<Object_PreferenceData> handler) {
+        getMostRecentVariant().getPreferabliScore(force_refresh, handler);
     }
 
     /**

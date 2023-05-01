@@ -18,6 +18,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.util.Log;
 
+
 import com.ringit.datasdk.BuildConfig;
 
 import java.util.ArrayList;

@@ -19,11 +19,13 @@ import java.util.Collections;
 import java.util.Comparator;
 
 /**
- * A Collection is a selection of {@link Object_Product}, organized into one or more {@link Object_CollectionGroup}.  For example, a Collection can represent an inventory for a store or just a subset of Products, such as selection of Products that are currently on sale or a selection of private-label Products.
+ * A collection is a selection of {@link Object_Product}, organized into one or more {@link Object_CollectionGroup}.  For example, a collection can represent an inventory for a store or just a subset of products, such as selection of products that are currently on sale or a selection of private-label products.
  * <p></p>
- * In general, a Collection will be an {@link Other_CollectionType#INVENTORY} or an {@link Other_CollectionType#EVENT}. Events are temporal in nature, such as a tasting events or weekly promotions. Inventories, whether entire inventories or subsets of an inventory, are meant to change from time to time but are not specifically temporal in nature.
+ * In general, a collection will be an {@link Other_CollectionType#INVENTORY} or an {@link Other_CollectionType#EVENT}. Events are temporal in nature, such as a tasting events or weekly promotions. Inventories, whether entire inventories or subsets of an inventory, are meant to change from time to time but are not specifically temporal in nature.
  * <p></p>
  * A Collection may also be a {@link Other_CollectionType#CELLAR} type (e.g., a {@link Object_Customer}'s personal cellar) or {@link Other_CollectionType#OTHER} type.
+ * <p></p>
+ * Collections are structured as follows: a collection has one or more {@link Object_CollectionVersion}s. Each version has one or more {@link Object_CollectionGroup}s. And each group contains one or more {@link Object_CollectionOrder}s, which link directly to a {@link Object_Tag} and thus by reference a {@link Object_Product}.
  */
 public class Object_Collection extends Object_BaseObject {
 

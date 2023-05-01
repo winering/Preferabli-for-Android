@@ -153,7 +153,7 @@ public class Object_Variant extends Object_BaseObject {
         this.preference_data = preference_data;
     }
 
-    public Object_PreferenceData getPreferenceData() {
+    Object_PreferenceData getPreferenceData() {
         return preference_data;
     }
 
@@ -331,7 +331,22 @@ public class Object_Variant extends Object_BaseObject {
     /**
      * See {@link Preferabli#getPreferabliScore(long, Integer, API_ResultHandler)}.
      */
-    public void getPreferabliScore(API_ResultHandler<Object_PreferenceData> handler) {
-        Preferabli.main().getPreferabliScore(product_id, year, handler);
+    public void getPreferabliScore(Boolean force_refresh, API_ResultHandler<Object_PreferenceData> handler) {
+        if (preference_data == null || Tools_Preferabli.isForceRefresh(force_refresh)) {
+            Preferabli.main().getPreferabliScore(product_id, year, new API_ResultHandler<Object_PreferenceData>() {
+                @Override
+                public void onSuccess(Object_PreferenceData data) {
+                    setPreferenceData(data);
+                    handler.onSuccess(data);
+                }
+
+                @Override
+                public void onFailure(API_PreferabliException e) {
+                    handler.onFailure(e);
+                }
+            });
+        } else {
+            handler.onSuccess(preference_data);
+        }
     }
 }
