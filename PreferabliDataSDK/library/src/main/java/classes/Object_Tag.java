@@ -18,6 +18,9 @@ import java.util.Currency;
 import java.util.Date;
 import java.util.HashSet;
 
+/**
+ * Chronicles a user's interaction with a {@link Object_Product}. Is one of a type {@link Other_TagType}.
+ */
 public class Object_Tag extends Object_BaseObject {
     private long user_id;
     private long variant_id;
@@ -213,7 +216,7 @@ public class Object_Tag extends Object_BaseObject {
         return updated_at;
     }
 
-    public static class TagComparator implements Comparator<Object_Tag> {
+    private static class TagComparator implements Comparator<Object_Tag> {
         @Override
         public int compare(Object_Tag tag1, Object_Tag tag2) {
             if (tag1 == null && tag2 == null) {

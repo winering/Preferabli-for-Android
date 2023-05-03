@@ -79,7 +79,7 @@ public class Object_LabelRecResults {
             return imageRecs;
         }
 
-        public static class LabelRecComparator implements Comparator<Object_LabelRecResult> {
+        private static class LabelRecComparator implements Comparator<Object_LabelRecResult> {
             @Override
             public int compare(Object_LabelRecResult labelRec1, Object_LabelRecResult labelRec2) {
                 if (labelRec1 == null && labelRec2 == null) {

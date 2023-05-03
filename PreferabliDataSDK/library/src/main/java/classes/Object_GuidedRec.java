@@ -120,7 +120,7 @@ public class Object_GuidedRec extends Object_BaseObject {
             return guided_rec_choices;
         }
 
-        public static class GuidedRecChoiceComparator implements Comparator<Object_GuidedRecChoice> {
+        private static class GuidedRecChoiceComparator implements Comparator<Object_GuidedRecChoice> {
 
             @Override
             public int compare(Object_GuidedRecChoice quizChoice1, Object_GuidedRecChoice quizChoice2) {

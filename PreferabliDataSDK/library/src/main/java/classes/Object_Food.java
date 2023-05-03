@@ -64,7 +64,7 @@ public class Object_Food extends Object_BaseObject {
         return true;
     }
 
-    public static class FoodComparator implements Comparator<Object_Food> {
+    private static class FoodComparator implements Comparator<Object_Food> {
         @Override
         public int compare(Object_Food food1, Object_Food food2) {
             if (food1 == null && food2 == null) {

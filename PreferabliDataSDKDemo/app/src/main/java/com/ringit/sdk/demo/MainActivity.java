@@ -47,6 +47,7 @@ import classes.Object_Variant;
 import classes.Object_WhereToBuy;
 import classes.Preferabli;
 
+
 public class MainActivity extends Activity implements RecyclerViewAdapter.ShouldWeShowListener, AdapterView.OnItemSelectedListener {
 
     private ImageView preferabliLogo;
@@ -184,7 +185,9 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.Should
     public void searchProducts() {
         showLoadingView();
 
-        Preferabli.main().searchProducts("wine", true, null, null, true, new API_ResultHandler<ArrayList<Object_Product>>() {
+        ArrayList<Object_Product.Other_ProductCategory> categories = new ArrayList<>();
+        categories.add(Object_Product.Other_ProductCategory.WINE);
+        Preferabli.main().searchProducts("wine", true, categories, null, null, new API_ResultHandler<ArrayList<Object_Product>>() {
             @Override
             public void onSuccess(ArrayList<Object_Product> data) {
                 products = data;
@@ -652,7 +655,7 @@ public class MainActivity extends Activity implements RecyclerViewAdapter.Should
                 return true;
             case R.id.score:
                 showLoadingView();
-                product.getPreferabliScore(null, new API_ResultHandler<Object_PreferenceData>() {
+                product.getPreferabliScore(new API_ResultHandler<Object_PreferenceData>() {
                     @Override
                     public void onSuccess(Object_PreferenceData data) {
                         products.clear();

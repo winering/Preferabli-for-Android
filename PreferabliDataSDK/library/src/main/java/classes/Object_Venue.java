@@ -475,6 +475,9 @@ public class Object_Venue extends Object_BaseObject {
         }
     };
 
+    /**
+     * Indicates that a {@link Object_Venue} provides a specified delivery method ({@link Other_ShippingType}).
+     */
     public static class Object_DeliveryMethod extends Object_BaseObject {
         private String shipping_type;
         private String state_abbreviation;

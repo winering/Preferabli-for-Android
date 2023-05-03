@@ -84,7 +84,7 @@ public class Preferabli {
      * @param client_interface your unique identifier - provided by Preferabli.
      * @param integration_id   your integration id - provided by Preferabli. You may have more than one integration for different segments of your business (depending on how your account is set up)
      */
-    public static void initialize(Application application, String client_interface, long integration_id) {
+    public static void initialize(Application application, String client_interface, Long integration_id) {
         initialize(application, client_interface, integration_id, false);
     }
 
@@ -96,7 +96,7 @@ public class Preferabli {
      * @param integration_id   your integration id - provided by Preferabli. You may have more than one integration for different segments of your business (depending on how your account is set up).
      * @param logging_enabled  pass true for full logging. Defaults to <STRONG>false</STRONG>.
      */
-    public static void initialize(Application application, String client_interface, long integration_id, boolean logging_enabled) {
+    public static void initialize(Application application, String client_interface, Long integration_id, Boolean logging_enabled) {
         try {
             Tools_PreferabliApp.setAppContext(application);
 
@@ -208,7 +208,7 @@ public class Preferabli {
     }
 
     /**
-     * Login an existing Preferabli user.
+     * Login an existing Preferabli user. Most SDK installations will never use this.
      *
      * @param email    user's email address.
      * @param password user's password.
@@ -301,7 +301,7 @@ public class Preferabli {
     }
 
     /**
-     * Logout a customer / Preferabli user.
+     * Logout a customer.
      *
      * @param handler returns true if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
@@ -321,7 +321,7 @@ public class Preferabli {
     }
 
     /**
-     * Resets the password of an existing Preferabli user.
+     * Resets the password of an existing Preferabli user. Most SDK installations will never use this.
      *
      * @param email   user's email address.
      * @param handler returns true if the call was successful. Returns {@link API_PreferabliException} if the call fails.
@@ -800,7 +800,7 @@ public class Preferabli {
     }
 
     /**
-     * Get a Preferabli user / customer's preference data for a given {@link Object_Product}.
+     * Get a customer's preference data for a given {@link Object_Product}.
      *
      * @param product_id             id of the starting {@link Object_Product}. Only pass a Preferabli product id. If necessary, call {@link Preferabli#getPreferabliProductId(String, String, API_ResultHandler)} to convert your product id into a Preferabli product id.
      * @param year                   year of the {@link Object_Variant} that you want to get results on. Defaults to {@link Object_Variant#CURRENT_VARIANT_YEAR}.
@@ -951,7 +951,7 @@ public class Preferabli {
     }
 
     /**
-     * Get rated products. Customer / Preferabli user must be logged in to run this call.
+     * Get rated products. Customer must be logged in to run this call.
      *
      * @param force_refresh          pass true if you want to force a refresh from the API and wait for the results to return. Otherwise, the call will load locally if available and run a background refresh only if one has not been initiated in the past 5 minutes. Defaults to false.
      * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
@@ -995,7 +995,7 @@ public class Preferabli {
      * @param include_merchant_links pass true if you want the results to include an array of {@link Object_MerchantProductLink} embedded in {@link Object_Variant}. These connect Preferabli products to your own. Passing true requires additional resources and therefore will take longer. Defaults to true.
      * @param handler                returns an array of {@link Object_Product} if the call was successful. Returns {@link API_PreferabliException} if the call fails.
      */
-    public void getWishlistProducts(Boolean force_refresh, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
+    public void getWishlistedProducts(Boolean force_refresh, Boolean include_merchant_links, API_ResultHandler<ArrayList<Object_Product>> handler) {
         getWishlistedProducts(PRIORITY_HIGH, force_refresh, include_merchant_links, handler);
     }
 
@@ -1027,7 +1027,7 @@ public class Preferabli {
     }
 
     /**
-     * Get purchased products. Customer / Preferabli user must be logged in to run this call.
+     * Get purchased products. Customer must be logged in to run this call.
      *
      * @param force_refresh          pass true if you want to force a refresh from the API and wait for the results to return. Otherwise, the call will load locally if available and run a background refresh only if one has not been initiated in the past 5 minutes. Defaults to false.
      * @param lock_to_integration    pass true if you only want to draw results from your integration. Defaults to true.
@@ -1527,7 +1527,7 @@ public class Preferabli {
     }
 
     /**
-     * Get a personalized, preference based recommendation for a customer / Preferabli user.
+     * Get a personalized, preference based recommendation for a customer.
      * @param product_category pass a {@link Object_Product.Other_ProductCategory} that you would like the results to conform to.
      * @param product_type pass a {@link Object_Product.Other_ProductType} that you would like the results to conform to. Pass {@link Object_Product.Other_ProductType#OTHER} if {@link Object_Product.Other_ProductCategory} is not set  to {@link Object_Product.Other_ProductCategory#WINE}. If {@link Object_Product.Other_ProductCategory#WINE} is passed, a type of wine must be passed here.
      * @param collection_id the id of a specific {@link Object_Collection} that you want to draw results from. Pass {@link Preferabli#PRIMARY_INVENTORY_ID} for results from your primary collection. Pass null for results from anywhere.

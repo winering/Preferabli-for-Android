@@ -697,7 +697,7 @@ public class Object_Collection extends Object_BaseObject {
             return restrict_to_ring_it;
         }
 
-        public static class TraitComparator implements Comparator<Object_CollectionTrait> {
+        private static class TraitComparator implements Comparator<Object_CollectionTrait> {
             @Override
             public int compare(Object_CollectionTrait trait1, Object_CollectionTrait trait2) {
                 if (trait1 == null && trait2 == null) {
