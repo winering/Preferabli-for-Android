@@ -6,6 +6,9 @@ public class Application extends android.app.Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Preferabli.initialize(this, "YOUR_CLIENT_INTERFACE_HERE", 6301,true);
+
+        // Update with your own keys.
+        long YOUR_INTEGRATION_ID = 12345;
+        Preferabli.initialize(this, "YOUR_CLIENT_INTERFACE_HERE", YOUR_INTEGRATION_ID,true);
     }
 }

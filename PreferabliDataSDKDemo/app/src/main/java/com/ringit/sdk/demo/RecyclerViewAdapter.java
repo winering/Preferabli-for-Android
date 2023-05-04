@@ -11,6 +11,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import classes.Preferabli;
+
 public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapter.ViewHolder> {
 
     private List<String> mData = new ArrayList<>();
@@ -53,10 +55,14 @@ public class RecyclerViewAdapter extends RecyclerView.Adapter<RecyclerViewAdapte
             if (shouldWeShowListener.shouldWeShow(getBindingAdapterPosition())) {
                 menu.setHeaderTitle("Select Product Action");
                 menu.add(getBindingAdapterPosition(), R.id.wtb, 0, "Where To Buy");//groupId, itemId, order, title
-                menu.add(getBindingAdapterPosition(), R.id.wishlist, 0, "Toggle Wishlist");
-                menu.add(getBindingAdapterPosition(), R.id.rate, 0, "Rate");
+                if (Preferabli.isPreferabliUserLoggedIn() || Preferabli.isCustomerLoggedIn()) {
+                    menu.add(getBindingAdapterPosition(), R.id.wishlist, 0, "Toggle Wishlist");
+                    menu.add(getBindingAdapterPosition(), R.id.rate, 0, "Rate");
+                }
                 menu.add(getBindingAdapterPosition(), R.id.lttt, 0, "LTTT");
-                menu.add(getBindingAdapterPosition(), R.id.score, 0, "Get Preferabli Score");
+                if (Preferabli.isPreferabliUserLoggedIn() || Preferabli.isCustomerLoggedIn()) {
+                    menu.add(getBindingAdapterPosition(), R.id.score, 0, "Get Preferabli Score");
+                }
             }
         }
     }
