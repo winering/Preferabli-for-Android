@@ -7,3 +7,12 @@ You can use the Preferabli Android SDK to integrate Preferabli's powerful prefer
 Clone this repo to review our demo application.
 
 [Click here for the full documentation, including an installation tutorial.](https://preferabli.readme.io/docs)
+
+
+webrtc:
+  listen: ":8552"
+  candidates: []
+  ice_servers:
+    - urls: [ "stun:stun.l.google.com:19302" ]
+      username: ""
+      credential: ""
